@@ -1,6 +1,7 @@
 // src/pages/api/admin/participants/register.ts
 import type { APIRoute } from 'astro';
-import { db, participants } from '../../../lib/users';
+import { db } from '../../../db/index.js';  // ← Perbaiki: dari db/index.js
+import { participants } from '../../../db/schema.js';  // ← Perbaiki: dari db/schema.js
 import { eq, like, sql } from 'drizzle-orm';
 import { verifyAdmin } from '../../../lib/auth';
 
