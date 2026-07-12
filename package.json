@@ -49,5 +49,8 @@
     "postcss": "^8.4.0",
     "tsx": "^4.19.0",
     "typescript": "^5.2.0"
+  },
+  "engines": {
+    "node": "20.x"
   }
 }
