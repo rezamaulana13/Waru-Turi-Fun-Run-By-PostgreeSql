@@ -1,0 +1,51 @@
+---
+// src/components/ui/Countdown.astro
+---
+
+<div class="countdown-container flex gap-3 sm:gap-5 justify-center">
+  <div class="countdown-box bg-white/10 backdrop-blur-sm rounded-2xl px-4 sm:px-6 py-3 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center border border-white/15">
+    <h2 id="days" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-none">00</h2>
+    <p class="text-[10px] sm:text-xs font-medium text-white/80 uppercase tracking-wider mt-1">Hari</p>
+  </div>
+  <div class="countdown-box bg-white/10 backdrop-blur-sm rounded-2xl px-4 sm:px-6 py-3 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center border border-white/15">
+    <h2 id="hours" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-none">00</h2>
+    <p class="text-[10px] sm:text-xs font-medium text-white/80 uppercase tracking-wider mt-1">Jam</p>
+  </div>
+  <div class="countdown-box bg-white/10 backdrop-blur-sm rounded-2xl px-4 sm:px-6 py-3 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center border border-white/15">
+    <h2 id="minutes" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-none">00</h2>
+    <p class="text-[10px] sm:text-xs font-medium text-white/80 uppercase tracking-wider mt-1">Menit</p>
+  </div>
+  <div class="countdown-box bg-white/10 backdrop-blur-sm rounded-2xl px-4 sm:px-6 py-3 sm:py-4 min-w-[60px] sm:min-w-[80px] text-center border border-white/15">
+    <h2 id="seconds" class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-none">00</h2>
+    <p class="text-[10px] sm:text-xs font-medium text-white/80 uppercase tracking-wider mt-1">Detik</p>
+  </div>
+</div>
+
+<script>
+  // Countdown Timer
+  const eventDate = new Date("2026-02-15T05:30:00").getTime();
+
+  function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = eventDate - now;
+    
+    if (distance < 0) {
+      document.querySelector('.countdown-container').innerHTML = 
+        '<h2 class="text-3xl sm:text-4xl font-bold text-white"> EVENT TELAH DIMULAI!</h2>';
+      return;
+    }
+    
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+    document.getElementById('days').textContent = String(days).padStart(2, '0');
+    document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+    document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+    document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+</script>

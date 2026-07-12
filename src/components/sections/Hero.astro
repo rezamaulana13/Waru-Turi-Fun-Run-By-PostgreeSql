@@ -1,0 +1,240 @@
+---
+// src/components/sections/Hero.astro
+import Countdown from '../ui/Countdown.astro';
+import { db, aboutContent } from '../../db/index.js';
+import { eq, asc } from 'drizzle-orm';
+
+// ===== AMBIL DATA HERO DARI DATABASE =====
+let heroData: Record<string, string> = {};
+let hasHeroData = false;
+
+try {
+  const result = await db.select().from(aboutContent)
+    .where(eq(aboutContent.section, 'hero'))
+    .orderBy(asc(aboutContent.order));
+  
+  if (result.length > 0) {
+    result.forEach((item: any) => {
+      heroData[item.key] = item.value || '';
+    });
+    hasHeroData = true;
+  }
+} catch (error) {
+  console.error('Error fetching hero data:', error);
+}
+
+// Fallback data
+const fallbackData = {
+  title: 'Waru Turi Fun Run 2026',
+  subtitle: 'Lari Sehat, Hidup Berkah',
+  description: 'Event lomba lari rekreasi di Bendung Waru Turi, Kediri.',
+  cta_text: 'Daftar Sekarang',
+  cta_link: '/daftar',
+  image: '/images/hero-header.webp',
+  event_date: '15 Februari 2026',
+  event_location: 'Bendung Waru Turi, Kediri'
+};
+
+const title = heroData.title || fallbackData.title;
+const ctaText = heroData.cta_text || fallbackData.cta_text;
+const ctaLink = heroData.cta_link || fallbackData.cta_link;
+const heroImage = heroData.image || fallbackData.image;
+const eventDate = heroData.event_date || fallbackData.event_date;
+const eventLocation = heroData.event_location || fallbackData.event_location;
+---
+
+<section id="hero" class="hero-section relative min-h-screen flex items-center overflow-hidden">
+  <!-- Background dengan overlay gradien (tanpa gambar background berat) -->
+  <div class="absolute inset-0 z-0">
+    <div class="absolute inset-0 bg-gradient-to-br from-[#002266] via-[#0033A0] to-[#00A3E0]"></div>
+    
+    <!-- Decorative circle -->
+    <div class="absolute top-[-50%] right-[-20%] w-[600px] h-[600px] lg:w-[800px] lg:h-[800px] bg-white/5 rounded-full pointer-events-none"></div>
+  </div>
+
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-16 sm:py-20 lg:py-28">
+    <div class="max-w-4xl mx-auto text-center">
+      <!-- Logo -->
+      <div class="hero-logo-wrapper mb-4 sm:mb-6 animate-fade-down">
+        <img 
+          src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_7yqZkol2_oh-DOsILVsPCd4wV11OjAalFSlWtVwgX-ryCIq6eL8swt_xsLkmxpEC4FQYEUFr38libsnOhSPimz7DcWGHpA09petmLf_YWdDVKDHSrZlHV2j3aoYNsmQwmLMJCd2-Qfk2IdjRUlk6beTlQbJVb362F3FjKjs2L2nqBke4V_NTeCDBc816/s704/logo%20fun%20run%202026.webp" 
+          alt="Waru Turi Fun Run Logo" 
+          class="max-w-[200px] sm:max-w-[280px] lg:max-w-[320px] w-full mx-auto drop-shadow-2xl"
+          width="320"
+          height="auto"
+          loading="lazy"
+          decoding="async"
+          onerror="this.style.display='none'; document.getElementById('alt-title').style.display='block';"
+        />
+        <h1 id="alt-title" class="hidden text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white">{title}</h1>
+      </div>
+
+      <!-- Event Details -->
+      <div class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 sm:mb-8 animate-fade-down animation-delay-200">
+        <div class="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 sm:px-6 py-2 rounded-full text-white text-sm sm:text-base border border-white/20">
+          <i class="bi bi-calendar-event"></i>
+          <span>{eventDate}</span>
+        </div>
+        <div class="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 sm:px-6 py-2 rounded-full text-white text-sm sm:text-base border border-white/20">
+          <i class="bi bi-geo-alt-fill"></i>
+          <span>{eventLocation}</span>
+        </div>
+      </div>
+
+      <!-- Countdown -->
+      <div class="countdown-container animate-fade-down animation-delay-400">
+        <h4 class="text-white/80 text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase mb-4">
+          EVENT DIMULAI DALAM
+        </h4>
+        <Countdown />
+      </div>
+
+      <!-- CTA Section -->
+      <div class="cta-section mt-6 sm:mt-10 animate-fade-down animation-delay-600">
+        <a 
+          href={ctaLink}
+          class="inline-flex items-center gap-2 bg-white hover:bg-gray-100 text-[#0033A0] font-bold text-base sm:text-lg px-8 sm:px-12 py-4 sm:py-5 rounded-full transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+        >
+          <i class="bi bi-ticket-perforated"></i>
+          {ctaText}
+        </a>
+        <p class="text-white/70 text-sm mt-3">Kuota terbatas! Harga Early Bird Hingga Kuota Terpenuhi.</p>
+      </div>
+
+      <!-- Sertifikat Button -->
+      <div class="sertifikat-section mt-4 animate-fade-down animation-delay-700">
+        <a 
+          href="/sertifikat"
+          class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-medium text-sm px-6 py-3 rounded-full transition-all border border-white/20 hover:border-white/40"
+        >
+          <i class="bi bi-award"></i>
+          Lihat Sertifikat
+        </a>
+      </div>
+
+      <!-- Sponsors Section (optimasi) -->
+      <div class="sponsors-section mt-12 sm:mt-16 opacity-90 animate-fade-down animation-delay-800">
+        <h4 class="text-white/60 text-[10px] sm:text-xs font-semibold tracking-[0.2em] uppercase mb-4">
+          DIDUKUNG OLEH
+        </h4>
+        <div class="sponsor-slider overflow-hidden whitespace-nowrap relative">
+          <div class="sponsor-track inline-flex animate-scroll-sponsors">
+            <!-- Group 1 -->
+            <div class="sponsor-group inline-flex items-center flex-shrink-0 pr-8 sm:pr-12">
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgoG8puA2xLI3PwyTvhWpVvwOHYeF3nBbBwf6Bg73TwILQVM0KYxW4iDH-zHI59a4alantzKOaYikSwuo2bzEs4S8XSePRrG3lUqBsf55yjIIUgGaxbELgBB5GY1LQ5wFOLMX9ahqXUhAdcvAW3gZLISBATTwmDm8siznhkxVJNs-n83NX3wG6zORzm5yMJ/s4999/LOGO%20YAKULT%20MERAH.png" alt="Yakult" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEixg9Jrx3Nvi2_JHV3CwNtuyiVqag785W3-gqfk8Y5i8yuFaecPlii2YRimVgTHOhns1a_YRXd_3G0K7yigYhmqt1YGvn-L9DzchrDtMK8e95NB_zkRllyB2V0EtFMUKswUUOhclrc5ng6oFJJN3yKJNXPA1cfAdYBmK0EP2lNCQZ_SAVKTQLMLFvkoXHwB/s4735/LOGO%20ISO%20PLUS%20PUTIH.png" alt="Iso Plus" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhnx2pRmViqTgLgnGCg3StsSqDgiYBwbgA8yCt9cNzOq7DKNjx-FK2skUyoM03UZQDAwLWxmOHGUstbdEPLVu3tRhO27mNzUD-Q737Aun0qfGAKObLcQO5oZbs2b3u-xMPc9ySz_0Mnmp1KSZf52dHpdeqlSDA5bSlJTwAruNxKMqaaOLqKfA69dzMe0jDj/s4780/LOGO%20ARTUGO%20HITAM.png" alt="Artugo" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiAnHHHD0HqwvA0qSEOrSxy6zjAWVmV1kiBnBrOaUxbPDsNnPcuKy2VAmvgl6wOWXyY-AnZT3BegvOB2Keybn8Y8Vsvre3UdgJoSKLPIWPjMvoEy9B2vXGBus8QVYhuzWmU4WPE1LSjmG8QCxiTq8e1xZiCCi7Q7X1YFvQ0qbdikaN7Und628A60W6V0vNf/s6024/LOGO%20NAV%20KARAOKE%20WARNA.png" alt="Nav Karaoke" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjXuhdpNkT6MxWFndo4j-P2VvYTsmL0a2NqTjidXfGxXQDA0iUm0QQ9ioWnQkW8HKvjLk7nI8C5-GhSditXoIhwandK87KtA7RTtdZ7NlLT7ROIaqlBwaKsQolfx99SEyamIc_nG6jsocnJYzT1Try3StngPEIvjvU1jZxt6s2iayruRPMLtw0R85tEl2iZ/s1602/LOGO%20KREZO%20MIE%20PUTIH.png" alt="Krezo" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi_pr0ljdK8Nt-m3PEfXlBW_bIo-03P0IbTQsZtIknzDbS_AyipmxtfTSjYIjVBp4Ke7u6Fa2qVBix8xnb5vQwsksNO5aJlTXOZGYTtO6tmBRIx74m_8kpA5Ce4zE7NxFPfqkgz1DRNBUul6RKX600xo_cf1hcuI4oxj7jQKVAuSI7iSlpIj2PL18itsvmP/s1276/LOGO%20USAGI%20PUTIH.png" alt="Usagi" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi9B5-rwSwKVjIQrODRn9hjqh4iwfuzps7lZx1OkNsQvdF2ad4A4su5jt-PykwmQqgiZnLCzZrCuTublJvfXmNd6I6FloAULRo1ThnsapFOsnRA4q_NDQU6Ny5Eg4mKjQOgl1xjRYwSiTvbzOp18KukQbKR7rWN_RC9nyv4F5zy6vGaTJ5A8sce3KRAlyTD/s847/LOGO%20ANAK%20SEHAT%20PUTIH.png" alt="Anak Sehat" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhKelcAiS3z-gjSHj2uUiuc5hAMMeNrhjVbhfMVQhfKwxIkZ504Ushw3S6mc2lszs-FvuBmXPwCd1amqPdo7y5l7PJADPBmzoSolLo59nNSIY4gC-gVlSgTMN-w6JoTQcrylckZtLsFSdn4dRAQ-Fn_UJcQixqgbJWaGMmxxDfYareKzssi3pudIIqZI9Oe/s1907/LOGO%20C%20COLLAGEN%20WARNA.png" alt="C Collagen" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/a/AVvXsEipJUHyRR9IvXlkLV-ED3xtM3UMJCkpioN04MbvMhwp9MYjGE7Zple0-5QULyTL2j57_McTEDQm9-HEUh6sUWkPpKknjAD8Gi9MEnkwTBlTH88lTm0r3Bg3m_0R0PWiLI4Z2yxzV8MUSA1m4m4ldbLjj41xrx9vM6muMyAKJktvunI8sPotJIkcTHN-4pO1" alt="Sponsor" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+            </div>
+            <!-- Group 2 (duplicate) -->
+            <div class="sponsor-group inline-flex items-center flex-shrink-0 pr-8 sm:pr-12">
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgoG8puA2xLI3PwyTvhWpVvwOHYeF3nBbBwf6Bg73TwILQVM0KYxW4iDH-zHI59a4alantzKOaYikSwuo2bzEs4S8XSePRrG3lUqBsf55yjIIUgGaxbELgBB5GY1LQ5wFOLMX9ahqXUhAdcvAW3gZLISBATTwmDm8siznhkxVJNs-n83NX3wG6zORzm5yMJ/s4999/LOGO%20YAKULT%20MERAH.png" alt="Yakult" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEixg9Jrx3Nvi2_JHV3CwNtuyiVqag785W3-gqfk8Y5i8yuFaecPlii2YRimVgTHOhns1a_YRXd_3G0K7yigYhmqt1YGvn-L9DzchrDtMK8e95NB_zkRllyB2V0EtFMUKswUUOhclrc5ng6oFJJN3yKJNXPA1cfAdYBmK0EP2lNCQZ_SAVKTQLMLFvkoXHwB/s4735/LOGO%20ISO%20PLUS%20PUTIH.png" alt="Iso Plus" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhnx2pRmViqTgLgnGCg3StsSqDgiYBwbgA8yCt9cNzOq7DKNjx-FK2skUyoM03UZQDAwLWxmOHGUstbdEPLVu3tRhO27mNzUD-Q737Aun0qfGAKObLcQO5oZbs2b3u-xMPc9ySz_0Mnmp1KSZf52dHpdeqlSDA5bSlJTwAruNxKMqaaOLqKfA69dzMe0jDj/s4780/LOGO%20ARTUGO%20HITAM.png" alt="Artugo" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiAnHHHD0HqwvA0qSEOrSxy6zjAWVmV1kiBnBrOaUxbPDsNnPcuKy2VAmvgl6wOWXyY-AnZT3BegvOB2Keybn8Y8Vsvre3UdgJoSKLPIWPjMvoEy9B2vXGBus8QVYhuzWmU4WPE1LSjmG8QCxiTq8e1xZiCCi7Q7X1YFvQ0qbdikaN7Und628A60W6V0vNf/s6024/LOGO%20NAV%20KARAOKE%20WARNA.png" alt="Nav Karaoke" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjXuhdpNkT6MxWFndo4j-P2VvYTsmL0a2NqTjidXfGxXQDA0iUm0QQ9ioWnQkW8HKvjLk7nI8C5-GhSditXoIhwandK87KtA7RTtdZ7NlLT7ROIaqlBwaKsQolfx99SEyamIc_nG6jsocnJYzT1Try3StngPEIvjvU1jZxt6s2iayruRPMLtw0R85tEl2iZ/s1602/LOGO%20KREZO%20MIE%20PUTIH.png" alt="Krezo" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi_pr0ljdK8Nt-m3PEfXlBW_bIo-03P0IbTQsZtIknzDbS_AyipmxtfTSjYIjVBp4Ke7u6Fa2qVBix8xnb5vQwsksNO5aJlTXOZGYTtO6tmBRIx74m_8kpA5Ce4zE7NxFPfqkgz1DRNBUul6RKX600xo_cf1hcuI4oxj7jQKVAuSI7iSlpIj2PL18itsvmP/s1276/LOGO%20USAGI%20PUTIH.png" alt="Usagi" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi9B5-rwSwKVjIQrODRn9hjqh4iwfuzps7lZx1OkNsQvdF2ad4A4su5jt-PykwmQqgiZnLCzZrCuTublJvfXmNd6I6FloAULRo1ThnsapFOsnRA4q_NDQU6Ny5Eg4mKjQOgl1xjRYwSiTvbzOp18KukQbKR7rWN_RC9nyv4F5zy6vGaTJ5A8sce3KRAlyTD/s847/LOGO%20ANAK%20SEHAT%20PUTIH.png" alt="Anak Sehat" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhKelcAiS3z-gjSHj2uUiuc5hAMMeNrhjVbhfMVQhfKwxIkZ504Ushw3S6mc2lszs-FvuBmXPwCd1amqPdo7y5l7PJADPBmzoSolLo59nNSIY4gC-gVlSgTMN-w6JoTQcrylckZtLsFSdn4dRAQ-Fn_UJcQixqgbJWaGMmxxDfYareKzssi3pudIIqZI9Oe/s1907/LOGO%20C%20COLLAGEN%20WARNA.png" alt="C Collagen" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+              <img src="https://blogger.googleusercontent.com/img/a/AVvXsEipJUHyRR9IvXlkLV-ED3xtM3UMJCkpioN04MbvMhwp9MYjGE7Zple0-5QULyTL2j57_McTEDQm9-HEUh6sUWkPpKknjAD8Gi9MEnkwTBlTH88lTm0r3Bg3m_0R0PWiLI4Z2yxzV8MUSA1m4m4ldbLjj41xrx9vM6muMyAKJktvunI8sPotJIkcTHN-4pO1" alt="Sponsor" class="h-6 sm:h-8 mx-3 sm:mx-4 brightness-0 invert opacity-70 hover:opacity-100 transition-all" loading="lazy" decoding="async" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ===== OPTIMASI: Hanya CSS yang diperlukan ===== */
+  .sponsor-slider {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+
+  .sponsor-track {
+    display: flex;
+    width: fit-content;
+    animation: scrollSponsors 25s linear infinite;
+    will-change: transform;
+  }
+
+  .sponsor-group {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding-right: 50px;
+  }
+
+  @keyframes scrollSponsors {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  /* ===== ANIMASI LOADING CEPAT ===== */
+  @keyframes fadeDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-down {
+    opacity: 0;
+    animation: fadeDown 0.6s ease forwards;
+  }
+  
+  .animation-delay-200 { animation-delay: 0.1s; }
+  .animation-delay-400 { animation-delay: 0.2s; }
+  .animation-delay-600 { animation-delay: 0.3s; }
+  .animation-delay-700 { animation-delay: 0.35s; }
+  .animation-delay-800 { animation-delay: 0.4s; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 640px) {
+    .sponsor-group {
+      padding-right: 30px;
+    }
+    .sponsor-group img {
+      height: 20px;
+      margin: 0 8px;
+    }
+    .animate-fade-down {
+      animation-duration: 0.4s;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .sponsor-group {
+      padding-right: 20px;
+    }
+    .sponsor-group img {
+      height: 16px;
+      margin: 0 6px;
+    }
+  }
+
+  /* ===== REDUCE MOTION ===== */
+  @media (prefers-reduced-motion: reduce) {
+    .sponsor-track {
+      animation: none;
+    }
+    .animate-fade-down {
+      opacity: 1;
+      animation: none;
+    }
+  }
+</style>

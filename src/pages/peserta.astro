@@ -1,0 +1,597 @@
+---
+// src/pages/peserta.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+import { db, participants } from '../db/index.js';
+import { desc } from 'drizzle-orm';
+
+// ===== AMBIL DATA PESERTA DARI DATABASE =====
+let pesertaData: any[] = [];
+let totalPeserta = 0;
+
+try {
+  const result = await db.select({
+    id: participants.id,
+    fullName: participants.fullName,
+    email: participants.email,
+    phone: participants.phone,
+    gender: participants.gender,
+    category: participants.category,
+    jerseySize: participants.jerseySize,
+    bibNumber: participants.bibNumber,
+    status: participants.status,
+    paymentStatus: participants.paymentStatus,
+    registerDate: participants.registerDate,
+    createdAt: participants.createdAt,
+  })
+  .from(participants)
+  .orderBy(desc(participants.createdAt));
+
+  pesertaData = result;
+  totalPeserta = result.length;
+
+  console.log('📊 Total peserta:', totalPeserta);
+
+} catch (error) {
+  console.error('Error fetching participants:', error);
+}
+
+// ===== HELPER FUNCTIONS =====
+function getInitials(nama: string): string {
+  if (!nama) return '?';
+  return nama.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function getAvatarColor(gender: string): string {
+  if (!gender) return 'bg-gray-500';
+  return gender === 'Pria' ? 'bg-blue-500' : 'bg-pink-500';
+}
+
+function getCategoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    '5K': '5K Fun Run',
+    '10K': '10K Fun Run',
+    'Pelajar': 'Pelajar 5K',
+  };
+  return labels[category] || category || '-';
+}
+
+function getStatusBadge(status: string): string {
+  const statusMap: Record<string, string> = {
+    'registered': 'bg-yellow-100 text-yellow-700',
+    'confirmed': 'bg-blue-100 text-blue-700',
+    'checked_in': 'bg-purple-100 text-purple-700',
+    'finished': 'bg-green-100 text-green-700',
+    'cancelled': 'bg-red-100 text-red-700',
+    'dnf': 'bg-gray-100 text-gray-700',
+  };
+  return statusMap[status] || 'bg-gray-100 text-gray-700';
+}
+
+function getStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    'registered': 'Terdaftar',
+    'confirmed': 'Dikonfirmasi',
+    'checked_in': 'Check In',
+    'finished': 'Selesai',
+    'cancelled': 'Dibatalkan',
+    'dnf': 'DNF',
+  };
+  return labels[status] || status || '-';
+}
+
+function getPaymentStatusBadge(status: string): string {
+  const statusMap: Record<string, string> = {
+    'pending': 'bg-yellow-100 text-yellow-700',
+    'paid': 'bg-green-100 text-green-700',
+    'failed': 'bg-red-100 text-red-700',
+    'refunded': 'bg-gray-100 text-gray-700',
+    'expired': 'bg-orange-100 text-orange-700',
+  };
+  return statusMap[status] || 'bg-gray-100 text-gray-700';
+}
+
+function getPaymentStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    'pending': 'Pending',
+    'paid': 'Lunas',
+    'failed': 'Gagal',
+    'refunded': 'Refund',
+    'expired': 'Expired',
+  };
+  return labels[status] || status || '-';
+}
+
+function getJarakBadge(jarak: string): string {
+  return jarak === '5K' ? 'bg-emerald-100 text-emerald-700' : 
+         jarak === '10K' ? 'bg-blue-100 text-blue-700' :
+         jarak === 'Pelajar' ? 'bg-yellow-100 text-yellow-700' :
+         'bg-gray-100 text-gray-700';
+}
+
+function formatDate(dateStr: string | Date | null): string {
+  if (!dateStr) return '-';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+}
+
+// ===== HITUNG STATISTIK =====
+const totalLunas = pesertaData.filter((p: any) => p.paymentStatus === 'paid').length;
+const totalTerdaftar = pesertaData.filter((p: any) => p.status === 'registered').length;
+const totalConfirmed = pesertaData.filter((p: any) => p.status === 'confirmed').length;
+const totalFinished = pesertaData.filter((p: any) => p.status === 'finished').length;
+const total5K = pesertaData.filter((p: any) => p.category === '5K').length;
+const total10K = pesertaData.filter((p: any) => p.category === '10K').length;
+const totalPelajar = pesertaData.filter((p: any) => p.category === 'Pelajar').length;
+const totalPria = pesertaData.filter((p: any) => p.gender === 'Pria').length;
+const totalWanita = pesertaData.filter((p: any) => p.gender === 'Wanita').length;
+---
+
+<BaseLayout title="Daftar Peserta - Waru Turi Fun Run 2026">
+  <Navbar />
+
+  <!-- ===== HERO ===== -->
+  <section class="peserta-hero">
+    <div class="peserta-overlay"></div>
+    <div class="peserta-hero-content">
+      <h2 class="peserta-title">Daftar Peserta</h2>
+      <p class="peserta-subtitle">
+        Berikut adalah daftar peserta yang sudah mendaftar Waru Turi Fun Run 2026.
+        Total <span class="font-bold text-[#FFD700]">{totalPeserta}</span> peserta telah bergabung!
+      </p>
+      <div class="peserta-breadcrumb">
+        <a href="/">Home</a>
+        <span>›</span>
+        <span>Peserta</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STATISTIK ===== -->
+  <section class="py-8 bg-[#F7F8FC]">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+          <p class="text-3xl font-extrabold text-[#2679ec]">{totalPeserta}</p>
+          <p class="text-sm text-gray-500 font-medium">Total</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+          <p class="text-3xl font-extrabold text-green-600">{totalLunas}</p>
+          <p class="text-sm text-gray-500 font-medium">Lunas</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+          <p class="text-3xl font-extrabold text-blue-600">{total5K}</p>
+          <p class="text-sm text-gray-500 font-medium">5K</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+          <p class="text-3xl font-extrabold text-purple-600">{total10K}</p>
+          <p class="text-sm text-gray-500 font-medium">10K</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+          <p class="text-3xl font-extrabold text-yellow-600">{totalPelajar}</p>
+          <p class="text-sm text-gray-500 font-medium">Pelajar</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 text-center shadow-md hover:shadow-lg transition-all hover:-translate-y-1">
+          <p class="text-3xl font-extrabold text-pink-500">{totalWanita}</p>
+          <p class="text-sm text-gray-500 font-medium">Wanita</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FILTER & SEARCH ===== -->
+  <section class="py-6 bg-white border-b border-gray-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="flex flex-wrap gap-2">
+          <button class="filter-btn active px-4 py-2 rounded-full text-sm font-semibold transition-all" data-filter="all">Semua</button>
+          <button class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-filter="5k">5K</button>
+          <button class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-filter="10k">10K</button>
+          <button class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-filter="pelajar">Pelajar</button>
+          <button class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-filter="lunas">Lunas</button>
+          <button class="filter-btn px-4 py-2 rounded-full text-sm font-semibold transition-all" data-filter="terdaftar">Terdaftar</button>
+        </div>
+        <div class="relative w-full md:w-64">
+          <input 
+            id="search-peserta" 
+            type="text" 
+            placeholder="Cari nama peserta..." 
+            class="w-full px-4 py-2.5 pl-10 rounded-full border border-gray-200 focus:border-[#2679ec] focus:ring-2 focus:ring-[#2679ec]/20 outline-none transition-all text-sm"
+          />
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TABLE PESERTA ===== -->
+  <section class="py-10 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+          <!-- Mobile Card View -->
+          <div id="peserta-mobile" class="md:hidden divide-y divide-gray-100">
+            {pesertaData.length === 0 ? (
+              <div class="p-8 text-center">
+                <i class="bi bi-inbox text-4xl text-gray-300 block mb-3"></i>
+                <p class="text-gray-500">Belum ada peserta yang mendaftar</p>
+              </div>
+            ) : (
+              pesertaData.map((peserta: any) => (
+                <div key={peserta.id} class="p-4 hover:bg-[#F7F8FC] transition-colors peserta-item" data-id={peserta.id} data-filter={peserta.category?.toLowerCase() || ''} data-status={peserta.paymentStatus === 'paid' ? 'lunas' : 'terdaftar'}>
+                  <div class="flex items-center gap-4">
+                    <div class={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${getAvatarColor(peserta.gender)}`}>
+                      {getInitials(peserta.fullName)}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-bold text-gray-900 text-sm truncate">{peserta.fullName || 'Nama Tidak Diketahui'}</p>
+                      <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span class={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(peserta.status)}`}>
+                          {getStatusLabel(peserta.status)}
+                        </span>
+                        {peserta.bibNumber && (
+                          <span class="text-xs text-gray-500">BIB: {String(peserta.bibNumber).padStart(4, '0')}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                      <span class={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${getJarakBadge(peserta.category)}`}>
+                        {peserta.category || '-'}
+                      </span>
+                      <p class="text-xs text-gray-400 mt-1">{formatDate(peserta.registerDate)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <!-- Desktop Table View -->
+          <div id="peserta-table" class="hidden md:block overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="bg-[#F7F8FC] border-b border-gray-200">
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">BIB</th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kategori</th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Gender</th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pembayaran</th>
+                  <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tanggal Daftar</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                {pesertaData.length === 0 ? (
+                  <tr>
+                    <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                      <i class="bi bi-inbox text-4xl block mb-3"></i>
+                      Belum ada peserta yang mendaftar
+                    </td>
+                  </tr>
+                ) : (
+                  pesertaData.map((peserta: any) => (
+                    <tr key={peserta.id} class="hover:bg-[#F7F8FC] transition-colors peserta-item" data-id={peserta.id} data-filter={peserta.category?.toLowerCase() || ''} data-status={peserta.paymentStatus === 'paid' ? 'lunas' : 'terdaftar'}>
+                      <td class="px-6 py-4 text-sm font-bold text-gray-900">
+                        {peserta.bibNumber ? String(peserta.bibNumber).padStart(4, '0') : '-'}
+                      </td>
+                      <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                          <div class={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${getAvatarColor(peserta.gender)}`}>
+                            {getInitials(peserta.fullName)}
+                          </div>
+                          <span class="text-sm font-medium text-gray-900">{peserta.fullName || 'Nama Tidak Diketahui'}</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4">
+                        <span class={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getJarakBadge(peserta.category)}`}>
+                          {getCategoryLabel(peserta.category)}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-700">{peserta.gender || '-'}</td>
+                      <td class="px-6 py-4">
+                        <span class={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(peserta.status)}`}>
+                          {getStatusLabel(peserta.status)}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">
+                        <span class={`px-3 py-1 rounded-full text-xs font-medium ${getPaymentStatusBadge(peserta.paymentStatus)}`}>
+                          {getPaymentStatusLabel(peserta.paymentStatus)}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-500">{formatDate(peserta.registerDate)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="hidden py-16 text-center">
+            <i class="bi bi-inbox text-6xl text-gray-300 block mb-4"></i>
+            <p class="text-gray-500 text-lg font-medium">Tidak ada peserta yang ditemukan</p>
+            <p class="text-gray-400 text-sm mt-1">Coba ubah filter atau kata kunci pencarian</p>
+          </div>
+        </div>
+
+        <!-- Footer Table Info -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 text-sm text-gray-500">
+          <p>Menampilkan <span id="total-tampil" class="font-semibold text-gray-700">{pesertaData.length}</span> dari <span class="font-semibold text-gray-700">{totalPeserta}</span> peserta</p>
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-green-500"></span>
+              Lunas
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+              Pending
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span class="w-3 h-3 rounded-full bg-red-500"></span>
+              Gagal
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== BELUM DAFTAR? ===== -->
+  <section class="py-16 bg-[#F7F8FC]">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-100">
+          <div class="w-20 h-20 bg-[#2679ec]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="bi bi-person-plus text-4xl text-[#2679ec]"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-3">Belum Mendaftar?</h3>
+          <p class="text-gray-600 text-base mb-8 leading-relaxed">
+            Bergabunglah dengan Waru Turi Fun Run 2026 dan rasakan pengalaman lari yang tak terlupakan.
+            Kuota terbatas, segera daftar!
+          </p>
+          <a href="/daftar" class="inline-flex items-center gap-2.5 bg-[#2679ec] hover:bg-[#1a5fc7] text-white font-bold px-8 py-4 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+            <i class="bi bi-ticket-perforated text-lg"></i> Daftar Sekarang
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  /* ===== HERO ===== */
+  .peserta-hero {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    background: linear-gradient(135deg, rgba(11, 124, 255, 0.85), rgba(0, 182, 219, 0.85)),
+      url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-XxTiJ/s1280/header.jpg') center/cover no-repeat fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+  }
+  .peserta-overlay {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    z-index: 1;
+  }
+  .peserta-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 20px;
+  }
+  .peserta-title {
+    font-size: 52px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+  }
+  .peserta-subtitle {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #e0f7fa;
+    margin-bottom: 28px;
+  }
+  .peserta-breadcrumb {
+    font-size: 14px;
+    color: #e0f7fa;
+  }
+  .peserta-breadcrumb a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .peserta-breadcrumb a:hover {
+    color: #FFD700;
+  }
+  .peserta-breadcrumb span {
+    margin: 0 6px;
+  }
+
+  @media (max-width: 768px) {
+    .peserta-hero {
+      min-height: 340px;
+      background-attachment: scroll;
+    }
+    .peserta-title {
+      font-size: 36px;
+    }
+    .peserta-subtitle {
+      font-size: 15px;
+    }
+  }
+
+  /* ===== FILTER BUTTONS ===== */
+  .filter-btn {
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+  }
+  .filter-btn.active {
+    background: #2679ec;
+    color: white;
+    border-color: #2679ec;
+    box-shadow: 0 4px 12px rgba(38, 121, 236, 0.3);
+  }
+
+  /* ===== TABLE ===== */
+  #peserta-table tbody tr {
+    transition: background-color 0.2s;
+  }
+  #peserta-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  /* ===== MOBILE CARD ===== */
+  #peserta-mobile .peserta-item {
+    transition: background-color 0.2s;
+  }
+
+  /* ===== ANIMASI ===== */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .peserta-item {
+    animation: fadeInUp 0.4s ease-out forwards;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 6px;
+  }
+  .overflow-x-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+  }
+  .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+</style>
+
+<!-- ===== FILTER & SEARCH SCRIPT ===== -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-peserta');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const pesertaItems = document.querySelectorAll('.peserta-item');
+    const totalTampil = document.getElementById('total-tampil');
+    const emptyState = document.getElementById('empty-state');
+    const tableContainer = document.querySelector('.bg-white.rounded-2xl.shadow-lg');
+
+    let currentFilter = 'all';
+    let currentSearch = '';
+
+    function filterPeserta() {
+      let visibleCount = 0;
+      const searchTerm = currentSearch.toLowerCase().trim();
+
+      pesertaItems.forEach(item => {
+        const filter = item.dataset.filter || '';
+        const status = item.dataset.status || '';
+        const nama = item.querySelector('.font-bold.text-gray-900')?.textContent?.toLowerCase() || '';
+        
+        let matchFilter = true;
+        if (currentFilter !== 'all') {
+          if (currentFilter === 'lunas') {
+            matchFilter = status === 'lunas';
+          } else if (currentFilter === 'terdaftar') {
+            matchFilter = status === 'terdaftar';
+          } else {
+            matchFilter = filter === currentFilter;
+          }
+        }
+
+        let matchSearch = true;
+        if (searchTerm) {
+          matchSearch = nama.includes(searchTerm);
+        }
+
+        if (matchFilter && matchSearch) {
+          item.style.display = '';
+          visibleCount++;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      if (totalTampil) totalTampil.textContent = visibleCount;
+
+      if (emptyState) {
+        if (visibleCount === 0) {
+          emptyState.classList.remove('hidden');
+          const table = document.getElementById('peserta-table');
+          const mobile = document.getElementById('peserta-mobile');
+          if (table) table.style.display = 'none';
+          if (mobile) mobile.style.display = 'none';
+        } else {
+          emptyState.classList.add('hidden');
+          const table = document.getElementById('peserta-table');
+          const mobile = document.getElementById('peserta-mobile');
+          if (table) {
+            const isMobile = window.innerWidth < 768;
+            table.style.display = isMobile ? 'none' : '';
+          }
+          if (mobile) {
+            const isMobile = window.innerWidth < 768;
+            mobile.style.display = isMobile ? '' : 'none';
+          }
+        }
+      }
+    }
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.dataset.filter;
+        filterPeserta();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        currentSearch = this.value;
+        filterPeserta();
+      });
+    }
+
+    window.addEventListener('resize', function() {
+      const isMobile = window.innerWidth < 768;
+      const table = document.getElementById('peserta-table');
+      const mobile = document.getElementById('peserta-mobile');
+      if (table) table.style.display = isMobile ? 'none' : '';
+      if (mobile) mobile.style.display = isMobile ? '' : 'none';
+    });
+
+    filterPeserta();
+  });
+</script>

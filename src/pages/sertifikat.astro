@@ -1,0 +1,528 @@
+---
+// src/pages/sertifikat.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+import { db, participants, certificates } from '../db/index.js';
+import { desc, eq } from 'drizzle-orm';
+import { verifyToken, getUserByToken } from '../lib/auth';
+
+// ===== CEK LOGIN =====
+let user = null;
+let isLoggedIn = false;
+const token = Astro.cookies.get('token');
+
+if (token) {
+  const tokenValue = typeof token === 'string' ? token : token.value;
+  if (tokenValue) {
+    const decoded = verifyToken(tokenValue);
+    if (decoded && typeof decoded !== 'string') {
+      user = await getUserByToken(tokenValue);
+      isLoggedIn = !!user;
+    }
+  }
+}
+
+// ===== AMBIL DATA PESERTA & SERTIFIKAT =====
+let participantsData = [];
+let totalParticipants = 0;
+let certificatesData = [];
+
+try {
+  // Ambil data peserta
+  const result = await db.select()
+    .from(participants)
+    .orderBy(desc(participants.createdAt));
+  
+  participantsData = result;
+  totalParticipants = result.length;
+
+  // Ambil data sertifikat dari database
+  const certResult = await db.select({
+    participantId: certificates.participantId,
+    certificateNumber: certificates.certificateNumber,
+    fileUrl: certificates.fileUrl,
+    status: certificates.status,
+    issuedAt: certificates.issuedAt,
+  })
+  .from(certificates)
+  .where(eq(certificates.status, 'issued'))
+  .orderBy(desc(certificates.issuedAt));
+
+  // Convert ke map untuk akses cepat
+  certificatesData = certResult.reduce((acc: any, cert: any) => {
+    acc[cert.participantId] = {
+      number: cert.certificateNumber,
+      url: cert.fileUrl,
+      status: cert.status,
+      issuedAt: cert.issuedAt,
+    };
+    return acc;
+  }, {});
+
+  console.log('📊 Total participants:', totalParticipants);
+  console.log('📊 Total certificates:', Object.keys(certificatesData).length);
+
+} catch (error) {
+  console.error('Error fetching data:', error);
+}
+
+// ===== GABUNG DATA PESERTA DENGAN SERTIFIKAT =====
+const mergedData = participantsData.map(p => {
+  const cert = certificatesData[p.id] || null;
+  return {
+    ...p,
+    certificateNumber: cert?.number || null,
+    certificateUrl: cert?.url || null,
+    certificateStatus: cert?.status || null,
+    hasCertificate: !!cert,
+  };
+});
+
+// ===== STATISTIK =====
+const totalCertificates = Object.keys(certificatesData).length;
+const pendingCertificates = totalParticipants - totalCertificates;
+
+// Statistik per kategori
+const statsByCategory = {
+  '5K': { label: '5K Fun Run', count: 0, available: 0 },
+  '10K': { label: '10K Fun Run', count: 0, available: 0 },
+  'Pelajar': { label: 'Pelajar 5K', count: 0, available: 0 },
+};
+
+mergedData.forEach(p => {
+  const cat = p.category || '5K';
+  if (statsByCategory[cat]) {
+    statsByCategory[cat].count++;
+    if (p.hasCertificate) {
+      statsByCategory[cat].available++;
+    }
+  }
+});
+
+// ===== FUNGSI =====
+function getRank(participant: any): string {
+  if (participant.ranking && participant.ranking <= 3) {
+    if (participant.ranking === 1) return 'Juara 1';
+    if (participant.ranking === 2) return 'Juara 2';
+    if (participant.ranking === 3) return 'Juara 3';
+  }
+  return 'Finisher';
+}
+
+function getRankColor(rank: string): string {
+  if (rank === 'Juara 1') return 'bg-[#FFD700] text-gray-900';
+  if (rank === 'Juara 2') return 'bg-[#C0C0C0] text-gray-900';
+  if (rank === 'Juara 3') return 'bg-[#CD7F32] text-white';
+  return 'bg-gray-100 text-gray-600';
+}
+
+function getCategoryLabel(category: string): string {
+  const labels: Record<string, string> = {
+    '5K': '5K Fun Run',
+    '10K': '10K Fun Run',
+    'Pelajar': 'Pelajar 5K',
+  };
+  return labels[category] || category;
+}
+
+function getCategoryColor(category: string): string {
+  const colors: Record<string, string> = {
+    '5K': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    '10K': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    'Pelajar': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  };
+  return colors[category] || 'bg-gray-100 text-gray-800';
+}
+
+// ===== CEK USER PARTICIPANT =====
+let userParticipant = null;
+if (isLoggedIn && user) {
+  userParticipant = mergedData.find(p => p.email === user.email);
+}
+---
+
+<BaseLayout title="Sertifikat - Waru Turi Fun Run 2026">
+  <Navbar />
+
+  <!-- Hero Section -->
+  <section class="relative py-16 sm:py-20 lg:py-28 bg-gradient-to-br from-[#002266] via-[#0033A0] to-[#00A3E0] text-white overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-[-50%] right-[-20%] w-[600px] h-[600px] bg-white/5 rounded-full"></div>
+      <div class="absolute bottom-[-40%] left-[-10%] w-[400px] h-[400px] bg-white/5 rounded-full"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="max-w-4xl mx-auto text-center">
+        <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-4 border border-white/20">
+          <i class="bi bi-award"></i>
+          Sertifikat Resmi
+        </div>
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4">
+          Sertifikat <span class="text-[#FFD700]">Peserta</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
+          Lihat dan unduh sertifikat resmi Waru Turi Fun Run 2026 untuk seluruh peserta.
+        </p>
+        
+        <!-- Statistik Total -->
+        <div class="grid grid-cols-3 gap-4 max-w-lg mx-auto mt-8">
+          <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+            <p class="text-2xl font-bold text-[#FFD700]">{totalParticipants}</p>
+            <p class="text-xs text-white/70">Total Peserta</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+            <p class="text-2xl font-bold text-[#20B082]">{totalCertificates}</p>
+            <p class="text-xs text-white/70">Sertifikat Tersedia</p>
+          </div>
+          <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+            <p class="text-2xl font-bold text-[#FF6B00]">{pendingCertificates}</p>
+            <p class="text-xs text-white/70">Menunggu</p>
+          </div>
+        </div>
+
+        <!-- Statistik per Kategori -->
+        <div class="flex flex-wrap justify-center gap-3 mt-6">
+          {Object.keys(statsByCategory).map(key => {
+            const stat = statsByCategory[key];
+            return (
+              <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/10">
+                <span class="text-xs text-white/70">{stat.label}</span>
+                <div class="flex items-center gap-3 justify-center">
+                  <span class="text-sm font-bold text-white">{stat.count} Peserta</span>
+                  <span class="text-xs text-[#20B082]">✓ {stat.available}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <!-- Sertifikat Saya -->
+        {isLoggedIn && userParticipant && (
+          <div class="mt-6 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#FFD700]/20 flex items-center justify-center text-[#FFD700]">
+                  <i class="bi bi-person-check text-xl"></i>
+                </div>
+                <div class="text-left">
+                  <p class="text-sm font-semibold">Sertifikat Anda</p>
+                  <p class="text-xs text-white/70">{userParticipant.fullName} • BIB: {String(userParticipant.bibNumber).padStart(4, '0')}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                {userParticipant.hasCertificate && userParticipant.certificateUrl ? (
+                  <a 
+                    href={userParticipant.certificateUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-2 bg-[#20B082] hover:bg-[#00825E] text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all hover:-translate-y-0.5 shadow-lg"
+                  >
+                    <i class="bi bi-eye"></i>
+                    Lihat Sertifikat Saya
+                  </a>
+                ) : (
+                  <span class="inline-flex items-center gap-2 bg-white/10 text-white/70 font-semibold text-sm px-5 py-2.5 rounded-xl">
+                    <i class="bi bi-clock-history"></i>
+                    Sertifikat Segera Tersedia
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Search & Filter -->
+  <section class="py-8 bg-white border-b border-gray-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row gap-4 max-w-4xl mx-auto">
+        <div class="flex-1">
+          <div class="relative">
+            <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input 
+              id="searchInput"
+              type="text" 
+              placeholder="Cari nama peserta atau BIB..." 
+              class="w-full pl-11 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0033A0] focus:ring-2 focus:ring-[#0033A0]/20 bg-white outline-none transition-all duration-200"
+              onkeyup="filterParticipants()"
+            />
+          </div>
+        </div>
+        <select 
+          id="filterCategory"
+          class="px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0033A0] focus:ring-2 focus:ring-[#0033A0]/20 bg-white outline-none appearance-none pr-10 transition-all duration-200"
+          onchange="filterParticipants()"
+        >
+          <option value="all">Semua Kategori</option>
+          <option value="5K">5K Fun Run</option>
+          <option value="10K">10K Fun Run</option>
+          <option value="Pelajar">Pelajar 5K</option>
+        </select>
+        <select 
+          id="filterStatus"
+          class="px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#0033A0] focus:ring-2 focus:ring-[#0033A0]/20 bg-white outline-none appearance-none pr-10 transition-all duration-200"
+          onchange="filterParticipants()"
+        >
+          <option value="all">Semua Status</option>
+          <option value="available">Sertifikat Tersedia</option>
+          <option value="pending">Menunggu</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Daftar Sertifikat -->
+  <section class="py-12 sm:py-16 bg-[#F4F7FC]">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-gray-900">
+          Daftar Sertifikat Peserta
+        </h2>
+        <span class="text-sm text-gray-500" id="resultCount">Menampilkan {mergedData.length} peserta</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6" id="certificateGrid">
+        {mergedData.length > 0 ? (
+          mergedData.map(p => {
+            const rank = getRank(p);
+            const rankColor = getRankColor(rank);
+            const isAvailable = p.hasCertificate;
+            const categoryLabel = getCategoryLabel(p.category);
+            const categoryColor = getCategoryColor(p.category);
+            
+            return (
+              <div 
+                class="certificate-card bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+                data-name={p.fullName?.toLowerCase() || ''}
+                data-bib={p.bibNumber || ''}
+                data-category={p.category || ''}
+                data-available={isAvailable}
+              >
+                <div class="p-5">
+                  <!-- Header Card -->
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1 min-w-0">
+                      <h4 class="font-semibold text-gray-900 text-sm truncate">{p.fullName || 'Nama Peserta'}</h4>
+                      <div class="flex items-center gap-2 mt-0.5">
+                        <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoryColor}`}>
+                          {categoryLabel}
+                        </span>
+                        <span class="text-xs text-gray-400">BIB: {String(p.bibNumber || '0000').padStart(4, '0')}</span>
+                      </div>
+                    </div>
+                    {rank && rank !== 'Finisher' && (
+                      <span class={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${rankColor} flex-shrink-0 ml-2`}>
+                        <i class="bi bi-trophy-fill"></i>
+                        {rank}
+                      </span>
+                    )}
+                  </div>
+
+                  <!-- Sertifikat Preview -->
+                  <div class={`
+                    relative aspect-[4/3] rounded-xl overflow-hidden border-2 mb-3
+                    ${isAvailable ? 'border-[#0033A0] cursor-pointer hover:scale-[1.02] transition-transform duration-300' : 'border-gray-200 opacity-70'}
+                  `}>
+                    <div class="absolute inset-0 bg-gradient-to-br from-[#0033A0] to-[#00A3E0]"></div>
+                    <div class="absolute inset-0 opacity-10">
+                      <div class="absolute top-[-50%] right-[-30%] w-[200%] h-[200%] bg-white/10 rounded-full"></div>
+                    </div>
+                    
+                    <div class="absolute inset-2 border-2 border-white/20 rounded-lg"></div>
+                    <div class="absolute inset-4 border border-white/10 rounded-lg"></div>
+                    
+                    <div class="relative z-10 flex flex-col items-center justify-center h-full text-white p-4">
+                      <i class="bi bi-award text-3xl sm:text-4xl mb-2 text-[#FFD700]"></i>
+                      <h4 class="text-[10px] sm:text-xs font-bold text-center uppercase tracking-wider">
+                        Sertifikat Peserta
+                      </h4>
+                      <div class="w-10 h-0.5 bg-[#FFD700]/50 my-1.5"></div>
+                      <p class="text-xs text-center text-white/80 font-medium line-clamp-1 px-2">
+                        {p.fullName || 'Nama Peserta'}
+                      </p>
+                      <p class="text-[9px] text-white/60">
+                        BIB: {String(p.bibNumber || '0000').padStart(4, '0')}
+                      </p>
+                      {p.finishTime && (
+                        <p class="text-[9px] text-white/60">
+                          Waktu: {p.finishTime}
+                        </p>
+                      )}
+                      <div class="mt-1.5 px-2 py-0.5 bg-white/20 rounded-full text-[8px] font-semibold uppercase tracking-wider">
+                        Waru Turi Fun Run 2026
+                      </div>
+                    </div>
+
+                    <!-- Status Badge -->
+                    {isAvailable ? (
+                      <div class="absolute bottom-2 right-2 bg-[#20B082]/90 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <i class="bi bi-check-circle-fill text-[8px]"></i>
+                        Tersedia
+                      </div>
+                    ) : (
+                      <div class="absolute bottom-2 right-2 bg-[#FF6B00]/90 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <i class="bi bi-clock-history text-[8px]"></i>
+                        Menunggu
+                      </div>
+                    )}
+                  </div>
+
+                  <!-- Tombol Aksi -->
+                  <div class="mt-3">
+                    {isAvailable && p.certificateUrl ? (
+                      <a 
+                        href={p.certificateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center justify-center gap-2 w-full bg-[#0033A0] hover:bg-[#002A86] text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-all hover:-translate-y-0.5 shadow-md hover:shadow-lg"
+                      >
+                        <i class="bi bi-eye"></i>
+                        Lihat Sertifikat
+                        <i class="bi bi-box-arrow-up-right text-xs"></i>
+                      </a>
+                    ) : (
+                      <button 
+                        disabled
+                        class="inline-flex items-center justify-center gap-2 w-full bg-gray-100 text-gray-400 font-semibold text-sm px-4 py-2.5 rounded-xl cursor-not-allowed"
+                      >
+                        <i class="bi bi-clock-history"></i>
+                        Belum Tersedia
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div class="col-span-full text-center py-16">
+            <i class="bi bi-inbox text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-600">Belum Ada Peserta</h3>
+            <p class="text-gray-400">Belum ada data peserta yang terdaftar.</p>
+          </div>
+        )}
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden text-center py-16">
+        <i class="bi bi-search text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600">Tidak Ada Peserta Ditemukan</h3>
+        <p class="text-gray-400">Coba ubah kata kunci pencarian atau filter</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Informasi Sertifikat -->
+  <section class="py-12 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-[#F0F7FF] rounded-2xl p-6 sm:p-8 border border-[#0033A0]/10">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-[#0033A0]/10 flex items-center justify-center text-[#0033A0] text-xl flex-shrink-0">
+              <i class="bi bi-info-circle"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-gray-900 mb-1">Informasi Sertifikat</h3>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li class="flex items-start gap-2">
+                  <i class="bi bi-check-circle-fill text-[#20B082] text-xs mt-1"></i>
+                  <span>Sertifikat akan tersedia setelah admin menerbitkan melalui panel admin.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="bi bi-check-circle-fill text-[#20B082] text-xs mt-1"></i>
+                  <span>Klik tombol "Lihat Sertifikat" untuk melihat atau mengunduh sertifikat.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="bi bi-check-circle-fill text-[#20B082] text-xs mt-1"></i>
+                  <span>Jika sertifikat belum tersedia, harap hubungi panitia melalui kontak yang tersedia.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>
+
+<script>
+  function filterParticipants() {
+    const searchInput = document.getElementById('searchInput');
+    const filterCategory = document.getElementById('filterCategory');
+    const filterStatus = document.getElementById('filterStatus');
+    const cards = document.querySelectorAll('.certificate-card');
+    const resultCount = document.getElementById('resultCount');
+    const emptyState = document.getElementById('emptyState');
+    
+    const searchQuery = searchInput.value.toLowerCase().trim();
+    const category = filterCategory.value;
+    const status = filterStatus.value;
+    
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+      const name = card.dataset.name || '';
+      const bib = card.dataset.bib || '';
+      const cardCategory = card.dataset.category || '';
+      const isAvailable = card.dataset.available === 'true';
+      
+      let show = true;
+      
+      if (searchQuery) {
+        if (!name.includes(searchQuery) && !bib.includes(searchQuery)) {
+          show = false;
+        }
+      }
+      
+      if (category !== 'all' && cardCategory !== category) {
+        show = false;
+      }
+      
+      if (status === 'available' && !isAvailable) {
+        show = false;
+      }
+      if (status === 'pending' && isAvailable) {
+        show = false;
+      }
+      
+      if (show) {
+        card.style.display = 'block';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+    
+    resultCount.textContent = `Menampilkan ${visibleCount} peserta`;
+    
+    if (visibleCount === 0) {
+      emptyState.classList.remove('hidden');
+    } else {
+      emptyState.classList.add('hidden');
+    }
+  }
+
+  window.filterParticipants = filterParticipants;
+</script>
+
+<style>
+  .certificate-card {
+    transition: all 0.3s ease;
+  }
+  
+  .certificate-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

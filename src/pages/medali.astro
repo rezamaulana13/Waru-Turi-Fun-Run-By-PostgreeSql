@@ -1,0 +1,473 @@
+---
+// src/pages/medali.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+
+// Data Medali
+const medalData = [
+  {
+    id: 'gold',
+    title: 'The Golden Champion',
+    description:
+      '<b>Jadilah yang Terdepan!</b> Medali Emas eksklusif ini dipesan khusus untuk para pelari tercepat yang mampu menaklukkan lintasan dengan determinasi tinggi. Ini bukan sekadar penghargaan, tapi simbol kekuatan dan kecepatanmu di Waru Turi. Buktikan bahwa kamulah sang juara sejati!',
+    imageUrl:
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgloYUwmS7ixUvYGyzMhLUxHXZfZRzSPEM1zyApcANwWsuCiH8u_ExyN1k50m4Xl72D4MpFMMYB2GqQ417d8AP5YCKpod4azna3HszS_ptESW8mf0D8IXvQV32PcNC6fLObOECb75SkiOhWt_CfVaJn4ryL02_9o8QvERXvitZgkjAPPN85gZxu7kEwQ12P/s960-rw/gabung10k.jpeg',
+  },
+  {
+    id: 'silver',
+    title: 'The Silver Finisher',
+    description:
+      '<b>Pantang Menyerah hingga Finish!</b> Medali Perak ini menunggumu yang gigih berjuang di barisan depan. Tunjukkan sportivitas tinggi dan lampaui batas kemampuanmu. Setiap lengkungan desainnya adalah saksi bisu atas keringat dan semangat pantang menyerahmu dalam mengejar garis finish.',
+    imageUrl:
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiu-flZMiecextDDty-H5UZ97102VdMcFB42OmRCi178AmcD1jkE0gXzsnkaAfiN3catA02CU4496DoCx-A7c1AmgJtRYZ0DAro3jtl-XBY5y4gpt-McAilDp5cMToj-R2jipsTLix6ZfukEasNNYhXga9ITjWcItkxv0EIJKZ9klq-cY24eCHl_qCXqliS/s960-rw/gabung5k.jpeg',
+  },
+];
+
+// Data Filosofi
+const philosophyItems = [
+  {
+    id: 'tenun-wikara',
+    title: 'Motif Tenun Wikara',
+    description:
+      'Simbol kejayaan Kediri lintas zaman (masa lalu, sekarang, dan masa depan). Setiap guratan warna pada tenun ini membawa pesan mendalam bagi setiap pemenang:',
+    imageUrl:
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiM_vty0rqUoTkHudVvgtXj6xQ2fp1MET_n2BL0tXdLKN_l4kHuHEufbMI5LbQf7EI_Xb9_1GwyaFwX5oVh23g-GSwCyrrdZFhxHwzjh9oKCysA6JI7rfShN8ViS82S84ovdTW13Zp_EpsGGNyBczATXCxO9CUMg5qyNlY3wypDuRgJOQyRgQCnsb6EfKLX/s515-rw/ASSET%20MEDALI%20-%20KAIN%20TENUN%20WIKARA.png',
+    tags: ['Kuning: Makmur', 'Merah: Jaya', 'Putih: Suci', 'Coklat: Adil'],
+  },
+  {
+    id: 'topeng-panji',
+    title: 'Topeng Panji',
+    description:
+      'Artefak budaya luhur Kerajaan Kediri yang mengangkat kisah cinta abadi Panji Asmarabangun & Galuh Candrakirana. Melambangkan karakter yang halus, bijaksana, penuh kasih, serta nilai kepahlawanan sejati.',
+    imageUrl:
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEglYegabv5cyoOM9OKM50IaCjxPEibHE5fHnfcsbf5uFilSCLz72Cn5oO70mLWEq8DFpmIkRybjVwpVsngF9B3ta6nAyJYujjBgt3PH1hBHKxBeN_U2WjhZAk-m5VAzxOrZDq2mbOP0cToDDsfIX_RIee8kQqIKyA19ZnM-XI_KgcABczufemK6k9CPOiav/s429-rw/ASSET%20MEDALI%20-%20TOPENG%20PANJI.png',
+    tags: [],
+  },
+  {
+    id: 'bendungan-waru-turi',
+    title: 'Bendungan Waru Turi',
+    description:
+      'Bukan sekadar infrastruktur irigasi, Bendungan Gerak Waru Turi hadir sebagai simbol kemajuan, pusat edukasi masyarakat, dan kawasan wisata air yang menyatu dengan harmoni alam Kediri.',
+    imageUrl:
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgZDEpPQwdtCmpxDn_zUHymIRvegAVpYQM9kMsnDNqMIPlacatdqpw2hKFdJFNFr-BjGCj5TlSg3zscx-bEtAx1zDmJEebeyW5V2Ja0-Zswwq8b78PRq0GAbFnAM7DJyK2LfkfGG_iOZ0_YSu4Rou35n0eLBpwHWpbFYbxyYrhAhLt-RO-WmhjKZQbzVsz1/s492-rw/ASSET%20MEDALI%20-%20ILUSTRASI%20BENDUNGAN%20GERAK%20WARU%20TURI.png',
+    tags: [],
+  },
+  {
+    id: 'batik-trinayana',
+    title: 'Motif Batik Trinayana',
+    description:
+      'Perpaduan motif klasik dan modern yang memancarkan tiga masa: Mata Leluhur (Ingatan), Mata Diri (Keseimbangan Jiwa), dan Mata Masa Depan yang membara menembus batas cakrawala baru.',
+    imageUrl:
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhdDx0QmBmm8EoF2ZBpHqW46DyAj99CJRwiT9jdwG78-KYVpmTclLJs0pQZxMyqjJS_2hTwnZMQRy8xFYQHJrpHDT2Ux1L-2zyHQUBlQhFEXNmzzGZ4RIduVW68OF2LleQ8jFJ_SHLYXTk0fbjhCsfTjjyJkL3mwsdwq5yoIUwuIbmGq1Zxvl1ZIDenJFLU/s362-rw/ASSET%20MEDALI%20-%20KAIN%20BATIK%20TRINAYANA.png',
+    tags: [],
+  },
+];
+
+const conclusionText =
+  '"Medali Waru Turi Fun Run 2026 adalah harmoni antara warisan budaya dan visi masa depan. Menggabungkan kemegahan Batik Trinayana, kearifan lokal Topeng Panji, dan vitalitas Bendungan Waru Turi sebagai simbol semangat perjuangan yang selaras dengan alam dan kemajuan zaman."';
+---
+
+<BaseLayout title="Medali Finisher Waru Turi Fun Run 2026" description="Medali Finisher Waru Turi Fun Run 2026 hadir dengan desain eksklusif sebagai simbol keberhasilan pelari yang menuntaskan kategori 5K dan 10K.">
+  <Navbar />
+
+  <!-- ===== HERO ===== -->
+  <section class="race-hero">
+    <div class="race-overlay"></div>
+    <div class="race-hero-content">
+      <h2 class="race-title">Medali Finisher Eksklusif</h2>
+      <p class="race-subtitle">
+        Dapatkan medali eksklusif bagi peserta yang menyelesaikan rute, dengan desain unik dan kualitas premium sebagai tanda prestasi.
+      </p>
+      <div class="race-breadcrumb">
+        <a href="/">Home</a>
+        <span>›</span>
+        <span>Medali</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MEDAL SECTION ===== -->
+  <section class="medal-section">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="max-w-4xl mx-auto space-y-12">
+        {medalData.map((medal) => (
+          <div key={medal.id} class="medal-card group">
+            <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100/50 hover:border-[#2679ec]/20 hover:-translate-y-2">
+              <div class="p-6 md:p-8">
+                <div class="flex flex-col lg:flex-row gap-8 items-center">
+                  <div class="w-full lg:w-[45%] flex-shrink-0">
+                    <div class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#f0f4ff] to-[#e8edf5] p-4">
+                      <img
+                        src={medal.imageUrl}
+                        alt={medal.title}
+                        class="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700"
+                        loading="lazy"
+                      />
+                      <div class="absolute -top-2 -right-2 bg-[#FFD700] text-gray-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                        <i class="bi bi-star-fill mr-1"></i> Exclusive
+                      </div>
+                    </div>
+                  </div>
+                  <div class="w-full lg:w-[55%]">
+                    <h3 class="text-3xl md:text-4xl font-extrabold text-[#2679ec] mb-4">{medal.title}</h3>
+                    <div class="text-gray-600 text-base md:text-lg leading-relaxed" set:html={medal.description}></div>
+                    <div class="mt-6 flex flex-wrap items-center gap-4">
+                      <span class="inline-flex items-center gap-2 px-4 py-2 bg-[#2679ec]/10 text-[#2679ec] rounded-full text-sm font-semibold">
+                        <i class="bi bi-trophy"></i> Finisher
+                      </span>
+                      <span class="inline-flex items-center gap-2 px-4 py-2 bg-[#FFD700]/10 text-[#996600] rounded-full text-sm font-semibold">
+                        <i class="bi bi-award"></i> Edisi Terbatas
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FILOSOFI ===== -->
+  <section class="section-filosofi">
+    <div class="judul-utama">
+      <h2>Filosofi Medali 2026</h2>
+      <div class="garis"></div>
+    </div>
+
+    <div class="kontainer-filosofi">
+      {philosophyItems.map((item, index) => (
+        <div key={item.id} class={`baris-filosofi ${index % 2 === 0 ? '' : 'reverse'}`}>
+          <div class="foto-filosofi">
+            <img src={item.imageUrl} alt={item.title} loading="lazy" />
+          </div>
+          <div class="teks-filosofi">
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+            {item.tags && item.tags.length > 0 && (
+              <div class="tag-warna-grup">
+                {item.tags.map((tag) => (
+                  <span key={tag} class="tag-warna">{tag}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="kesimpulan-box">
+      <h3>Makna Filosofis Medali</h3>
+      <p>{conclusionText}</p>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="py-16 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">
+          Raih Medali <span class="text-[#FFD700]">Eksklusif</span> Anda!
+        </h2>
+        <p class="text-white/80 text-base mb-8 leading-relaxed">
+          Daftar sekarang dan jadilah bagian dari sejarah Waru Turi Fun Run 2026. 
+          Medali terbatas hanya untuk peserta tercepat!
+        </p>
+        <a href="/p/ticket-sold.html" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
+          <i class="bi bi-trophy text-lg"></i> Daftar Sekarang
+        </a>
+        <p class="text-white/40 text-xs mt-4">
+          <i class="bi bi-clock-history mr-1"></i> Kuota terbatas, segera daftar!
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  /* ===== HERO ===== */
+  .race-hero {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    background: linear-gradient(135deg, rgba(11, 124, 255, 0.85), rgba(0, 182, 219, 0.85)),
+      url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-XxTiJ/s1280/header.jpg') center/cover no-repeat fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+  }
+  .race-overlay {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    z-index: 1;
+  }
+  .race-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 20px;
+  }
+  .race-title {
+    font-size: 52px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+  }
+  .race-subtitle {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #e0f7fa;
+    margin-bottom: 28px;
+  }
+  .race-breadcrumb {
+    font-size: 14px;
+    color: #e0f7fa;
+  }
+  .race-breadcrumb a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .race-breadcrumb a:hover {
+    color: #FFD700;
+  }
+  .race-breadcrumb span {
+    margin: 0 6px;
+  }
+
+  @media (max-width: 768px) {
+    .race-hero {
+      min-height: 340px;
+      background-attachment: scroll;
+    }
+    .race-title {
+      font-size: 36px;
+    }
+    .race-subtitle {
+      font-size: 15px;
+    }
+  }
+
+  /* ===== MEDAL SECTION ===== */
+  .medal-section {
+    background: #f8f9fa;
+  }
+  .medal-card .bg-white {
+    background: #ffffff;
+  }
+
+  /* ===== FILOSOFI ===== */
+  .section-filosofi {
+    padding: 120px 20px;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f8f9fa;
+    color: #111;
+    overflow: hidden;
+  }
+  .judul-utama {
+    text-align: center;
+    margin-bottom: 100px;
+  }
+  .judul-utama h2 {
+    color: #0d6efd;
+    font-size: 4.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    margin-bottom: 25px;
+    letter-spacing: 3px;
+  }
+  .judul-utama .garis {
+    width: 150px;
+    height: 12px;
+    background: #d4af37;
+    margin: 0 auto;
+    border-radius: 20px;
+  }
+
+  .kontainer-filosofi {
+    max-width: 1300px;
+    margin: 0 auto;
+  }
+  .baris-filosofi {
+    display: flex;
+    align-items: center;
+    margin-bottom: 150px;
+    gap: 40px;
+  }
+  .baris-filosofi.reverse {
+    flex-direction: row-reverse;
+  }
+
+  .foto-filosofi {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+  }
+  .foto-filosofi img {
+    width: 100%;
+    max-width: 380px;
+    height: auto;
+    border-radius: 40px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+  }
+  .baris-filosofi:hover .foto-filosofi img {
+    transform: scale(1.05);
+    box-shadow: 0 30px 60px rgba(13, 110, 253, 0.2);
+  }
+
+  .teks-filosofi {
+    flex: 1.5;
+  }
+  .teks-filosofi h3 {
+    color: #0d6efd;
+    font-size: 3.2rem;
+    font-weight: 900;
+    margin-bottom: 30px;
+    line-height: 1.1;
+  }
+  .teks-filosofi p {
+    font-size: 1.8rem;
+    line-height: 1.7;
+    color: #222;
+    font-weight: 500;
+  }
+
+  .tag-warna-grup {
+    margin-top: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .tag-warna {
+    padding: 15px 30px;
+    border-radius: 15px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: white;
+    border: 3px solid #eee;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .kesimpulan-box {
+    max-width: 1200px;
+    margin: 80px auto 0;
+    background: linear-gradient(135deg, #0d6efd 0%, #043d8d 100%);
+    color: white;
+    padding: 100px 60px;
+    border-radius: 60px;
+    text-align: center;
+    box-shadow: 0 40px 80px rgba(13, 110, 253, 0.4);
+  }
+  .kesimpulan-box h3 {
+    font-size: 3.5rem;
+    margin-bottom: 40px;
+    color: #d4af37;
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: 4px;
+  }
+  .kesimpulan-box p {
+    font-size: 2.2rem;
+    line-height: 1.6;
+    font-style: italic;
+    font-weight: 500;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* ===== RESPONSIVE FILOSOFI ===== */
+  @media (max-width: 992px) {
+    .baris-filosofi {
+      gap: 30px;
+    }
+    .judul-utama h2 {
+      font-size: 3.5rem;
+    }
+    .teks-filosofi h3 {
+      font-size: 2.8rem;
+    }
+    .foto-filosofi img {
+      max-width: 300px;
+    }
+  }
+  @media (max-width: 768px) {
+    .section-filosofi {
+      padding: 80px 15px;
+    }
+    .judul-utama h2 {
+      font-size: 3rem;
+    }
+    .teks-filosofi h3 {
+      font-size: 2.5rem;
+    }
+    .teks-filosofi p {
+      font-size: 1.5rem;
+    }
+    .kesimpulan-box h3 {
+      font-size: 2.5rem;
+    }
+    .kesimpulan-box p {
+      font-size: 1.6rem;
+    }
+
+    .baris-filosofi,
+    .baris-filosofi.reverse {
+      flex-direction: column !important;
+      margin-bottom: 100px;
+      gap: 20px;
+    }
+
+    .foto-filosofi img {
+      max-width: 250px;
+    }
+    .kesimpulan-box {
+      padding: 60px 30px;
+      border-radius: 40px;
+    }
+  }
+
+  /* ===== ANIMASI ===== */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .medal-card {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+  .medal-card:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .baris-filosofi {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+  .baris-filosofi:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .baris-filosofi:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  .baris-filosofi:nth-child(4) {
+    animation-delay: 0.45s;
+  }
+  .kesimpulan-box {
+    animation: fadeInUp 0.8s ease-out forwards;
+    animation-delay: 0.6s;
+    opacity: 0;
+  }
+</style>

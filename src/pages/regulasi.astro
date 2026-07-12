@@ -1,0 +1,410 @@
+---
+// src/pages/regulasi.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+
+// Data Regulasi
+const regulations = [
+  {
+    category: 'Kategori Lomba',
+    icon: 'bi-trophy',
+    items: [
+      '5K Fun Run (Umum)',
+      '10K Fun Run (Umum)',
+      '5K Pelajar (SMP/SMA sederajat)',
+    ],
+  },
+  {
+    category: 'Persyaratan Peserta',
+    icon: 'bi-person-check',
+    items: [
+      'Usia minimal 12 tahun untuk kategori 5K',
+      'Usia minimal 15 tahun untuk kategori 10K',
+      'Membawa KTP/SIM/Kartu Pelajar saat registrasi',
+      'Sehat jasmani dan rohani (surat keterangan sehat dari dokter)',
+      'Menandatangani surat pernyataan kesediaan mengikuti aturan',
+    ],
+  },
+  {
+    category: 'Perlengkapan Wajib',
+    icon: 'bi-backpack',
+    items: [
+      'Nomor dada (diberikan panitia)',
+      'Jersey Waru Turi Fun Run 2026',
+      'Sepatu lari yang nyaman',
+      'Air minum pribadi (recommended)',
+      'Jam tangan atau GPS watch (opsional)',
+    ],
+  },
+  {
+    category: 'Aturan Perlombaan',
+    icon: 'bi-flag-checkered',
+    items: [
+      'Start sesuai jadwal yang telah ditentukan',
+      'Peserta wajib mengikuti rute yang telah ditentukan',
+      'Dilarang menggunakan alat bantu mekanis (sepeda, skuter, dll)',
+      'Dilarang mengambil jalur pintas (cut-off)',
+      'Peserta wajib melalui semua checkpoint yang disediakan',
+      'Mematuhi instruksi dari panitia dan petugas keamanan',
+      'Menjaga kebersihan dan tidak membuang sampah sembarangan',
+    ],
+  },
+  {
+    category: 'Batasan Waktu (Cut Off Time)',
+    icon: 'bi-clock-history',
+    items: [
+      '5K Fun Run: 1 Jam 30 Menit',
+      '10K Fun Run: 2 Jam 30 Menit',
+      'Peserta yang tidak mencapai finish hingga batas waktu dinyatakan DNF (Did Not Finish)',
+    ],
+  },
+  {
+    category: 'Fasilitas Peserta',
+    icon: 'bi-gift',
+    items: [
+      'Jersey eksklusif Waru Turi Fun Run 2026',
+      'Nomor dada',
+      'Medali finisher (untuk yang finish)',
+      'Sertifikat elektronik',
+      'Water station di setiap 2.5 km',
+      'Medical support di start, finish, dan sepanjang rute',
+      'Refreshment di garis finish',
+      'Akomodasi parkir kendaraan',
+      'Toilet portabel',
+      'Musik dan entertainment sepanjang rute',
+    ],
+  },
+  {
+    category: 'Larangan',
+    icon: 'bi-exclamation-triangle',
+    items: [
+      'Membawa benda tajam atau senjata api',
+      'Konsumsi alkohol atau obat-obatan terlarang',
+      'Membawa hewan peliharaan',
+      'Mengganggu peserta lain',
+      'Menggunakan kamera profesional tanpa izin panitia',
+    ],
+  },
+  {
+    category: 'Sanksi & Disqualifikasi',
+    icon: 'bi-x-octagon',
+    items: [
+      'Peringatan lisan untuk pelanggaran ringan',
+      'Diskualifikasi untuk pelanggaran berat',
+      'Pembatalan hasil dan pencabutan medali',
+      'Larangan mengikuti event selanjutnya (untuk pelanggaran serius)',
+    ],
+  },
+  {
+    category: 'Kebijakan Refund',
+    icon: 'bi-currency-exchange',
+    items: [
+      'Tidak ada refund untuk pendaftaran yang sudah dibayar',
+      'Transfer pendaftaran ke peserta lain diperbolehkan maksimal H-7',
+      'Perubahan kategori lomba diperbolehkan maksimal H-14 (dengan biaya administrasi)',
+    ],
+  },
+];
+
+const importantNotes = [
+  'Panitia berhak mengubah jadwal atau rute jika terjadi force majeure (cuaca ekstrem, bencana alam, dll)',
+  'Keputusan panitia adalah mutlak dan tidak dapat diganggu gugat',
+  'Dengan mendaftar, peserta menyetujui semua aturan dan ketentuan yang berlaku',
+  'Pastikan untuk membaca dan memahami seluruh regulasi sebelum mendaftar',
+];
+---
+
+<BaseLayout title="Regulasi - Waru Turi Fun Run 2026" description="Regulasi dan ketentuan lengkap Waru Turi Fun Run 2026. Baca aturan perlombaan, persyaratan peserta, fasilitas, dan kebijakan lainnya.">
+  <Navbar />
+
+  <!-- ===== HERO ===== -->
+  <section class="regulasi-hero">
+    <div class="regulasi-overlay"></div>
+    <div class="regulasi-hero-content">
+      <h2 class="regulasi-title">Regulasi Lomba</h2>
+      <p class="regulasi-subtitle">
+        Bacalah dengan seksama seluruh aturan dan ketentuan Waru Turi Fun Run 2026.
+        Dengan mendaftar, Anda menyetujui seluruh regulasi yang berlaku.
+      </p>
+      <div class="regulasi-breadcrumb">
+        <a href="/">Home</a>
+        <span>›</span>
+        <span>Regulasi</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== REGULASI CONTENT ===== -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Download Button -->
+      <div class="text-center mb-10">
+        <a href="/pdf/regulasi-waruturi-2026.pdf" download class="inline-flex items-center gap-3 bg-[#2679ec] hover:bg-[#1a5fc7] text-white font-semibold px-8 py-4 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+          <i class="bi bi-file-pdf text-2xl"></i>
+          Download Regulasi (PDF)
+        </a>
+      </div>
+
+      <!-- Regulasi Grid -->
+      <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+        {regulations.map((reg, index) => (
+          <div key={index} class="regulasi-card group">
+            <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-[#2679ec]/20 h-full overflow-hidden">
+              <div class="p-6">
+                <div class="flex items-center gap-4 mb-4">
+                  <div class="w-12 h-12 bg-[#2679ec]/10 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#2679ec] transition-colors duration-300">
+                    <i class={`${reg.icon} text-2xl text-[#2679ec] group-hover:text-white transition-colors duration-300`}></i>
+                  </div>
+                  <h3 class="text-xl font-bold text-gray-900">{reg.category}</h3>
+                </div>
+                <ul class="space-y-2.5">
+                  {reg.items.map((item, idx) => (
+                    <li key={idx} class="flex items-start gap-3 text-gray-700 text-sm leading-relaxed">
+                      <span class="text-[#2679ec] text-lg font-bold flex-shrink-0">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== IMPORTANT NOTES ===== -->
+  <section class="py-16 bg-[#F7F8FC]">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+          <span class="text-[#2679ec] font-semibold text-sm uppercase tracking-wider">Penting</span>
+          <h2 class="text-3xl font-bold text-gray-900 mt-2 mb-3">Catatan Penting</h2>
+          <p class="text-gray-500 text-base max-w-2xl mx-auto">Hal-hal yang perlu diperhatikan oleh seluruh peserta.</p>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+          <div class="p-8 md:p-10">
+            <div class="flex items-start gap-4 mb-6">
+              <div class="w-12 h-12 bg-[#FFD700]/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <i class="bi bi-info-circle text-2xl text-[#FFD700]"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold text-gray-900">Perhatian!</h3>
+                <p class="text-gray-500 text-sm mt-1">Baca dan pahami sebelum mendaftar</p>
+              </div>
+            </div>
+
+            <ul class="space-y-4">
+              {importantNotes.map((note, index) => (
+                <li key={index} class="flex items-start gap-3 text-gray-700 text-base leading-relaxed border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
+                  <span class="text-[#FFD700] text-xl font-bold flex-shrink-0">{index + 1}.</span>
+                  <span>{note}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div class="mt-8 p-4 bg-[#FFF8E6] rounded-xl border border-[#FFD700]/30">
+              <p class="text-sm text-gray-700 flex items-center gap-2">
+                <i class="bi bi-shield-check text-[#FFD700] text-lg"></i>
+                <span>Dengan mendaftar, Anda secara otomatis menyetujui semua regulasi yang tercantum di atas.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ QUICK ===== -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+          <span class="text-[#2679ec] font-semibold text-sm uppercase tracking-wider">Tanya Jawab</span>
+          <h2 class="text-3xl font-bold text-gray-900 mt-2 mb-3">Pertanyaan Umum</h2>
+          <p class="text-gray-500 text-base max-w-2xl mx-auto">Pertanyaan yang sering ditanyakan seputar regulasi lomba.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-[#F7F8FC] rounded-2xl p-6 border border-gray-100 hover:border-[#2679ec]/20 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+              <i class="bi bi-question-circle text-[#2679ec] text-xl"></i>
+              <h4 class="font-bold text-gray-900">Apa itu DNF?</h4>
+            </div>
+            <p class="text-gray-600 text-sm">DNF (Did Not Finish) adalah status bagi peserta yang tidak berhasil mencapai garis finish sebelum batas waktu yang ditentukan.</p>
+          </div>
+
+          <div class="bg-[#F7F8FC] rounded-2xl p-6 border border-gray-100 hover:border-[#2679ec]/20 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+              <i class="bi bi-question-circle text-[#2679ec] text-xl"></i>
+              <h4 class="font-bold text-gray-900">Bolehkah transfer tiket?</h4>
+            </div>
+            <p class="text-gray-600 text-sm">Transfer pendaftaran ke peserta lain diperbolehkan maksimal H-7 dengan menghubungi panitia.</p>
+          </div>
+
+          <div class="bg-[#F7F8FC] rounded-2xl p-6 border border-gray-100 hover:border-[#2679ec]/20 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+              <i class="bi bi-question-circle text-[#2679ec] text-xl"></i>
+              <h4 class="font-bold text-gray-900">Apakah ada refund?</h4>
+            </div>
+            <p class="text-gray-600 text-sm">Tidak ada refund untuk pendaftaran yang sudah dibayar. Mohon pertimbangkan sebelum mendaftar.</p>
+          </div>
+
+          <div class="bg-[#F7F8FC] rounded-2xl p-6 border border-gray-100 hover:border-[#2679ec]/20 transition-all">
+            <div class="flex items-center gap-3 mb-3">
+              <i class="bi bi-question-circle text-[#2679ec] text-xl"></i>
+              <h4 class="font-bold text-gray-900">Apa yang harus dibawa?</h4>
+            </div>
+            <p class="text-gray-600 text-sm">Bawa nomor dada, jersey, KTP/identitas, dan perlengkapan lari yang nyaman.</p>
+          </div>
+        </div>
+
+        <div class="text-center mt-8">
+          <a href="/p/kontak.html" class="inline-flex items-center gap-2 text-[#2679ec] hover:text-[#1a5fc7] font-semibold transition-colors">
+            Masih ada pertanyaan? Hubungi Kami
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="py-16 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">
+          Sudah Siap <span class="text-[#FFD700]">Daftar</span>?
+        </h2>
+        <p class="text-white/80 text-base mb-8 leading-relaxed">
+          Pastikan Anda sudah membaca seluruh regulasi sebelum mendaftar. Siapkan diri Anda untuk pengalaman lari yang tak terlupakan!
+        </p>
+        <a href="/p/ticket-sold.html" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
+          <i class="bi bi-ticket-perforated text-lg"></i> Daftar Sekarang
+        </a>
+        <p class="text-white/40 text-xs mt-4">
+          <i class="bi bi-clock-history mr-1"></i> Kuota terbatas, segera daftar!
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  /* ===== HERO ===== */
+  .regulasi-hero {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    background: linear-gradient(135deg, rgba(11, 124, 255, 0.85), rgba(0, 182, 219, 0.85)),
+      url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-XxTiJ/s1280/header.jpg') center/cover no-repeat fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+  }
+  .regulasi-overlay {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    z-index: 1;
+  }
+  .regulasi-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 20px;
+  }
+  .regulasi-title {
+    font-size: 52px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+  }
+  .regulasi-subtitle {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #e0f7fa;
+    margin-bottom: 28px;
+  }
+  .regulasi-breadcrumb {
+    font-size: 14px;
+    color: #e0f7fa;
+  }
+  .regulasi-breadcrumb a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .regulasi-breadcrumb a:hover {
+    color: #FFD700;
+  }
+  .regulasi-breadcrumb span {
+    margin: 0 6px;
+  }
+
+  @media (max-width: 768px) {
+    .regulasi-hero {
+      min-height: 340px;
+      background-attachment: scroll;
+    }
+    .regulasi-title {
+      font-size: 36px;
+    }
+    .regulasi-subtitle {
+      font-size: 15px;
+    }
+  }
+
+  /* ===== REGULASI CARDS ===== */
+  .regulasi-card {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+  .regulasi-card:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  .regulasi-card:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .regulasi-card:nth-child(4) {
+    animation-delay: 0.3s;
+  }
+  .regulasi-card:nth-child(5) {
+    animation-delay: 0.4s;
+  }
+  .regulasi-card:nth-child(6) {
+    animation-delay: 0.5s;
+  }
+  .regulasi-card:nth-child(7) {
+    animation-delay: 0.6s;
+  }
+  .regulasi-card:nth-child(8) {
+    animation-delay: 0.7s;
+  }
+  .regulasi-card:nth-child(9) {
+    animation-delay: 0.8s;
+  }
+
+  .regulasi-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  /* ===== ANIMASI ===== */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

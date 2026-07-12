@@ -1,0 +1,619 @@
+---
+// src/pages/admin/certificates/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, participants, users, certificates } from '../../../db/index.js';
+import { eq, desc, count, and, or, like, sql } from 'drizzle-orm';
+import { verifyToken } from '../../../lib/auth';
+
+// ===== CEK AUTH ADMIN =====
+const token = Astro.cookies.get('token')?.value;
+let isAdmin = false;
+let userData = null;
+
+if (token) {
+  const decoded = verifyToken(token);
+  if (decoded && typeof decoded !== 'string') {
+    const user = await db.select().from(users).where(eq(users.id, decoded.id));
+    if (user && user.length > 0 && (user[0].role === 'admin' || user[0].role === 'super_admin')) {
+      isAdmin = true;
+      userData = user[0];
+    }
+  }
+}
+
+if (!isAdmin) {
+  return Astro.redirect('/auth/login');
+}
+
+// ===== AMBIL DATA =====
+let certificatesData: any[] = [];
+let participantsList: any[] = [];
+let searchQuery = Astro.url.searchParams.get('search') || '';
+let statusFilter = Astro.url.searchParams.get('status') || '';
+
+try {
+  // Ambil sertifikat dengan data peserta
+  let query = db.select({
+    id: certificates.id,
+    participantId: certificates.participantId,
+    userId: certificates.userId,
+    certificateNumber: certificates.certificateNumber,
+    template: certificates.template,
+    data: certificates.data,
+    fileUrl: certificates.fileUrl,
+    status: certificates.status,
+    issuedAt: certificates.issuedAt,
+    createdAt: certificates.createdAt,
+    updatedAt: certificates.updatedAt,
+    fullName: participants.fullName,
+    email: participants.email,
+    category: participants.category,
+    bibNumber: participants.bibNumber,
+    participantStatus: participants.status,
+  })
+  .from(certificates)
+  .leftJoin(participants, eq(certificates.participantId, participants.id));
+
+  // Filter search
+  if (searchQuery) {
+    query = query.where(
+      or(
+        like(participants.fullName, `%${searchQuery}%`),
+        like(participants.email, `%${searchQuery}%`),
+        like(certificates.certificateNumber, `%${searchQuery}%`)
+      )
+    );
+  }
+
+  // Filter status
+  if (statusFilter) {
+    query = query.where(eq(certificates.status, statusFilter));
+  }
+
+  const certResult = await query.orderBy(desc(certificates.createdAt));
+  certificatesData = certResult;
+
+  // Ambil daftar peserta untuk dropdown
+  const participantsResult = await db.select({
+    id: participants.id,
+    fullName: participants.fullName,
+    email: participants.email,
+    category: participants.category,
+    bibNumber: participants.bibNumber,
+  })
+  .from(participants)
+  .orderBy(participants.fullName);
+
+  participantsList = participantsResult;
+
+} catch (error) {
+  console.error('Error fetching data:', error);
+}
+
+// ===== STATUS MAPPING =====
+const statusMap: Record<string, { label: string; color: string; icon: string }> = {
+  draft: { label: 'Draft', color: 'bg-gray-100 text-gray-700 dark:bg-gray-700/30 dark:text-gray-400', icon: 'bi-pencil' },
+  issued: { label: 'Diterbitkan', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', icon: 'bi-check-circle' },
+  sent: { label: 'Dikirim', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', icon: 'bi-send' },
+  cancelled: { label: 'Dibatalkan', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', icon: 'bi-x-circle' },
+};
+
+const statusOptions = ['draft', 'issued', 'sent', 'cancelled'];
+
+// ===== FORMAT DATE =====
+const formatDate = (date: Date | string | null) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+// ===== TOTAL STATS =====
+const totalCertificates = certificatesData.length;
+const totalIssued = certificatesData.filter((c: any) => c.status === 'issued' || c.status === 'sent').length;
+const totalDraft = certificatesData.filter((c: any) => c.status === 'draft').length;
+const totalParticipants = participantsList.length;
+---
+
+<AdminLayout title="Manajemen Sertifikat - Admin Panel">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+      <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+          <i class="bi bi-file-earmark-text text-blue-600 dark:text-blue-400 mr-2"></i>
+          Manajemen Sertifikat
+        </h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+          Kelola sertifikat peserta Waru Turi Fun Run
+        </p>
+      </div>
+      <div class="flex gap-3">
+        <a href="/admin/certificates/export" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+          <i class="bi bi-download"></i>
+          Export
+        </a>
+        <button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-sm hover:shadow-md">
+          <i class="bi bi-plus-lg"></i>
+          Tambah Sertifikat
+        </button>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Sertifikat</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{totalCertificates}</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-file-earmark-text text-2xl text-blue-600 dark:text-blue-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Total sertifikat dibuat</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Diterbitkan</p>
+            <p class="text-2xl font-bold text-green-600 dark:text-green-400">{totalIssued}</p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-check-circle text-2xl text-green-600 dark:text-green-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+            {totalCertificates > 0 ? Math.round((totalIssued / totalCertificates) * 100) : 0}% dari total
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Draft</p>
+            <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{totalDraft}</p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-pencil text-2xl text-yellow-600 dark:text-yellow-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Menunggu diterbitkan</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Peserta</p>
+            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalParticipants}</p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-people text-2xl text-purple-600 dark:text-purple-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+            {totalParticipants - totalCertificates} peserta belum punya sertifikat
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
+      <form method="GET" class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-1 relative">
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          <input 
+            type="text" 
+            name="search" 
+            value={searchQuery}
+            placeholder="Cari nama, email, atau nomor sertifikat..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          />
+        </div>
+        <div class="flex gap-3 flex-wrap">
+          <select name="status" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Semua Status</option>
+            {statusOptions.map(s => (
+              <option value={s} selected={statusFilter === s}>{statusMap[s]?.label || s}</option>
+            ))}
+          </select>
+          <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+            <i class="bi bi-funnel"></i> Filter
+          </button>
+          <a href="/admin/certificates" class="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gray-200/50 dark:border-gray-700/50">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">#</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nomor Sertifikat</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Peserta</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Template</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal</th>
+              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Aksi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200/50 dark:divide-gray-700/50" id="tableBody">
+            {certificatesData.length === 0 ? (
+              <tr>
+                <td colspan="8" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
+                  <i class="bi bi-inbox text-4xl block mb-3"></i>
+                  <p class="text-lg font-medium">Belum ada sertifikat</p>
+                  <p class="text-sm">Klik "Tambah Sertifikat" untuk membuat sertifikat baru.</p>
+                </td>
+              </tr>
+            ) : (
+              certificatesData.map((cert: any, index: number) => {
+                const status = statusMap[cert.status] || { label: cert.status || 'Unknown', color: 'bg-gray-100 text-gray-700', icon: 'bi-circle' };
+                const initial = cert.fullName?.charAt(0)?.toUpperCase() || '?';
+                const colors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500'];
+                const colorIndex = index % colors.length;
+                const hasFileUrl = cert.fileUrl && cert.fileUrl !== '';
+                
+                return (
+                  <tr key={cert.id} class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition" data-id={cert.id}>
+                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{index + 1}</td>
+                    <td class="px-4 py-3">
+                      <code class="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-800 dark:text-gray-200">
+                        {cert.certificateNumber || '-'}
+                      </code>
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center gap-3">
+                        <div class={`w-8 h-8 rounded-full ${colors[colorIndex]} text-white flex items-center justify-center text-xs font-semibold flex-shrink-0`}>
+                          {initial}
+                        </div>
+                        <div>
+                          <p class="text-sm font-medium text-gray-900 dark:text-white">{cert.fullName || 'Tidak ada peserta'}</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-400">{cert.email || '-'}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class={`px-2 py-1 text-xs font-medium rounded-full ${
+                        cert.category === '5K' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                        cert.category === '10K' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                        cert.category === 'Pelajar' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                        'bg-gray-100 text-gray-700 dark:bg-gray-700/30 dark:text-gray-400'
+                      }`}>
+                        {cert.category || '-'}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                      <span class="capitalize bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">
+                        {cert.template || 'default'}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full ${status.color}`}>
+                        <i class={`bi ${status.icon} text-[10px]`}></i>
+                        {status.label}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                      {formatDate(cert.createdAt)}
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                      <div class="flex items-center justify-center gap-1">
+                        {hasFileUrl && (
+                          <a 
+                            href={cert.fileUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            class="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                            title="Lihat Sertifikat"
+                          >
+                            <i class="bi bi-eye"></i>
+                          </a>
+                        )}
+                        <button 
+                          onclick="editCertificate({id: '${cert.id}', participantId: '${cert.participantId}', template: '${cert.template}', status: '${cert.status}', fileUrl: '${cert.fileUrl || ''}'})" 
+                          class="p-1.5 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition"
+                          title="Edit"
+                        >
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button 
+                          onclick="deleteCertificate('${cert.id}')" 
+                          class="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                          title="Hapus"
+                        >
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="px-4 py-3 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between flex-wrap gap-3">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Menampilkan <span class="font-medium">{certificatesData.length}</span> data
+          {searchQuery && ` dari hasil pencarian "${searchQuery}"`}
+          {statusFilter && ` dengan status ${statusMap[statusFilter]?.label || statusFilter}`}
+        </p>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+            Total {totalCertificates} sertifikat
+          </span>
+          {totalParticipants > totalCertificates && (
+            <span class="text-xs text-orange-500">
+              <i class="bi bi-exclamation-triangle"></i> {totalParticipants - totalCertificates} peserta belum punya sertifikat
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL TAMBAH / EDIT -->
+  <!-- ============================================================ -->
+  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
+    <div class="absolute inset-0 bg-black/50" onclick="closeModal()"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="modalTitle">
+          <i class="bi bi-plus-circle text-blue-600 dark:text-blue-400 mr-2"></i>
+          Tambah Sertifikat
+        </h3>
+        <button onclick="closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <form id="certForm" onsubmit="saveCertificate(event)">
+          <input type="hidden" id="editId" value="" />
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Peserta <span class="text-red-500">*</span>
+            </label>
+            <select id="participantId" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" required>
+              <option value="">Pilih Peserta</option>
+              {participantsList.map((p: any) => (
+                <option key={p.id} value={p.id}>{p.fullName} - {p.category} (BIB: #{p.bibNumber})</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Template
+            </label>
+            <select id="template" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              <option value="default">Default</option>
+              <option value="premium">Premium</option>
+              <option value="simple">Simple</option>
+              <option value="elegant">Elegant</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Status
+            </label>
+            <select id="certStatus" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              {statusOptions.map(s => (
+                <option key={s} value={s}>{statusMap[s]?.label || s}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              File URL (link sertifikat)
+            </label>
+            <input type="url" id="fileUrl" placeholder="https://drive.google.com/file/..." class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
+            <p class="text-xs text-gray-400 mt-1">Masukkan link Google Drive atau URL sertifikat</p>
+          </div>
+
+          <div class="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              Batal
+            </button>
+            <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+              <i class="bi bi-check-lg"></i>
+              Simpan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+    <i class="bi bi-check-circle-fill text-green-400"></i>
+    <span id="toast-message">Berhasil!</span>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <script>
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      const icon = toast.querySelector('.bi');
+      
+      if (type === 'success') {
+        icon.className = 'bi bi-check-circle-fill text-green-400';
+      } else {
+        icon.className = 'bi bi-exclamation-circle-fill text-red-400';
+      }
+      
+      toastMessage.textContent = message;
+      toast.classList.remove('translate-y-full', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      
+      setTimeout(hideToast, 3000);
+    }
+
+    function hideToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-full', 'opacity-0');
+    }
+
+    // ============================================================
+    // MODAL
+    // ============================================================
+    function openModal(data = null) {
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modalTitle');
+      
+      if (data) {
+        title.innerHTML = '<i class="bi bi-pencil text-yellow-600 mr-2"></i> Edit Sertifikat';
+        document.getElementById('editId').value = data.id || '';
+        document.getElementById('participantId').value = data.participantId || '';
+        document.getElementById('template').value = data.template || 'default';
+        document.getElementById('certStatus').value = data.status || 'draft';
+        document.getElementById('fileUrl').value = data.fileUrl || '';
+      } else {
+        title.innerHTML = '<i class="bi bi-plus-circle text-blue-600 mr-2"></i> Tambah Sertifikat';
+        document.getElementById('editId').value = '';
+        document.getElementById('participantId').value = '';
+        document.getElementById('template').value = 'default';
+        document.getElementById('certStatus').value = 'draft';
+        document.getElementById('fileUrl').value = '';
+      }
+      
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // ============================================================
+    // EDIT CERTIFICATE
+    // ============================================================
+    function editCertificate(data) {
+      openModal(data);
+    }
+
+    // ============================================================
+    // SAVE CERTIFICATE
+    // ============================================================
+    async function saveCertificate(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('editId').value;
+      const participantId = document.getElementById('participantId').value;
+      const template = document.getElementById('template').value;
+      const status = document.getElementById('certStatus').value;
+      const fileUrl = document.getElementById('fileUrl').value;
+
+      if (!participantId) {
+        showToast('Pilih peserta terlebih dahulu!', 'error');
+        return;
+      }
+
+      const data = { 
+        participantId: parseInt(participantId), 
+        template, 
+        status, 
+        fileUrl 
+      };
+      const method = id ? 'PUT' : 'POST';
+      if (id) data.id = parseInt(id);
+
+      try {
+        const response = await fetch('/api/admin/certificates', {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast(result.message || 'Berhasil!');
+          setTimeout(() => location.reload(), 800);
+          closeModal();
+        } else {
+          showToast(result.error || 'Gagal menyimpan', 'error');
+        }
+      } catch (error) {
+        showToast('Terjadi kesalahan', 'error');
+      }
+    }
+
+    // ============================================================
+    // DELETE CERTIFICATE
+    // ============================================================
+    async function deleteCertificate(id) {
+      if (!confirm('Yakin ingin menghapus sertifikat ini?')) return;
+
+      try {
+        const response = await fetch('/api/admin/certificates?id=' + id, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showToast('Sertifikat berhasil dihapus!');
+          setTimeout(() => location.reload(), 800);
+        } else {
+          showToast(result.error || 'Gagal menghapus', 'error');
+        }
+      } catch (error) {
+        showToast('Terjadi kesalahan', 'error');
+      }
+    }
+
+    // ============================================================
+    // ESC KEY
+    // ============================================================
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+
+    // ============================================================
+    // CLICK OUTSIDE MODAL
+    // ============================================================
+    document.querySelector('#modal .absolute')?.addEventListener('click', closeModal);
+
+    console.log('✅ Sertifikat Admin Panel loaded');
+  </script>
+</AdminLayout>

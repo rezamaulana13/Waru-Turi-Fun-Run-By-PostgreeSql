@@ -1,0 +1,204 @@
+---
+// src/pages/admin/participants/[id].astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, users, participants } from '../../../db';
+import { eq } from 'drizzle-orm';
+import { verifyToken } from '../../../lib/auth';
+import { getParticipantById } from '../../../lib/participants';
+
+// ===== CEK AUTH =====
+const token = Astro.cookies.get('token')?.value;
+let isAdmin = false;
+let userData = null;
+
+if (token) {
+  const decoded = verifyToken(token);
+  if (decoded && typeof decoded !== 'string') {
+    const user = await db.select().from(users).where(eq(users.id, decoded.id));
+    if (user && user.length > 0 && (user[0].role === 'admin' || user[0].role === 'super_admin')) {
+      isAdmin = true;
+      userData = user[0];
+    }
+  }
+}
+
+// Redirect jika bukan admin
+if (!isAdmin) {
+  return Astro.redirect('/');
+}
+
+// ===== AMBIL DATA PESERTA =====
+const id = parseInt(Astro.params.id);
+let participant = null;
+
+try {
+  participant = await getParticipantById(id);
+} catch (error) {
+  console.error('Error fetching participant:', error);
+}
+
+// Jika data tidak ditemukan
+if (!participant) {
+  return Astro.redirect('/admin/participants');
+}
+
+// Map status ke label
+const statusLabels: Record<string, string> = {
+  'registered': 'Terdaftar',
+  'confirmed': 'Dikonfirmasi',
+  'checked_in': 'Check In',
+  'finished': 'Selesai',
+  'cancelled': 'Dibatalkan',
+  'dnf': 'DNF'
+};
+
+const paymentLabels: Record<string, string> = {
+  'pending': 'Pending',
+  'paid': 'Lunas',
+  'failed': 'Gagal',
+  'refunded': 'Refund',
+  'expired': 'Expired'
+};
+
+const categoryLabels: Record<string, string> = {
+  '5K': '5K Fun Run',
+  '10K': '10K Fun Run',
+  'pelajar': 'Pelajar 5K'
+};
+
+const statusColors: Record<string, string> = {
+  'registered': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  'confirmed': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  'checked_in': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  'finished': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  'dnf': 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+};
+
+const paymentColors: Record<string, string> = {
+  'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  'paid': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  'failed': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  'refunded': 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+  'expired': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+};
+---
+
+<AdminLayout title={`Detail Peserta - ${participant.fullName}`}>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Detail Peserta</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          Informasi lengkap peserta Waru Turi Fun Run 2027
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/admin/participants" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2">
+          <i class="bi bi-arrow-left"></i>
+          Kembali
+        </a>
+        <a href={`/admin/participants/${id}/edit`} class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md">
+          <i class="bi bi-pencil"></i>
+          Edit
+        </a>
+      </div>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Nomor BIB</p>
+        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">#{String(participant.bibNumber).padStart(4, '0')}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Kategori</p>
+        <p class="text-lg font-semibold text-gray-900 dark:text-white">{categoryLabels[participant.category] || participant.category}</p>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Status</p>
+        <span class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusColors[participant.status] || 'bg-gray-100 text-gray-800'}`}>
+          {statusLabels[participant.status] || participant.status}
+        </span>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Pembayaran</p>
+        <span class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${paymentColors[participant.paymentStatus] || 'bg-gray-100 text-gray-800'}`}>
+          {paymentLabels[participant.paymentStatus] || participant.paymentStatus}
+        </span>
+      </div>
+    </div>
+
+    <!-- Detail Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
+      <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Kolom Kiri -->
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Lengkap</h3>
+              <p class="text-lg font-semibold text-gray-900 dark:text-white">{participant.fullName}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.email}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nomor Telepon</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.phone || '-'}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jenis Kelamin</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.gender || '-'}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal Lahir</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.birthDate || '-'}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Institusi</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.institution || '-'}</p>
+            </div>
+          </div>
+
+          <!-- Kolom Kanan -->
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ukuran Jersey</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.jerseySize || '-'}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Alamat</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.address || '-'}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kontak Darurat</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.emergencyContact || '-'}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nomor Kontak Darurat</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.emergencyPhone || '-'}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Metode Pembayaran</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.paymentMethod || '-'}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal Daftar</h3>
+              <p class="text-gray-700 dark:text-gray-300">{participant.registerDate ? new Date(participant.registerDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Catatan -->
+        {participant.note && (
+          <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Catatan</h3>
+            <p class="text-gray-700 dark:text-gray-300 mt-1">{participant.note}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</AdminLayout>

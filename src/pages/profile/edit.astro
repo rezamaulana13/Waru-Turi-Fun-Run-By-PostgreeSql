@@ -1,0 +1,471 @@
+---
+// src/pages/profile/edit.astro
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { verifyToken, getUserByToken } from '../../lib/auth';
+
+// Cek autentikasi
+let user = null;
+let isLoggedIn = false;
+let isAdmin = false;
+
+try {
+  const tokenCookie = Astro.cookies.get('token');
+  const tokenValue = tokenCookie?.value || null;
+  
+  if (tokenValue) {
+    const decoded = verifyToken(tokenValue);
+    if (decoded) {
+      user = await getUserByToken(tokenValue);
+      isLoggedIn = !!user;
+      isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+    }
+  }
+} catch (error) {
+  console.error('Error checking auth:', error);
+}
+
+// Jika admin, redirect ke dashboard
+if (isAdmin && user) {
+  return Astro.redirect('/admin');
+}
+
+// Jika tidak login, redirect ke login
+if (!isLoggedIn) {
+  return Astro.redirect('/auth/login');
+}
+
+// Ambil inisial nama
+const getInitial = (name) => {
+  if (!name) return 'U';
+  return name.charAt(0).toUpperCase();
+};
+
+// Format tanggal untuk input date
+const formatDateForInput = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  return d.toISOString().split('T')[0];
+};
+---
+
+<BaseLayout title="Edit Profile - Waru Turi Fun Run">
+  <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+        <a href="/" class="hover:text-primary-600 transition-colors">Beranda</a>
+        <span class="text-gray-300">/</span>
+        <a href="/profile" class="hover:text-primary-600 transition-colors">Profile Saya</a>
+        <span class="text-gray-300">/</span>
+        <span class="text-gray-700 font-medium">Edit Profile</span>
+      </nav>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Sidebar Kiri -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
+            <!-- Profile Header -->
+            <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-8 text-center">
+              <div class="w-24 h-24 mx-auto rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-4xl font-bold text-white ring-4 ring-white/50">
+                {getInitial(user?.name)}
+              </div>
+              <h2 class="mt-4 text-xl font-semibold text-white">{user?.name || 'User'}</h2>
+              <p class="text-sm text-white/80">{user?.email || '-'}</p>
+              <span class="inline-block mt-2 px-3 py-1 text-xs font-medium bg-white/20 text-white rounded-full">
+                Peserta
+              </span>
+            </div>
+
+            <!-- Menu Sidebar -->
+            <div class="p-4 space-y-1">
+              <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
+                <i class="bi bi-person text-lg"></i>
+                Profile Saya
+              </a>
+              <a href="/profile/edit" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary-600 bg-primary-50 rounded-xl transition-colors">
+                <i class="bi bi-gear text-lg"></i>
+                Pengaturan
+              </a>
+              <a href="/registrasi" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
+                <i class="bi bi-ticket-perforated text-lg"></i>
+                Registrasi Lomba
+              </a>
+              <a href="/peserta" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
+                <i class="bi bi-people text-lg"></i>
+                Daftar Peserta
+              </a>
+              <hr class="my-2 border-gray-100" />
+              <button 
+                onclick="handleLogout()"
+                class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left"
+              >
+                <i class="bi bi-box-arrow-right text-lg"></i>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Edit Profile -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+              <h3 class="text-lg font-semibold text-gray-800">
+                <i class="bi bi-pencil-square text-primary-600 mr-2"></i>
+                Edit Profil
+              </h3>
+              <p class="text-sm text-gray-500 mt-1">Perbarui informasi profil Anda</p>
+            </div>
+
+            <form id="editProfileForm" class="px-6 py-4 space-y-5">
+              <!-- Nama Lengkap -->
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">
+                  Nama Lengkap <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="name" 
+                  name="name" 
+                  value={user?.name || ''}
+                  required
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Masukkan nama lengkap"
+                />
+              </div>
+
+              <!-- Email -->
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">
+                  Email <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  name="email" 
+                  value={user?.email || ''}
+                  required
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors bg-gray-50 cursor-not-allowed"
+                  placeholder="Masukkan email"
+                  readonly
+                  disabled
+                />
+                <p class="text-xs text-gray-400 mt-1">Email tidak dapat diubah</p>
+              </div>
+
+              <!-- Nomor Telepon -->
+              <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1.5">
+                  Nomor Telepon <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="tel" 
+                  id="phone" 
+                  name="phone" 
+                  value={user?.phone || ''}
+                  required
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Masukkan nomor telepon"
+                />
+              </div>
+
+              <!-- Grid 2 Kolom -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Tanggal Lahir -->
+                <div>
+                  <label for="birth_date" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Tanggal Lahir
+                  </label>
+                  <input 
+                    type="date" 
+                    id="birth_date" 
+                    name="birth_date" 
+                    value={formatDateForInput(user?.birth_date)}
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  />
+                </div>
+
+                <!-- Jenis Kelamin -->
+                <div>
+                  <label for="gender" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Jenis Kelamin
+                  </label>
+                  <select 
+                    id="gender" 
+                    name="gender"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  >
+                    <option value="">Pilih jenis kelamin</option>
+                    <option value="male" selected={user?.gender === 'male'}>Laki-laki</option>
+                    <option value="female" selected={user?.gender === 'female'}>Perempuan</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Alamat -->
+              <div>
+                <label for="address" class="block text-sm font-medium text-gray-700 mb-1.5">
+                  Alamat
+                </label>
+                <textarea 
+                  id="address" 
+                  name="address" 
+                  rows="2"
+                  class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Masukkan alamat lengkap"
+                >{user?.address || ''}</textarea>
+              </div>
+
+              <!-- Grid 3 Kolom -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Kota -->
+                <div>
+                  <label for="city" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Kota
+                  </label>
+                  <input 
+                    type="text" 
+                    id="city" 
+                    name="city" 
+                    value={user?.city || ''}
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                    placeholder="Kota"
+                  />
+                </div>
+
+                <!-- Provinsi -->
+                <div>
+                  <label for="province" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Provinsi
+                  </label>
+                  <input 
+                    type="text" 
+                    id="province" 
+                    name="province" 
+                    value={user?.province || ''}
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                    placeholder="Provinsi"
+                  />
+                </div>
+
+                <!-- Kode Pos -->
+                <div>
+                  <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Kode Pos
+                  </label>
+                  <input 
+                    type="text" 
+                    id="postal_code" 
+                    name="postal_code" 
+                    value={user?.postal_code || ''}
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                    placeholder="Kode pos"
+                  />
+                </div>
+              </div>
+
+              <!-- Divider - Ubah Password (Opsional) -->
+              <div class="border-t border-gray-100 pt-4">
+                <div class="flex items-center gap-2 mb-2">
+                  <h4 class="text-sm font-medium text-gray-700">Ubah Password</h4>
+                  <span class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Opsional</span>
+                </div>
+                <p class="text-sm text-gray-500 mb-3">Kosongkan kedua kolom jika tidak ingin mengubah password</p>
+
+                <!-- Password Baru -->
+                <div class="mb-3">
+                  <label for="new_password" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Password Baru
+                  </label>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="new_password" 
+                      name="new_password" 
+                      class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors pr-10"
+                      placeholder="Masukkan password baru (opsional)"
+                    />
+                    <button 
+                      type="button" 
+                      onclick="togglePassword('new_password', this)"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Konfirmasi Password -->
+                <div>
+                  <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Konfirmasi Password Baru
+                  </label>
+                  <div class="relative">
+                    <input 
+                      type="password" 
+                      id="confirm_password" 
+                      name="confirm_password" 
+                      class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors pr-10"
+                      placeholder="Konfirmasi password baru (opsional)"
+                    />
+                    <button 
+                      type="button" 
+                      onclick="togglePassword('confirm_password', this)"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit & Cancel Buttons -->
+              <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+                <button 
+                  type="submit" 
+                  id="submitBtn"
+                  class="flex-1 px-6 py-3 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i class="bi bi-save me-1.5"></i>
+                  Simpan Perubahan
+                </button>
+                <a 
+                  href="/profile" 
+                  class="flex-1 px-6 py-3 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all text-center"
+                >
+                  <i class="bi bi-x-circle me-1.5"></i>
+                  Batal
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // TOGGLE PASSWORD VISIBILITY
+    // ============================================================
+    window.togglePassword = function(inputId, button) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      
+      const icon = button.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+      }
+    };
+
+    // ============================================================
+    // HANDLE FORM SUBMIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('editProfileForm');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          // Disable button
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1.5"></i> Menyimpan...';
+
+          // Collect form data
+          const formData = new FormData(form);
+          const data = Object.fromEntries(formData.entries());
+
+          // Ambil password baru dan konfirmasi
+          const newPassword = data.new_password || '';
+          const confirmPassword = data.confirm_password || '';
+
+          // Validasi: Jika salah satu diisi, keduanya harus diisi dan sama
+          if (newPassword || confirmPassword) {
+            if (!newPassword || !confirmPassword) {
+              alert('⚠️ Jika ingin mengubah password, harap isi kedua kolom password!');
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="bi bi-save me-1.5"></i> Simpan Perubahan';
+              return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+              alert('⚠️ Password baru dan konfirmasi password tidak cocok!');
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="bi bi-save me-1.5"></i> Simpan Perubahan';
+              return;
+            }
+          }
+
+          // Hapus confirm_password dari data yang dikirim
+          delete data.confirm_password;
+
+          // Jika password kosong, hapus dari data (tidak akan diubah)
+          if (!data.new_password) {
+            delete data.new_password;
+          }
+
+          try {
+            const response = await fetch('/api/user/update', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+              // Tampilkan pesan sukses
+              const message = result.message || '✅ Profil berhasil diperbarui!';
+              alert(message);
+              window.location.href = '/profile';
+            } else {
+              alert(result.message || '❌ Gagal memperbarui profil. Silakan coba lagi.');
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="bi bi-save me-1.5"></i> Simpan Perubahan';
+            }
+          } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('❌ Terjadi kesalahan. Silakan coba lagi.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-save me-1.5"></i> Simpan Perubahan';
+          }
+        });
+      }
+    });
+
+    // ============================================================
+    // LOGOUT FUNCTION
+    // ============================================================
+    window.handleLogout = async function() {
+      if (!confirm('Yakin ingin logout?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/logout', { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.clear();
+      window.location.href = '/';
+    };
+  </script>
+</BaseLayout>

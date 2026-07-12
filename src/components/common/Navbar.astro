@@ -1,0 +1,377 @@
+---
+// src/components/common/Navbar.astro
+import { verifyToken, getUserByToken } from '../../lib/auth';
+
+// Cek apakah user sudah login
+let user = null;
+let isLoggedIn = false;
+let isAdmin = false;
+
+try {
+  const tokenCookie = Astro.cookies.get('token');
+  const tokenValue = tokenCookie?.value || null;
+  
+  if (tokenValue) {
+    const decoded = verifyToken(tokenValue);
+    if (decoded) {
+      user = await getUserByToken(tokenValue);
+      isLoggedIn = !!user;
+      isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+    }
+  }
+} catch (error) {
+  console.error('Error checking auth:', error);
+}
+---
+
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-gray-100 transition-all duration-300">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 lg:h-20">
+      <!-- Logo -->
+      <a href="/" class="flex items-center gap-2 flex-shrink-0">
+        <img 
+          src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_7yqZkol2_oh-DOsILVsPCd4wV11OjAalFSlWtVwgX-ryCIq6eL8swt_xsLkmxpEC4FQYEUFr38libsnOhSPimz7DcWGHpA09petmLf_YWdDVKDHSrZlHV2j3aoYNsmQwmLMJCd2-Qfk2IdjRUlk6beTlQbJVb362F3FjKjs2L2nqBke4V_NTeCDBc816/s704/logo%20fun%20run%202026.webp" 
+          alt="Waru Turi Fun Run"
+          class="h-10 lg:h-12 w-auto"
+        />
+      </a>
+
+      <!-- Desktop Menu -->
+      <div class="hidden lg:flex items-center gap-0.5">
+        <!-- Menu Utama -->
+        <a href="/" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          Beranda
+        </a>
+        <a href="/about" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          About
+        </a>
+        
+        <!-- Dropdown Informasi -->
+        <div class="relative group">
+          <button 
+            class="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors group"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            Informasi
+            <svg class="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          <div class="absolute left-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-left group-hover:translate-y-0 translate-y-1 z-50">
+            <div class="py-1.5">
+              <a href="/sertifikat" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                <i class="bi bi-award w-5 text-gray-400"></i>
+                Sertifikat
+              </a>
+              <a href="/galeri" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                <i class="bi bi-images w-5 text-gray-400"></i>
+                Galeri
+              </a>
+              <a href="/race" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                <i class="bi bi-flag w-5 text-gray-400"></i>
+                Race
+              </a>
+              <a href="/jersey" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                <i class="bi bi-hdd-stack w-5 text-gray-400"></i>
+                Jersey
+              </a>
+              <a href="/medali" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                <i class="bi bi-trophy w-5 text-gray-400"></i>
+                Medali
+              </a>
+              <a href="/rute" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                <i class="bi bi-map w-5 text-gray-400"></i>
+                Rute
+              </a>
+              <a href="/regulasi" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                <i class="bi bi-file-text w-5 text-gray-400"></i>
+                Regulasi
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <a href="/peserta" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          Peserta
+        </a>
+        <a href="/artikel" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          Artikel
+        </a>
+        <a href="/kontak" class="px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          Kontak
+        </a>
+        
+        <!-- ===== AUTH MENU ===== -->
+        {isLoggedIn ? (
+          // Sudah Login - HANYA DROPDOWN USER
+          <>
+            <!-- Dropdown User -->
+            <div class="relative group ml-2">
+              <button 
+                class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+              >
+                <div class="w-7 h-7 rounded-full bg-[#0033A0] text-white flex items-center justify-center text-xs font-bold">
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </div>
+                <span class="max-w-[100px] truncate">{user?.name || 'User'}</span>
+                <svg class="w-3 h-3 transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              <!-- Dropdown Menu -->
+              <div class="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right group-hover:translate-y-0 translate-y-1 z-50">
+                <div class="py-1.5">
+                  {isAdmin ? (
+                    <a href="/admin" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                      <i class="bi bi-speedometer2 w-5 text-gray-400"></i>
+                      Dashboard Admin
+                    </a>
+                  ) : (
+                    <a href="/profile" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                      <i class="bi bi-person w-5 text-gray-400"></i>
+                      Profile Saya
+                    </a>
+                  )}
+                  <a href="/profile/edit" class="flex items-center px-4 py-2.5 text-sm text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition-colors">
+                    <i class="bi bi-gear w-5 text-gray-400"></i>
+                    Pengaturan
+                  </a>
+                  <hr class="my-1 border-gray-100" />
+                  <button 
+                    onclick="handleLogout()"
+                    class="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <i class="bi bi-box-arrow-right w-5 text-red-400"></i>
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          // Belum Login
+          <>
+            <a href="/auth/login" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              Login
+            </a>
+            <a href="/auth/register" class="ml-1 px-5 py-2.5 text-sm font-semibold text-white bg-[#20B082] hover:bg-[#00825E] rounded-full transition-all hover:shadow-lg hover:-translate-y-0.5">
+              <i class="bi bi-person-plus me-1.5"></i>
+              Daftar
+            </a>
+          </>
+        )}
+        {/* ===== END AUTH MENU ===== */}
+        
+        <!-- ===== SATU TOMBOL UNTUK DAFTAR + BUY TICKET + REGISTRASI ===== -->
+        {isLoggedIn ? (
+          <a href="/registrasi" class="ml-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-full transition-all hover:shadow-lg hover:-translate-y-0.5">
+            <i class="bi bi-ticket-perforated me-1.5"></i>
+            Daftar Lomba
+          </a>
+        ) : (
+          <a href="/auth/register" class="ml-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-full transition-all hover:shadow-lg hover:-translate-y-0.5">
+            <i class="bi bi-ticket-perforated me-1.5"></i>
+            Daftar & Beli Tiket
+          </a>
+        )}
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <button 
+        id="mobileMenuToggle"
+        class="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        aria-label="Toggle menu"
+      >
+        <i class="bi bi-list text-2xl"></i>
+      </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden lg:hidden pb-4 border-t border-gray-100 max-h-[80vh] overflow-y-auto">
+      <div class="flex flex-col gap-0.5 pt-3">
+        <a href="/" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          Beranda
+        </a>
+        <a href="/about" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          About
+        </a>
+        
+        <!-- Mobile Dropdown Informasi -->
+        <div>
+          <button 
+            id="mobileInfoToggle"
+            class="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+          >
+            <span>Informasi</span>
+            <i class="bi bi-chevron-down text-sm transition-transform" id="mobileInfoIcon"></i>
+          </button>
+          <div id="mobileInfoMenu" class="hidden pl-4 space-y-0.5 border-l-2 border-gray-100 ml-4">
+            <a href="/sertifikat" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              <i class="bi bi-award text-gray-400"></i>
+              Sertifikat
+            </a>
+            <a href="/galeri" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              <i class="bi bi-images text-gray-400"></i>
+              Galeri
+            </a>
+            <a href="/race" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              <i class="bi bi-flag text-gray-400"></i>
+              Race
+            </a>
+            <a href="/jersey" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              <i class="bi bi-hdd-stack text-gray-400"></i>
+              Jersey
+            </a>
+            <a href="/medali" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              <i class="bi bi-trophy text-gray-400"></i>
+              Medali
+            </a>
+            <a href="/rute" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              <i class="bi bi-map text-gray-400"></i>
+              Rute
+            </a>
+            <a href="/regulasi" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              <i class="bi bi-file-text text-gray-400"></i>
+              Regulasi
+            </a>
+          </div>
+        </div>
+
+        <a href="/peserta" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          Peserta
+        </a>
+        <a href="/artikel" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          Artikel
+        </a>
+        <a href="/kontak" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+          Kontak
+        </a>
+        
+        <!-- ===== MOBILE AUTH MENU ===== -->
+        {isLoggedIn ? (
+          <>
+            <button 
+              onclick="handleLogout()"
+              class="px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left w-full"
+            >
+              <i class="bi bi-box-arrow-right me-1"></i>
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <a href="/auth/login" class="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+              Login
+            </a>
+            <a href="/auth/register" class="px-4 py-2.5 text-sm font-medium text-white bg-[#20B082] hover:bg-[#00825E] rounded-lg transition-colors text-center">
+              <i class="bi bi-person-plus me-1"></i>
+              Daftar
+            </a>
+          </>
+        )}
+        {/* ===== END MOBILE AUTH MENU ===== */}
+        
+        <!-- ===== MOBILE: SATU TOMBOL UNTUK DAFTAR + BUY TICKET + REGISTRASI ===== -->
+        {isLoggedIn ? (
+          <a href="/registrasi" class="mt-2 px-6 py-3 text-sm font-semibold text-center text-white bg-primary-600 hover:bg-primary-700 rounded-full transition-all">
+            <i class="bi bi-ticket-perforated me-1.5"></i>
+            Daftar Lomba
+          </a>
+        ) : (
+          <a href="/auth/register" class="mt-2 px-6 py-3 text-sm font-semibold text-center text-white bg-primary-600 hover:bg-primary-700 rounded-full transition-all">
+            <i class="bi bi-ticket-perforated me-1.5"></i>
+            Daftar & Beli Tiket
+          </a>
+        )}
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  // ============================================================
+  // MOBILE MENU TOGGLE
+  // ============================================================
+  document.addEventListener('DOMContentLoaded', () => {
+    const toggle = document.getElementById('mobileMenuToggle');
+    const menu = document.getElementById('mobileMenu');
+    
+    if (toggle && menu) {
+      toggle.addEventListener('click', () => {
+        menu.classList.toggle('hidden');
+      });
+    }
+    
+    // Close menu on link click
+    document.querySelectorAll('#mobileMenu a').forEach(link => {
+      link.addEventListener('click', () => {
+        menu.classList.add('hidden');
+      });
+    });
+
+    // Mobile dropdown Informasi
+    const infoToggle = document.getElementById('mobileInfoToggle');
+    const infoMenu = document.getElementById('mobileInfoMenu');
+    const infoIcon = document.getElementById('mobileInfoIcon');
+
+    if (infoToggle && infoMenu && infoIcon) {
+      infoToggle.addEventListener('click', () => {
+        infoMenu.classList.toggle('hidden');
+        infoIcon.classList.toggle('bi-chevron-down');
+        infoIcon.classList.toggle('bi-chevron-up');
+      });
+    }
+  });
+
+  // ============================================================
+  // LOGOUT FUNCTION - REDIRECT KE HOMEPAGE (/)
+  // ============================================================
+  window.handleLogout = async function() {
+    if (!confirm('Yakin ingin logout?')) {
+      return;
+    }
+
+    try {
+      const logoutButtons = document.querySelectorAll('[onclick="handleLogout()"]');
+      logoutButtons.forEach(btn => {
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Logout...';
+        btn.disabled = true;
+      });
+
+      const response = await fetch('/api/auth/logout', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.warn('Logout API response not OK:', response.status);
+      }
+
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.clear();
+
+    window.location.href = '/';
+  };
+
+  // ============================================================
+  // KEYBOARD SHORTCUT - Ctrl+Shift+L = Logout
+  // ============================================================
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+      e.preventDefault();
+      window.handleLogout();
+    }
+  });
+
+  console.log('✅ Navbar loaded - Dashboard button removed');
+</script>

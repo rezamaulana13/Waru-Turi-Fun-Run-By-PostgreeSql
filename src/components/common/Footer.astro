@@ -1,0 +1,59 @@
+---
+// src/components/common/Footer.astro
+---
+
+<footer class="bg-gray-900 text-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+      <!-- Info -->
+      <div>
+        <h5 class="text-lg font-bold mb-4">Waru Turi Fun Run 2026</h5>
+        <p class="text-gray-400 text-sm mb-2">
+          <i class="bi bi-geo-alt me-2"></i> Bendung Waruturi, Kediri, Jawa Timur
+        </p>
+        <p class="text-gray-400 text-sm mb-2">
+          <i class="bi bi-telephone me-2"></i> +62 815-5257-733
+        </p>
+        <p class="text-gray-400 text-sm">
+          <i class="bi bi-envelope me-2"></i> officialwaruturirun@gmail.com
+        </p>
+      </div>
+
+      <!-- Partner -->
+      <div>
+        <h5 class="text-lg font-bold mb-4">Partner & Sponsor</h5>
+        <ul class="space-y-2 text-sm text-gray-400">
+          <li>Perum Jasa Tirta 1 (PJT 1)</li>
+          <li>Jawa Pos Radar Kediri</li>
+          <li>Bendung Gerak Waruturi</li>
+          <li>R-Project Event Organizer</li>
+        </ul>
+      </div>
+
+      <!-- Social -->
+      <div>
+        <h5 class="text-lg font-bold mb-4">Ikuti Kami</h5>
+        <div class="flex gap-4">
+          <a 
+            href="https://www.instagram.com/radarkedirievent" 
+            target="_blank"
+            class="w-10 h-10 flex items-center justify-center bg-gray-800 hover:bg-primary-600 rounded-full transition-colors"
+          >
+            <i class="bi bi-instagram text-xl"></i>
+          </a>
+          <a 
+            href="https://www.facebook.com/offprint.radarkediri.7" 
+            target="_blank"
+            class="w-10 h-10 flex items-center justify-center bg-gray-800 hover:bg-primary-600 rounded-full transition-colors"
+          >
+            <i class="bi bi-facebook text-xl"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
+      &copy; {new Date().getFullYear()} Waru Turi Fun Run. All rights reserved.
+    </div>
+  </div>
+</footer>

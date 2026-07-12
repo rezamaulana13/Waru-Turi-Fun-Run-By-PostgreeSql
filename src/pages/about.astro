@@ -1,0 +1,528 @@
+---
+// src/pages/about.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+import Card from '../components/ui/Card.astro';
+import { db, aboutContent, participants } from '../db/index.js';
+import { count, asc } from 'drizzle-orm';
+
+// ============================================================
+// AMBIL DATA DARI DATABASE
+// ============================================================
+
+let aboutData: Record<string, any> = {};
+let aboutContentData: any[] = [];
+
+try {
+  aboutContentData = await db.select().from(aboutContent).orderBy(asc(aboutContent.order));
+  aboutContentData.forEach((item: any) => {
+    if (!aboutData[item.section]) {
+      aboutData[item.section] = {};
+    }
+    if (item.key) {
+      aboutData[item.section][item.key] = item.value || item.imageUrl || '';
+    }
+  });
+} catch (error) {
+  console.error('Error fetching about data:', error);
+}
+
+let totalParticipants = 0;
+try {
+  const result = await db.select({ count: count() }).from(participants);
+  totalParticipants = Number(result[0]?.count) || 0;
+} catch (error) {
+  console.error('Error fetching participant count:', error);
+}
+
+function getValue(section: string, key: string, defaultValue: string = ''): string {
+  return aboutData[section]?.[key] || defaultValue;
+}
+
+const hasData = Object.keys(aboutData).length > 0;
+
+// ============================================================
+// DATA STATIS
+// ============================================================
+
+// Core Values
+const valuesData = [
+  {
+    icon: 'bi-heart-pulse',
+    title: 'Kesehatan & Gaya Hidup Aktif',
+    description: 'Mendorong masyarakat untuk hidup sehat melalui olahraga lari yang menyenangkan dan terjangkau.'
+  },
+  {
+    icon: 'bi-tree',
+    title: 'Peduli Lingkungan',
+    description: 'Melalui aksi penanaman pohon dan menjaga kelestarian alam di sekitar Bendung Waru Turi.'
+  },
+  {
+    icon: 'bi-people',
+    title: 'Kebersamaan & Inklusivitas',
+    description: 'Membuka kesempatan bagi semua kalangan dari pelari pemula hingga profesional untuk bersatu.'
+  },
+  {
+    icon: 'bi-trophy',
+    title: 'Sportivitas & Prestasi',
+    description: 'Menghargai usaha terbaik setiap peserta dan menjunjung tinggi nilai-nilai sportif.'
+  }
+];
+
+// Timeline
+const timelineData = [
+  {
+    year: '2024',
+    title: 'Awal Mula',
+    description: 'Gagasan Waru Turi Fun Run dimulai sebagai upaya untuk mempromosikan gaya hidup sehat dan keindahan alam Bendung Waru Turi.'
+  },
+  {
+    year: '2025',
+    title: 'Event Perdana',
+    description: 'Menyelenggarakan event fun run pertama dengan peserta dari berbagai kalangan dan mendapat sambutan yang sangat positif.'
+  },
+  {
+    year: '2026',
+    title: 'Tahun 2026',
+    description: 'Mengembangkan event dengan kategori baru, rute yang lebih menantang, dan partisipasi yang lebih luas dari komunitas.'
+  }
+];
+
+// Statistik
+const statsData = [
+  { icon: 'bi-people', label: 'Total Peserta', value: totalParticipants + '+', color: 'text-blue-600' },
+  { icon: 'bi-trophy', label: 'Event Terlaksana', value: '3', color: 'text-yellow-600' },
+  { icon: 'bi-clock-history', label: 'Total Jam Lari', value: '72+', color: 'text-green-600' },
+  { icon: 'bi-tree', label: 'Pohon Ditanam', value: '500+', color: 'text-emerald-600' }
+];
+
+// Testimoni
+const testimonials = [
+  {
+    name: 'Budi Santoso',
+    role: 'Peserta 5K',
+    quote: 'Pengalaman lari yang luar biasa! Rute yang indah dan panitia yang sangat profesional. Pasti ikut lagi tahun depan!',
+    avatar: 'B'
+  },
+  {
+    name: 'Siti Rahayu',
+    role: 'Peserta 10K',
+    quote: 'Lomba lari yang sangat terorganisir dengan baik. Fasilitas lengkap dan hadiah menarik. Rekomendasi banget!',
+    avatar: 'S'
+  },
+  {
+    name: 'Andi Wijaya',
+    role: 'Komunitas Lari',
+    quote: 'Event yang sangat menginspirasi. Tidak hanya lari, tapi juga peduli lingkungan. Bravo Waru Turi Fun Run!',
+    avatar: 'A'
+  }
+];
+---
+
+<BaseLayout title="Tentang Kami - Waru Turi Fun Run 2027">
+  <Navbar />
+
+  {!hasData ? (
+    <section class="py-20 bg-white">
+      <div class="container mx-auto px-4 text-center">
+        <div class="max-w-2xl mx-auto">
+          <div class="w-24 h-24 mx-auto bg-gray-100 rounded-full flex items-center justify-center text-4xl text-gray-300">
+            <i class="bi bi-inbox"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-gray-700 mt-4">Belum Ada Konten</h2>
+          <p class="text-gray-500 mt-2">Admin belum mengisi konten halaman About.</p>
+          <a href="/" class="inline-block mt-6 px-6 py-3 bg-[#0033A0] text-white rounded-lg hover:bg-[#002A86] transition">
+            <i class="bi bi-house me-2"></i> Kembali ke Beranda
+          </a>
+        </div>
+      </div>
+    </section>
+  ) : (
+    <>
+      <!-- ============================================================ -->
+      <!-- 1. HERO SECTION -->
+      <!-- ============================================================ -->
+      <section class="relative min-h-[70vh] flex items-center justify-center bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white overflow-hidden">
+        <div class="absolute inset-0 opacity-20">
+          <div class="absolute top-[-50%] right-[-20%] w-[600px] h-[600px] bg-blue-400/20 rounded-full blur-3xl"></div>
+          <div class="absolute bottom-[-40%] left-[-10%] w-[400px] h-[400px] bg-indigo-400/20 rounded-full blur-3xl"></div>
+        </div>
+        <div class="container relative z-10 px-4 text-center">
+          <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-6 border border-white/20">
+            <i class="bi bi-info-circle"></i> Tentang Kami
+          </div>
+          <h1 class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight">
+            {getValue('hero', 'title', 'Waru Turi Fun Run')}
+          </h1>
+          <p class="text-base md:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
+            {getValue('hero', 'description', 'Event lomba lari yang memadukan olahraga, hiburan, dan kepedulian lingkungan.')}
+          </p>
+          <div class="flex flex-wrap justify-center gap-4 mt-8">
+            <a href={getValue('hero', 'cta_link', '/daftar')} class="inline-flex items-center gap-2 bg-[#FF6B00] hover:bg-[#E86000] text-white font-bold px-8 py-4 rounded-full transition-all hover:-translate-y-1 shadow-lg text-lg">
+              <i class="bi bi-ticket-perforated"></i>
+              {getValue('hero', 'cta_text', 'Daftar Sekarang')}
+            </a>
+            <a href="#about" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white font-semibold px-8 py-4 rounded-full transition-all backdrop-blur-sm border border-white/20">
+              <i class="bi bi-chevron-down"></i> Pelajari Lebih Lanjut
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- 2. STATISTIK -->
+      <!-- ============================================================ -->
+      <section class="py-12 bg-[#0033A0] text-white">
+        <div class="container px-4 mx-auto">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            {statsData.map((stat, i) => (
+              <div key={i} class="text-center">
+                <div class="text-3xl md:text-4xl mb-1"><i class={stat.icon}></i></div>
+                <p class="text-2xl md:text-3xl font-extrabold">{stat.value}</p>
+                <p class="text-xs text-white/70 mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- 3. ABOUT CONTENT -->
+      <!-- ============================================================ -->
+      {getValue('about', 'title') && (
+        <section id="about" class="py-20 bg-white">
+          <div class="container px-4 mx-auto max-w-6xl">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <span class="text-[#0033A0] font-semibold text-sm uppercase tracking-wider">Tentang Event</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mt-2 mb-4">
+                  {getValue('about', 'title', 'Lebih dari Sekadar Lomba Lari')}
+                </h2>
+                <div class="text-gray-600 leading-relaxed space-y-4">
+                  {getValue('about', 'description', '').split('\n').filter(p => p.trim()).map((p, i) => (
+                    <p key={i}>{p}</p>
+                  ))}
+                </div>
+                <div class="flex flex-wrap gap-4 mt-6">
+                  <a href={getValue('hero', 'cta_link', '/daftar')} class="bg-[#0033A0] hover:bg-[#002A86] text-white font-semibold px-6 py-3 rounded-full transition hover:-translate-y-0.5 shadow-lg">
+                    <i class="bi bi-ticket-perforated mr-2"></i>
+                    {getValue('hero', 'cta_text', 'Daftar Sekarang')}
+                  </a>
+                  <a href="/rute" class="border-2 border-[#0033A0] text-[#0033A0] hover:bg-[#0033A0] hover:text-white font-semibold px-6 py-3 rounded-full transition">
+                    <i class="bi bi-map mr-2"></i> Lihat Rute
+                  </a>
+                </div>
+              </div>
+              <div class="relative">
+                <img 
+                  src={getValue('hero', 'image', 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgfZOME1jxvXjrMmS0NZZnJsTWtEX0Oe5mTBk4JUSvu91HJa8ae0x97XxDdg-Idlgxi1dY1yAh93CYZIl_Dc7q-pvO3VJiFtJjXskMGOouAg1Iy5lzd0KNb8yFDsT9g_RA9rVNenf4inQfTQ91PuDt5KKtqjXpabN5ecOlugbvRA-CmvbfCECre2Ql8z3ZU/s1536/Harga%20Reguler%20Waru%20Turi%20Fun%20Run%202026%20Landscape.jpeg.jpg')} 
+                  alt="Waru Turi Fun Run" 
+                  class="rounded-2xl shadow-2xl w-full"
+                />
+                <div class="absolute -bottom-4 -right-4 bg-white rounded-xl shadow-lg p-4 flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-full bg-[#0033A0] text-white flex items-center justify-center text-xl">
+                    <i class="bi bi-people"></i>
+                  </div>
+                  <div>
+                    <p class="text-2xl font-extrabold text-gray-900">{totalParticipants}+</p>
+                    <p class="text-xs text-gray-500">Peserta</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- ============================================================ -->
+      <!-- 4. EVENT INFO -->
+      <!-- ============================================================ -->
+      {getValue('event_info', 'date') && (
+        <section class="py-12 bg-gray-50">
+          <div class="container px-4 mx-auto">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+              <div class="bg-white p-4 rounded-xl shadow-sm text-center hover:shadow-md transition">
+                <div class="text-2xl text-[#0033A0] mb-1"><i class="bi bi-calendar-event"></i></div>
+                <p class="text-xs text-gray-500">Tanggal</p>
+                <p class="font-bold text-sm">{getValue('event_info', 'date', '')}</p>
+              </div>
+              <div class="bg-white p-4 rounded-xl shadow-sm text-center hover:shadow-md transition">
+                <div class="text-2xl text-[#0033A0] mb-1"><i class="bi bi-clock"></i></div>
+                <p class="text-xs text-gray-500">Mulai</p>
+                <p class="font-bold text-sm">{getValue('event_info', 'start', '')}</p>
+              </div>
+              <div class="bg-white p-4 rounded-xl shadow-sm text-center hover:shadow-md transition">
+                <div class="text-2xl text-[#0033A0] mb-1"><i class="bi bi-clock"></i></div>
+                <p class="text-xs text-gray-500">Selesai</p>
+                <p class="font-bold text-sm">{getValue('event_info', 'end', '')}</p>
+              </div>
+              <div class="bg-white p-4 rounded-xl shadow-sm text-center hover:shadow-md transition">
+                <div class="text-2xl text-[#0033A0] mb-1"><i class="bi bi-geo-alt"></i></div>
+                <p class="text-xs text-gray-500">Lokasi</p>
+                <p class="font-bold text-sm">{getValue('event_info', 'location', '')}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- ============================================================ -->
+      <!-- 5. VISI & MISI -->
+      <!-- ============================================================ -->
+      {(getValue('visi_misi', 'vision') || getValue('visi_misi', 'mission')) && (
+        <section class="py-16 bg-white">
+          <div class="container px-4 mx-auto">
+            <div class="text-center mb-12">
+              <span class="text-[#0033A0] font-semibold text-sm uppercase tracking-wider">Tujuan Kami</span>
+              <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Visi & Misi</h2>
+              <p class="text-gray-500 mt-2 max-w-2xl mx-auto">Visi dan misi yang menjadi fondasi Waru Turi Fun Run</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              <Card padding="lg" class="rounded-2xl text-center shadow-lg hover:shadow-xl transition hover:-translate-y-1">
+                <div class="w-16 h-16 rounded-full bg-[#0033A0]/10 text-[#0033A0] flex items-center justify-center text-3xl mx-auto mb-4">
+                  <i class="bi bi-eye"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Visi</h3>
+                <p class="text-gray-600 leading-relaxed">{getValue('visi_misi', 'vision', '')}</p>
+              </Card>
+              <Card padding="lg" class="rounded-2xl text-center shadow-lg hover:shadow-xl transition hover:-translate-y-1">
+                <div class="w-16 h-16 rounded-full bg-[#00A3E0]/10 text-[#00A3E0] flex items-center justify-center text-3xl mx-auto mb-4">
+                  <i class="bi bi-bullseye"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Misi</h3>
+                <ul class="text-left text-gray-600 space-y-2 max-w-xs mx-auto">
+                  {getValue('visi_misi', 'mission', '').split('\n').filter(m => m.trim()).map((m, i) => (
+                    <li key={i} class="flex items-start gap-2">
+                      <i class="bi bi-check-circle-fill text-[#20B082] text-sm mt-1 flex-shrink-0"></i>
+                      <span>{m.replace(/^\d+\.\s*/, '')}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- ============================================================ -->
+      <!-- 6. CORE VALUES -->
+      <!-- ============================================================ -->
+      <section class="py-16 bg-gray-50">
+        <div class="container px-4 mx-auto">
+          <div class="text-center mb-12">
+            <span class="text-[#0033A0] font-semibold text-sm uppercase tracking-wider">Nilai-Nilai</span>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Core Values</h2>
+            <p class="text-gray-500 mt-2 max-w-2xl mx-auto">Nilai-nilai yang menjadi fondasi dalam menyelenggarakan Waru Turi Fun Run</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {valuesData.map((value, i) => (
+              <Card key={i} padding="lg" class="rounded-2xl text-center shadow hover:shadow-lg transition hover:-translate-y-1 border border-gray-100">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#0033A0] to-[#00A3E0] text-white flex items-center justify-center text-2xl mx-auto mb-4">
+                  <i class={value.icon}></i>
+                </div>
+                <h4 class="font-bold text-gray-900 mb-2">{value.title}</h4>
+                <p class="text-sm text-gray-500 leading-relaxed">{value.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- 7. BENEFITS -->
+      <!-- ============================================================ -->
+      {[1,2,3,4,5].some(i => getValue('benefits', `benefit_${i}`, '')) && (
+<section class="py-16 bg-white">
+  <div class="container px-4 mx-auto">
+    <div class="text-center mb-12">
+      <span class="text-[#0033A0] font-semibold text-sm uppercase tracking-wider">Fasilitas</span>
+      <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Benefit <span class="text-[#0033A0]">Peserta</span></h2>
+      <p class="text-gray-500 mt-2 max-w-2xl mx-auto">10 Fasilitas menarik yang akan Anda dapatkan sebagai peserta</p>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-5xl mx-auto">
+      {[1,2,3,4,5,6,7,8,9,10].map(i => {
+        const benefit = getValue('benefits', `benefit_${i}`, '');
+        if (!benefit) return null;
+        const icons = [
+          'bi-trophy', 'bi-file-earmark-text', 'bi-ticket', 
+          'bi-clock', 'bi-gift', 'bi-gift-fill', 'bi-camera', 
+          'bi-heart-pulse', 'bi-cup-straw', 'bi-p-circle'
+        ];
+        const colors = [
+          'text-yellow-500', 'text-green-500', 'text-purple-500',
+          'text-red-500', 'text-pink-500', 'text-orange-500', 'text-indigo-500',
+          'text-rose-500', 'text-teal-500', 'text-blue-500'
+        ];
+        const bgColors = [
+          'bg-yellow-50', 'bg-green-50', 'bg-purple-50',
+          'bg-red-50', 'bg-pink-50', 'bg-orange-50', 'bg-indigo-50',
+          'bg-rose-50', 'bg-teal-50', 'bg-blue-50'
+        ];
+        return (
+          <div key={i} class={`${bgColors[i-1]} p-4 rounded-xl text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group border border-transparent hover:border-[#0033A0]`}>
+            <div class={`text-3xl mb-2 group-hover:scale-110 transition-transform duration-300 ${colors[i-1]}`}>
+              <i class={icons[i-1]}></i>
+            </div>
+            <p class="text-xs font-medium text-gray-700 group-hover:text-[#0033A0] transition-colors">{benefit}</p>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
+      )}
+
+      <!-- ============================================================ -->
+      <!-- 8. HARGA (3 Kategori) -->
+      <!-- ============================================================ -->
+      {(getValue('prices', 'price_5k') || getValue('prices', 'price_pelajar') || getValue('prices', 'price_10k')) && (
+        <section class="py-16 bg-gray-50">
+          <div class="container px-4 mx-auto">
+            <div class="text-center mb-12">
+              <span class="text-[#0033A0] font-semibold text-sm uppercase tracking-wider">Harga</span>
+              <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Kategori & <span class="text-[#0033A0]">Harga</span></h2>
+              <p class="text-sm text-gray-500 mt-2">{getValue('prices', 'registration_period', '')}</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <!-- 5K -->
+              <div class="bg-white border-2 border-[#0033A0] rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition hover:-translate-y-1">
+                <div class="w-16 h-16 bg-[#0033A0]/10 rounded-full flex items-center justify-center text-2xl text-[#0033A0] mx-auto mb-3">
+                  <i class="bi bi-flag"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">{getValue('prices', 'category_5k', '5K Fun Run')}</h3>
+                <p class="text-3xl font-extrabold text-[#0033A0] mt-2">{getValue('prices', 'price_5k', 'Rp 150.000')}</p>
+                <a href="/daftar" class="mt-4 inline-block px-6 py-2 bg-[#0033A0] text-white rounded-full hover:bg-[#002A86] transition text-sm">Daftar</a>
+              </div>
+
+              <!-- Pelajar 5K -->
+              <div class="bg-white border-2 border-[#20B082] rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition hover:-translate-y-1 relative overflow-hidden">
+                <span class="absolute top-0 right-0 bg-[#20B082] text-white text-xs px-3 py-1 rounded-bl-lg font-bold">HEMAT</span>
+                <div class="w-16 h-16 bg-[#20B082]/10 rounded-full flex items-center justify-center text-2xl text-[#20B082] mx-auto mb-3">
+                  <i class="bi bi-mortarboard"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">{getValue('prices', 'category_pelajar', 'Pelajar 5K')}</h3>
+                <p class="text-3xl font-extrabold text-[#20B082] mt-2">{getValue('prices', 'price_pelajar', 'Rp 99.000')}</p>
+                <a href="/daftar" class="mt-4 inline-block px-6 py-2 bg-[#20B082] text-white rounded-full hover:bg-[#00825E] transition text-sm">Daftar</a>
+              </div>
+
+              <!-- 10K -->
+              <div class="bg-white border-2 border-[#FF6B00] rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition hover:-translate-y-1 relative overflow-hidden">
+                <span class="absolute top-0 right-0 bg-[#FF6B00] text-white text-xs px-3 py-1 rounded-bl-lg font-bold">POPULER</span>
+                <div class="w-16 h-16 bg-[#FF6B00]/10 rounded-full flex items-center justify-center text-2xl text-[#FF6B00] mx-auto mb-3">
+                  <i class="bi bi-flag-fill"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900">{getValue('prices', 'category_10k', '10K Fun Run')}</h3>
+                <p class="text-3xl font-extrabold text-[#FF6B00] mt-2">{getValue('prices', 'price_10k', 'Rp 200.000')}</p>
+                <a href="/daftar" class="mt-4 inline-block px-6 py-2 bg-[#FF6B00] text-white rounded-full hover:bg-[#E86000] transition text-sm">Daftar</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <!-- ============================================================ -->
+      <!-- 9. TIMELINE -->
+      <!-- ============================================================ -->
+      <section class="py-16 bg-white">
+        <div class="container px-4 mx-auto">
+          <div class="text-center mb-12">
+            <span class="text-[#0033A0] font-semibold text-sm uppercase tracking-wider">Perjalanan</span>
+            <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Timeline <span class="text-[#0033A0]">Event</span></h2>
+            <p class="text-gray-500 mt-2 max-w-2xl mx-auto">Perjalanan Waru Turi Fun Run dari awal hingga sekarang</p>
+          </div>
+          <div class="max-w-4xl mx-auto">
+            <div class="relative">
+              <div class="absolute left-8 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-[#0033A0] via-[#00A3E0] to-[#0033A0] transform -translate-x-1/2"></div>
+              {timelineData.map((item, i) => {
+                const isEven = i % 2 === 0;
+                return (
+                  <div key={i} class={`relative flex flex-col md:flex-row items-start mb-12 last:mb-0 ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
+                    <div class="absolute left-8 md:left-1/2 transform -translate-x-1/2 w-5 h-5 rounded-full bg-[#0033A0] border-4 border-white shadow-lg z-10"></div>
+                    <div class={`ml-12 md:ml-0 ${isEven ? 'md:pr-16 md:text-right md:w-1/2' : 'md:pl-16 md:w-1/2'}`}>
+                      <div class="bg-gray-50 rounded-2xl p-6 shadow hover:shadow-lg transition">
+                        <span class="text-[#0033A0] font-extrabold text-2xl">{item.year}</span>
+                        <h3 class="text-lg font-bold text-gray-900 mt-1">{item.title}</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed mt-2">{item.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- 10. ORGANIZER -->
+      <!-- ============================================================ -->
+      {[1,2,3].some(i => getValue('organizer', `organizer${i}`, '')) && (
+        <section class="py-16 bg-gray-50">
+          <div class="container px-4 mx-auto">
+            <div class="text-center mb-12">
+              <span class="text-[#0033A0] font-semibold text-sm uppercase tracking-wider">Penyelenggara</span>
+              <h2 class="text-3xl font-extrabold text-gray-900 mt-2">Di Balik <span class="text-[#0033A0]">Event</span></h2>
+              <p class="text-gray-500 mt-2 max-w-2xl mx-auto">Pihak-pihak yang berperan dalam menyukseskan Waru Turi Fun Run</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {[1,2,3].map(i => {
+                const name = getValue('organizer', `organizer${i}`, '');
+                if (!name) return null;
+                const colors = ['from-[#0033A0] to-[#00A3E0]', 'from-[#FF6B00] to-[#E86000]', 'from-[#20B082] to-[#00825E]'];
+                const icons = ['bi-building', 'bi-newspaper', 'bi-people-fill'];
+                return (
+                  <Card key={i} padding="lg" class="rounded-2xl text-center shadow hover:shadow-xl transition hover:-translate-y-1">
+                    <div class={`w-20 h-20 rounded-full bg-gradient-to-br ${colors[i-1]} flex items-center justify-center text-white text-3xl mx-auto mb-4`}>
+                      <i class={icons[i-1]}></i>
+                    </div>
+                    <h4 class="font-bold text-gray-900">{name}</h4>
+                  </Card>
+                );
+              })}
+            </div>
+            {(getValue('organizer', 'contact_email') || getValue('organizer', 'whatsapp_1') || getValue('organizer', 'whatsapp_2')) && (
+              <div class="text-center mt-8">
+                {getValue('organizer', 'contact_email') && (
+                  <p class="text-sm text-gray-500"><i class="bi bi-envelope mr-2"></i>{getValue('organizer', 'contact_email', '')}</p>
+                )}
+                <div class="flex justify-center gap-4 mt-2 flex-wrap">
+                  {getValue('organizer', 'whatsapp_1') && (
+                    <span class="text-sm text-gray-500"><i class="bi bi-whatsapp text-green-500 mr-1"></i>{getValue('organizer', 'whatsapp_1', '')}</span>
+                  )}
+                  {getValue('organizer', 'whatsapp_2') && (
+                    <span class="text-sm text-gray-500"><i class="bi bi-whatsapp text-green-500 mr-1"></i>{getValue('organizer', 'whatsapp_2', '')}</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <!-- ============================================================ -->
+      <!-- 11. CTA SECTION -->
+      <!-- ============================================================ -->
+      <section class="py-16 bg-gradient-to-br from-[#002266] to-[#0033A0] text-white">
+        <div class="container px-4 mx-auto text-center">
+          <h2 class="text-3xl md:text-4xl font-extrabold mb-4">
+            Siap Menjadi Bagian dari <span class="text-[#FF6B00]">Waru Turi Fun Run</span>?
+          </h2>
+          <p class="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
+            Daftar sekarang dan rasakan pengalaman lari yang tak terlupakan di Bendung Waru Turi!
+          </p>
+          <div class="flex flex-wrap justify-center gap-4">
+            <a href="/daftar" class="inline-flex items-center gap-2 bg-[#FF6B00] hover:bg-[#E86000] text-white font-bold px-8 py-4 rounded-full transition hover:-translate-y-1 shadow-lg">
+              <i class="bi bi-ticket-perforated"></i> Daftar Sekarang
+            </a>
+            <a href="/kontak" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white font-semibold px-8 py-4 rounded-full transition backdrop-blur-sm border border-white/20">
+              <i class="bi bi-envelope"></i> Hubungi Kami
+            </a>
+          </div>
+        </div>
+      </section>
+    </>
+  )}
+
+  <Footer />
+</BaseLayout>

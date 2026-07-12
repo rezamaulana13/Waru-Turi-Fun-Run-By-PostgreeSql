@@ -1,0 +1,101 @@
+---
+// src/components/ui/Loading.astro
+export interface Props {
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  variant?: 'primary' | 'secondary' | 'white' | 'dark';
+  className?: string;
+  text?: string;
+  fullPage?: boolean;
+  overlay?: boolean;
+}
+
+const { 
+  size = 'md', 
+  variant = 'primary',
+  className = '',
+  text,
+  fullPage = false,
+  overlay = false,
+} = Astro.props;
+
+// ===== SIZE CLASSES =====
+const sizeClasses: Record<string, string> = {
+  xs: 'w-4 h-4 border-2',
+  sm: 'w-6 h-6 border-2',
+  md: 'w-8 h-8 border-3',
+  lg: 'w-12 h-12 border-4',
+  xl: 'w-16 h-16 border-4',
+};
+
+// ===== COLOR CLASSES =====
+const colorClasses: Record<string, string> = {
+  primary: 'border-[#0033A0] border-t-transparent',
+  secondary: 'border-[#00A3E0] border-t-transparent',
+  white: 'border-white border-t-transparent',
+  dark: 'border-gray-800 border-t-transparent',
+};
+
+// ===== TEXT SIZE =====
+const textSizeClasses: Record<string, string> = {
+  xs: 'text-xs',
+  sm: 'text-sm',
+  md: 'text-base',
+  lg: 'text-lg',
+  xl: 'text-xl',
+};
+
+// ===== CONTAINER CLASSES =====
+const containerClasses = `
+  flex flex-col items-center justify-center gap-3
+  ${fullPage ? 'min-h-[60vh]' : ''}
+  ${overlay ? 'fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50' : ''}
+  ${className}
+`;
+---
+
+<div class={containerClasses} role="status" aria-label="Loading">
+  <div class={`
+    ${sizeClasses[size]}
+    ${colorClasses[variant]}
+    rounded-full animate-spin
+    ${text ? 'mb-1' : ''}
+  `}></div>
+  
+  {text && (
+    <p class={`text-gray-500 dark:text-gray-400 ${textSizeClasses[size]} font-medium animate-pulse`}>
+      {text}
+    </p>
+  )}
+</div>
+
+<style>
+  /* ===== OPTIMASI ===== */
+  .animate-spin {
+    animation: spin 0.7s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ===== REDUCE MOTION ===== */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-spin {
+      animation: none;
+    }
+    .animate-pulse {
+      animation: none;
+    }
+  }
+</style>

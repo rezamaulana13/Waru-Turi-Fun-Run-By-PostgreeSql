@@ -1,0 +1,630 @@
+---
+// src/pages/admin/gallery/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Galeri - Admin Panel">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <i class="bi bi-images text-blue-600 dark:text-blue-400 mr-2"></i>
+            Manajemen Galeri
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Kelola foto dan video dokumentasi event Waru Turi Run
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="bi bi-grid-3x3-gap"></i>
+            Grid
+          </button>
+          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="bi bi-list"></i>
+            List
+          </button>
+          <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2" onclick="openModal()">
+            <i class="bi bi-plus-lg"></i>
+            Tambah Media
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1 relative">
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          <input 
+            type="text" 
+            placeholder="Cari foto atau video..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            id="searchInput"
+          />
+        </div>
+        <div class="flex gap-3">
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Semua Kategori</option>
+            <option value="race">Race</option>
+            <option value="ceremony">Upacara</option>
+            <option value="participants">Peserta</option>
+            <option value="sponsors">Sponsor</option>
+            <option value="fun">Fun Moment</option>
+          </select>
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="all">Semua Media</option>
+            <option value="photo">Foto</option>
+            <option value="video">Video</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Media</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">1,847</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-images text-2xl text-blue-600 dark:text-blue-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-green-600 dark:text-green-400">↑ 8% dari bulan lalu</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Foto</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">1,523</p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-camera text-2xl text-green-600 dark:text-green-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">82% dari total</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Video</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">324</p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-play-circle text-2xl text-purple-600 dark:text-purple-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">18% dari total</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Album</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">12</p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-folder text-2xl text-yellow-600 dark:text-yellow-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">2 album baru</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="galleryGrid">
+      <!-- Gallery Item 1 -->
+      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="aspect-square overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race1/400/400" 
+            alt="Race photo 1" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <div class="flex items-center justify-between text-white">
+              <div>
+                <p class="text-sm font-medium">Start Race 2027</p>
+                <p class="text-xs text-gray-300">Race • 10 Jul 2026</p>
+              </div>
+              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
+            </div>
+          </div>
+        </div>
+        <div class="absolute top-2 left-2">
+          <span class="px-2 py-0.5 bg-black/60 text-white text-[10px] font-medium rounded-full">Featured</span>
+        </div>
+      </div>
+
+      <!-- Gallery Item 2 (Video) -->
+      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="aspect-square overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race2/400/400" 
+            alt="Race video 1" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition shadow-lg">
+              <i class="bi bi-play-fill text-3xl text-blue-600 ml-1"></i>
+            </div>
+          </div>
+          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <div class="flex items-center justify-between text-white">
+              <div>
+                <p class="text-sm font-medium">Opening Ceremony</p>
+                <p class="text-xs text-gray-300">Ceremony • 10 Jul 2026</p>
+              </div>
+              <span class="px-2 py-0.5 bg-purple-500/80 text-xs rounded-full">Video</span>
+            </div>
+          </div>
+        </div>
+        <div class="absolute top-2 left-2">
+          <span class="px-2 py-0.5 bg-red-500/80 text-white text-[10px] font-medium rounded-full">HD</span>
+        </div>
+      </div>
+
+      <!-- Gallery Item 3 -->
+      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="aspect-square overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race3/400/400" 
+            alt="Race photo 2" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <div class="flex items-center justify-between text-white">
+              <div>
+                <p class="text-sm font-medium">Participants Running</p>
+                <p class="text-xs text-gray-300">Participants • 10 Jul 2026</p>
+              </div>
+              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gallery Item 4 -->
+      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="aspect-square overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race4/400/400" 
+            alt="Race photo 3" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <div class="flex items-center justify-between text-white">
+              <div>
+                <p class="text-sm font-medium">Sponsor Booth</p>
+                <p class="text-xs text-gray-300">Sponsors • 10 Jul 2026</p>
+              </div>
+              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gallery Item 5 -->
+      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="aspect-square overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race5/400/400" 
+            alt="Race photo 4" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <div class="flex items-center justify-between text-white">
+              <div>
+                <p class="text-sm font-medium">Finish Line</p>
+                <p class="text-xs text-gray-300">Race • 10 Jul 2026</p>
+              </div>
+              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gallery Item 6 (Video) -->
+      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="aspect-square overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race6/400/400" 
+            alt="Race video 2" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition shadow-lg">
+              <i class="bi bi-play-fill text-3xl text-blue-600 ml-1"></i>
+            </div>
+          </div>
+          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <div class="flex items-center justify-between text-white">
+              <div>
+                <p class="text-sm font-medium">Medal Ceremony</p>
+                <p class="text-xs text-gray-300">Ceremony • 10 Jul 2026</p>
+              </div>
+              <span class="px-2 py-0.5 bg-purple-500/80 text-xs rounded-full">Video</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gallery Item 7 -->
+      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="aspect-square overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race7/400/400" 
+            alt="Race photo 5" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <div class="flex items-center justify-between text-white">
+              <div>
+                <p class="text-sm font-medium">Fun Moment</p>
+                <p class="text-xs text-gray-300">Fun • 10 Jul 2026</p>
+              </div>
+              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gallery Item 8 -->
+      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+          <button onclick="openModal()" class="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition">
+            <i class="bi bi-plus-circle text-4xl"></i>
+            <span class="text-sm font-medium">Tambah Media</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load More -->
+    <div class="mt-8 text-center">
+      <button class="px-8 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium">
+        Load More
+        <i class="bi bi-arrow-down ml-2"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Media -->
+  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0 invisible transition-all duration-300">
+    <div class="absolute inset-0 bg-black/50" onclick="closeModal()"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform scale-95 transition-all duration-300">
+      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <i class="bi bi-cloud-upload text-blue-600 dark:text-blue-400 mr-2"></i>
+          Tambah Media Baru
+        </h3>
+        <button onclick="closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <!-- Upload Area -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Upload Media <span class="text-red-500">*</span>
+          </label>
+          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer" id="uploadArea">
+            <input type="file" accept="image/*,video/*" multiple class="hidden" id="fileInput" />
+            <i class="bi bi-cloud-upload text-4xl text-gray-400 dark:text-gray-500 mb-3 block"></i>
+            <p class="text-gray-600 dark:text-gray-300 font-medium">Klik atau drag & drop untuk upload</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, GIF, MP4 (Max 10MB)</p>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Judul Media <span class="text-red-500">*</span>
+          </label>
+          <input 
+            type="text" 
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            placeholder="Masukkan judul media"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Deskripsi
+          </label>
+          <textarea 
+            rows="3" 
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+            placeholder="Masukkan deskripsi media..."
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Kategori <span class="text-red-500">*</span>
+            </label>
+            <select class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              <option value="">Pilih Kategori</option>
+              <option value="race">Race</option>
+              <option value="ceremony">Upacara</option>
+              <option value="participants">Peserta</option>
+              <option value="sponsors">Sponsor</option>
+              <option value="fun">Fun Moment</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tipe Media <span class="text-red-500">*</span>
+            </label>
+            <select class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              <option value="photo">Foto</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Event <span class="text-red-500">*</span>
+          </label>
+          <select class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Pilih Event</option>
+            <option value="waru-turi-2027">Waru Turi Run 2027</option>
+            <option value="waru-turi-2026">Waru Turi Run 2026</option>
+            <option value="waru-turi-2025">Waru Turi Run 2025</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Tanggal Upload
+          </label>
+          <input 
+            type="date" 
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            value="2026-07-10"
+          />
+        </div>
+
+        <div>
+          <label class="flex items-center gap-3">
+            <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" />
+            <span class="text-sm text-gray-700 dark:text-gray-300">Jadikan sebagai media featured</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-white dark:bg-gray-800 px-6 py-4 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end gap-3">
+        <button onclick="closeModal()" class="px-6 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          Batal
+        </button>
+        <button onclick="saveMedia()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+          <i class="bi bi-check-lg"></i>
+          Upload
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+    <i class="bi bi-check-circle-fill text-green-400"></i>
+    <span id="toast-message">Media berhasil diupload!</span>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <script>
+    // Modal functions
+    const modal = document.getElementById('modal');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    function openModal() {
+      modal.classList.remove('opacity-0', 'invisible');
+      modal.querySelector('.relative').classList.remove('scale-95');
+      modal.querySelector('.relative').classList.add('scale-100');
+      document.body.style.overflow = 'hidden';
+    }
+
+    window.openModal = openModal;
+
+    function closeModal() {
+      modal.classList.add('opacity-0', 'invisible');
+      modal.querySelector('.relative').classList.remove('scale-100');
+      modal.querySelector('.relative').classList.add('scale-95');
+      document.body.style.overflow = '';
+    }
+
+    window.closeModal = closeModal;
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Upload area
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+
+    uploadArea?.addEventListener('click', () => {
+      fileInput?.click();
+    });
+
+    uploadArea?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        showToast(`${files.length} file berhasil diupload!`);
+      }
+    });
+
+    fileInput?.addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files.length > 0) {
+        showToast(`${files.length} file berhasil diupload!`);
+      }
+    });
+
+    // Save media
+    function saveMedia() {
+      closeModal();
+      showToast('Media berhasil diupload!');
+    }
+
+    window.saveMedia = saveMedia;
+
+    // Delete media
+    function deleteMedia(btn) {
+      if (confirm('Yakin ingin menghapus media ini?')) {
+        const galleryItem = btn.closest('.group');
+        if (galleryItem) {
+          galleryItem.style.transform = 'scale(0.8)';
+          galleryItem.style.opacity = '0';
+          setTimeout(() => {
+            galleryItem.remove();
+            showToast('Media berhasil dihapus!');
+          }, 300);
+        }
+      }
+    }
+
+    window.deleteMedia = deleteMedia;
+
+    // Toast notification
+    function showToast(message) {
+      toastMessage.textContent = message;
+      toast.classList.remove('translate-y-full', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      
+      setTimeout(hideToast, 3000);
+    }
+
+    window.showToast = showToast;
+
+    function hideToast() {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-full', 'opacity-0');
+    }
+
+    window.hideToast = hideToast;
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    searchInput?.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const items = document.querySelectorAll('#galleryGrid .group');
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(query) && !item.querySelector('.bg-gray-100')) {
+          item.style.display = '';
+        } else if (!item.querySelector('.bg-gray-100')) {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    // Grid/List toggle
+    document.querySelectorAll('.bg-gray-100:not(.dark\\:bg-gray-700) button').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const grid = document.getElementById('galleryGrid');
+        const icon = this.querySelector('i');
+        
+        if (icon.classList.contains('bi-grid-3x3-gap')) {
+          grid.classList.remove('grid-cols-1', 'md:grid-cols-2');
+          grid.classList.add('grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4');
+        } else {
+          grid.classList.remove('grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4');
+          grid.classList.add('grid-cols-1', 'md:grid-cols-2');
+        }
+      });
+    });
+
+    console.log('✅ Galeri Admin Panel loaded');
+  </script>
+</AdminLayout>

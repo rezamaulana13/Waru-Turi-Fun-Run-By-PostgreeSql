@@ -1,0 +1,77 @@
+---
+// src/components/ui/Alert.astro
+export interface Props {
+  type?: 'success' | 'error' | 'warning' | 'info';
+  title?: string;
+  className?: string;
+  dismissible?: boolean;
+  onDismiss?: () => void;
+}
+
+const { 
+  type = 'info',
+  title,
+  className = '',
+  dismissible = false,
+  onDismiss,
+} = Astro.props;
+
+const typeClasses: Record<string, string> = {
+  success: 'bg-emerald-50 border-emerald-500 text-emerald-800',
+  error: 'bg-red-50 border-red-500 text-red-800',
+  warning: 'bg-amber-50 border-amber-500 text-amber-800',
+  info: 'bg-blue-50 border-blue-500 text-blue-800',
+};
+
+const iconMap: Record<string, string> = {
+  success: 'bi-check-circle-fill text-emerald-500',
+  error: 'bi-exclamation-circle-fill text-red-500',
+  warning: 'bi-exclamation-triangle-fill text-amber-500',
+  info: 'bi-info-circle-fill text-blue-500',
+};
+
+const borderColors: Record<string, string> = {
+  success: 'border-emerald-500',
+  error: 'border-red-500',
+  warning: 'border-amber-500',
+  info: 'border-blue-500',
+};
+---
+
+<div 
+  class={`flex items-start gap-3 p-4 rounded-xl border-l-4 ${typeClasses[type]} ${borderColors[type]} ${className} shadow-sm`}
+  role="alert"
+  data-dismissible={dismissible}
+>
+  <i class={`bi ${iconMap[type]} text-xl flex-shrink-0 mt-0.5`}></i>
+  <div class="flex-1 min-w-0">
+    {title && <h4 class="font-semibold text-sm mb-0.5">{title}</h4>}
+    <div class="text-sm leading-relaxed">
+      <slot />
+    </div>
+  </div>
+  {dismissible && (
+    <button 
+      type="button" 
+      class="flex-shrink-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 p-1 rounded-lg transition-colors -mr-1 -mt-1"
+      aria-label="Tutup notifikasi"
+      onclick="this.closest('[role=alert]').remove()"
+    >
+      <i class="bi bi-x-lg text-sm"></i>
+    </button>
+  )}
+</div>
+
+<style>
+  div[role="alert"] {
+    contain: layout paint;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    div[role="alert"] {
+      transition: none !important;
+    }
+  }
+</style>

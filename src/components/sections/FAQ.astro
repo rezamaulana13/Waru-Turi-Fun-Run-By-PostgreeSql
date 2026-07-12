@@ -1,0 +1,167 @@
+---
+// src/components/sections/FAQ.astro
+import { db, aboutContent } from '../../db/index.js';
+import { eq, asc } from 'drizzle-orm';
+
+// ===== AMBIL DATA FAQ DARI DATABASE =====
+let faqData: any[] = [];
+
+try {
+  const result = await db.select().from(aboutContent)
+    .where(eq(aboutContent.section, 'faq'))
+    .orderBy(asc(aboutContent.order));
+  
+  if (result.length > 0) {
+    // Kelompokkan berdasarkan key (faq_1, faq_2, dst)
+    const grouped: Record<string, { question: string; answer: string }> = {};
+    result.forEach((item: any) => {
+      const key = item.key;
+      if (key.startsWith('faq_')) {
+        const num = key.replace('faq_', '');
+        if (!grouped[num]) grouped[num] = { question: '', answer: '' };
+        if (key.includes('question')) grouped[num].question = item.value;
+        if (key.includes('answer')) grouped[num].answer = item.value;
+      }
+    });
+    
+    faqData = Object.values(grouped).filter(f => f.question && f.answer);
+  }
+} catch (error) {
+  console.error('Error fetching FAQ data:', error);
+}
+
+// Fallback FAQ jika database kosong
+const fallbackFAQ = [
+  {
+    question: 'Apa itu Waru Turi Fun Run?',
+    answer: 'Waru Turi Fun Run adalah ajang lomba lari kategori 5K dan 10K dengan lintasan jalan raya, jalan pedesaan, dan area persawahan yang dimulai dari Bendung Gerak Waru Turi.'
+  },
+  {
+    question: 'Siapa saja yang boleh ikut?',
+    answer: 'Acara ini terbuka untuk semua kalangan, baik pemula, pelajar, komunitas lari, keluarga, hingga pelari profesional.'
+  },
+  {
+    question: 'Di mana lokasi start dan finish?',
+    answer: 'Lokasi start dan finish berada di area utama Bendung Gerak Waru Turi.'
+  },
+  {
+    question: 'Bagaimana cara mendaftar?',
+    answer: 'Pendaftaran dilakukan secara online melalui website resmi lomba serta pendaftaran offline di kantor Jawa Pos Radar Kediri.'
+  },
+  {
+    question: 'Fasilitas apa saja yang didapat peserta?',
+    answer: 'Peserta akan mendapatkan jersey run eksklusif, medali finisher, BIB number, snack, e-sertifikat, doorprize, dokumentasi, dan refreshment.'
+  }
+];
+
+const faqItems = faqData.length > 0 ? faqData : fallbackFAQ;
+const faqTitle = 'Pertanyaan Seputar Event';
+const faqSubtitle = 'Temukan jawaban atas pertanyaan umum seputar Waru Turi Run 2026 di sini.';
+---
+
+<section id="faq" class="py-16 sm:py-20 lg:py-24 bg-[#F4F7FC]">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8 sm:mb-12">
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900">{faqTitle}</h2>
+      <p class="text-gray-500 text-base sm:text-lg mt-2">{faqSubtitle}</p>
+    </div>
+    
+    <div class="max-w-3xl mx-auto space-y-3 sm:space-y-4">
+      {faqItems.map((item, index) => (
+        <div key={index} class="faq-item bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+          <button 
+            class="faq-header w-full px-5 sm:px-8 py-4 sm:py-5 flex justify-between items-center text-left font-semibold text-gray-900 hover:text-[#0033A0] transition-colors group"
+            onclick="toggleFaq(this)"
+            aria-expanded="false"
+          >
+            <span class="text-base sm:text-lg">{item.question}</span>
+            <i class="bi bi-plus-lg text-xl sm:text-2xl transition-transform duration-300 flex-shrink-0 ml-4"></i>
+          </button>
+          <div class="faq-body max-h-0 overflow-hidden transition-all duration-300 ease-in-out">
+            <div class="px-5 sm:px-8 pb-5 sm:pb-6 text-gray-500 text-sm sm:text-base leading-relaxed">
+              {item.answer}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  /* ===== OPTIMASI ===== */
+  #faq .faq-item {
+    contain: layout paint;
+  }
+
+  #faq .faq-header {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  #faq .faq-body {
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ===== REDUCE MOTION ===== */
+  @media (prefers-reduced-motion: reduce) {
+    #faq .faq-body {
+      transition: none !important;
+    }
+    #faq .faq-header .bi {
+      transition: none !important;
+    }
+  }
+</style>
+
+<script>
+  // ===== TOGGLE FAQ =====
+  function toggleFaq(button) {
+    const body = button.nextElementSibling;
+    const icon = button.querySelector('.bi');
+    const isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
+    
+    // Tutup semua FAQ lainnya (accordion mode)
+    document.querySelectorAll('.faq-body').forEach(el => {
+      if (el !== body) {
+        el.style.maxHeight = '0';
+        const btn = el.previousElementSibling;
+        const icn = btn?.querySelector('.bi');
+        if (icn) {
+          icn.classList.remove('bi-dash-lg');
+          icn.classList.add('bi-plus-lg');
+        }
+        btn?.setAttribute('aria-expanded', 'false');
+      }
+    });
+    
+    if (isOpen) {
+      body.style.maxHeight = '0';
+      icon.classList.remove('bi-dash-lg');
+      icon.classList.add('bi-plus-lg');
+      button.setAttribute('aria-expanded', 'false');
+    } else {
+      body.style.maxHeight = body.scrollHeight + 'px';
+      icon.classList.remove('bi-plus-lg');
+      icon.classList.add('bi-dash-lg');
+      button.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  // ===== CLOSE FAQ ON ESC =====
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.faq-body').forEach(el => {
+        el.style.maxHeight = '0';
+        const btn = el.previousElementSibling;
+        const icn = btn?.querySelector('.bi');
+        if (icn) {
+          icn.classList.remove('bi-dash-lg');
+          icn.classList.add('bi-plus-lg');
+        }
+        btn?.setAttribute('aria-expanded', 'false');
+      });
+    }
+  });
+</script>

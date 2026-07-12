@@ -1,0 +1,88 @@
+---
+// src/components/ui/Card.astro
+export interface Props {
+  className?: string;
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  border?: boolean;
+  hover?: boolean;
+  dark?: boolean;
+  as?: 'div' | 'article' | 'section' | 'aside';
+}
+
+const { 
+  className = '',
+  padding = 'md',
+  shadow = 'md',
+  rounded = 'lg',
+  border = false,
+  hover = false,
+  dark = false,
+  as: Tag = 'div',
+} = Astro.props;
+
+// ===== PADDING =====
+const paddingClasses: Record<string, string> = {
+  none: 'p-0',
+  sm: 'p-3 sm:p-4',
+  md: 'p-4 sm:p-6',
+  lg: 'p-6 sm:p-8',
+  xl: 'p-8 sm:p-10',
+};
+
+// ===== SHADOW =====
+const shadowClasses: Record<string, string> = {
+  none: '',
+  sm: 'shadow-sm',
+  md: 'shadow-md',
+  lg: 'shadow-lg',
+  xl: 'shadow-xl',
+};
+
+// ===== ROUNDED =====
+const roundedClasses: Record<string, string> = {
+  none: 'rounded-none',
+  sm: 'rounded',
+  md: 'rounded-lg',
+  lg: 'rounded-xl',
+  xl: 'rounded-2xl',
+  full: 'rounded-full',
+};
+
+// ===== BACKGROUND =====
+const bgClass = dark ? 'bg-gray-800 text-white' : 'bg-white';
+
+// ===== BORDER =====
+const borderClass = border ? 'border border-gray-200 dark:border-gray-700' : '';
+
+// ===== HOVER =====
+const hoverClass = hover ? 'hover:shadow-xl hover:-translate-y-1 transition-all duration-300' : '';
+
+// ===== FINAL CLASSES =====
+const combinedClasses = `${bgClass} ${paddingClasses[padding]} ${shadowClasses[shadow]} ${roundedClasses[rounded]} ${borderClass} ${hoverClass} ${className}`;
+---
+
+<Tag class={combinedClasses}>
+  <slot />
+</Tag>
+
+<style>
+  [class*="hover\:shadow-xl"] {
+    contain: layout paint;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [class*="hover\:-translate-y-1"] {
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    .bg-white:not(.dark\:bg-gray-800) {
+      background-color: white;
+    }
+  }
+</style>

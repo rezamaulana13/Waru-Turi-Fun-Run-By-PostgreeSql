@@ -1,0 +1,119 @@
+---
+// src/components/ui/Button.astro
+export interface Props {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'warning';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  className?: string;
+  onClick?: string;
+  target?: '_blank' | '_self';
+  fullWidth?: boolean;
+  icon?: string;
+  iconPosition?: 'left' | 'right';
+  loading?: boolean;
+  ariaLabel?: string;
+}
+
+const { 
+  variant = 'primary', 
+  size = 'md', 
+  href, 
+  type = 'button',
+  disabled = false,
+  className = '',
+  onClick,
+  target = '_self',
+  fullWidth = false,
+  icon,
+  iconPosition = 'left',
+  loading = false,
+  ariaLabel,
+  children 
+} = Astro.props;
+
+// ===== BASE CLASSES =====
+const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95';
+
+// ===== VARIANT CLASSES =====
+const variantClasses: Record<string, string> = {
+  primary: 'bg-[#0033A0] hover:bg-[#002A86] text-white shadow-md hover:shadow-lg focus:ring-[#0033A0]',
+  secondary: 'bg-[#00A3E0] hover:bg-[#0092CC] text-white shadow-md hover:shadow-lg focus:ring-[#00A3E0]',
+  outline: 'bg-transparent border-2 border-[#0033A0] text-[#0033A0] hover:bg-[#0033A0] hover:text-white focus:ring-[#0033A0]',
+  ghost: 'bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-gray-300',
+  danger: 'bg-[#E55649] hover:bg-[#D23A2E] text-white shadow-md hover:shadow-lg focus:ring-[#E55649]',
+  success: 'bg-[#20B082] hover:bg-[#00825E] text-white shadow-md hover:shadow-lg focus:ring-[#20B082]',
+  warning: 'bg-[#FF6B00] hover:bg-[#E86000] text-white shadow-md hover:shadow-lg focus:ring-[#FF6B00]',
+};
+
+// ===== SIZE CLASSES =====
+const sizeClasses: Record<string, string> = {
+  sm: 'text-xs px-3 sm:px-4 py-1.5 sm:py-2 gap-1.5',
+  md: 'text-sm px-4 sm:px-6 py-2 sm:py-2.5 gap-2',
+  lg: 'text-base px-6 sm:px-8 py-2.5 sm:py-3 gap-2.5',
+  xl: 'text-lg px-8 sm:px-10 py-3 sm:py-4 gap-3',
+};
+
+const widthClass = fullWidth ? 'w-full' : '';
+
+const combinedClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`;
+
+// ===== LOADING STATE =====
+const isDisabled = disabled || loading;
+const buttonContent = (
+  <>
+    {loading && (
+      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    )}
+    {icon && iconPosition === 'left' && !loading && <i class={`bi ${icon} text-lg`}></i>}
+    <slot />
+    {icon && iconPosition === 'right' && <i class={`bi ${icon} text-lg`}></i>}
+  </>
+);
+---
+
+{
+  href ? (
+    <a 
+      href={href} 
+      class={combinedClasses} 
+      target={target} 
+      onclick={onClick}
+      aria-label={ariaLabel || undefined}
+    >
+      {buttonContent}
+    </a>
+  ) : (
+    <button 
+      type={type} 
+      class={combinedClasses} 
+      disabled={isDisabled} 
+      onclick={onClick}
+      aria-label={ariaLabel || undefined}
+    >
+      {buttonContent}
+    </button>
+  )
+}
+
+<style>
+  button, a {
+    contain: layout paint;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button, a {
+      transition: none !important;
+      transform: none !important;
+    }
+    .animate-spin {
+      animation: none !important;
+    }
+  }
+</style>

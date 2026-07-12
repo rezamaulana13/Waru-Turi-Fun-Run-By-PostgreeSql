@@ -1,0 +1,100 @@
+---
+// src/components/sections/Reasons.astro
+import { db, aboutContent } from '../../db/index.js';
+import { eq, asc } from 'drizzle-orm';
+
+// ===== AMBIL DATA REASONS DARI DATABASE =====
+let reasonsData: Record<string, string> = {};
+let reasonsItems: { icon: string; title: string }[] = [];
+
+try {
+  const result = await db.select().from(aboutContent)
+    .where(eq(aboutContent.section, 'reasons'))
+    .orderBy(asc(aboutContent.order));
+  
+  if (result.length > 0) {
+    result.forEach((item: any) => {
+      reasonsData[item.key] = item.value || '';
+    });
+  }
+} catch (error) {
+  console.error('Error fetching reasons data:', error);
+}
+
+// Fallback title
+const title = reasonsData.title || 'Kenapa Anda Harus Ikut Event ini?';
+
+// Fallback reasons items (ikon menggunakan Base64 inline agar cepat)
+const defaultReasons = [
+  { icon: '📋', title: 'Nomor BIB' },
+  { icon: '👕', title: 'Jersey Official' },
+  { icon: '🏅', title: 'Finisher Medal' },
+  { icon: '🎁', title: 'Goodie Bag' },
+  { icon: '🎊', title: 'Doorprize' },
+  { icon: '🌳', title: 'Penanaman Pohon' }
+];
+
+// Ambil dari database atau pakai default
+if (reasonsData.items) {
+  try {
+    reasonsItems = JSON.parse(reasonsData.items);
+  } catch {
+    reasonsItems = defaultReasons;
+  }
+} else {
+  reasonsItems = defaultReasons;
+}
+
+// Pastikan ada 6 item
+while (reasonsItems.length < 6) {
+  reasonsItems.push(defaultReasons[reasonsItems.length % defaultReasons.length]);
+}
+---
+
+<section id="reasons" class="py-16 sm:py-20 lg:py-24 bg-[#0033A0] text-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-center mb-8 sm:mb-12">
+      {title}
+    </h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 max-w-5xl mx-auto">
+      {reasonsItems.slice(0, 6).map((item, index) => (
+        <div key={index} class="group bg-white/10 backdrop-blur-sm rounded-2xl p-4 sm:p-6 text-center border border-white/10 hover:bg-white/20 hover:-translate-y-2 transition-all duration-300">
+          <div class="text-3xl sm:text-4xl lg:text-5xl mb-2 sm:mb-3 inline-block group-hover:scale-110 transition-transform duration-300">
+            {item.icon || '🏃'}
+          </div>
+          <p class="text-xs sm:text-sm font-semibold leading-tight">{item.title}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  #reasons {
+    contain: layout paint;
+  }
+
+  #reasons .group {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #reasons .group {
+      transform: none !important;
+      transition: none !important;
+    }
+    #reasons .group .text-3xl {
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    #reasons .group {
+      padding: 0.75rem;
+    }
+    #reasons .group .text-3xl {
+      font-size: 1.75rem;
+    }
+  }
+</style>

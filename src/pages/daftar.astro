@@ -1,0 +1,678 @@
+---
+// src/pages/daftar.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+import Card from '../components/ui/Card.astro';
+import { getUserByToken, verifyToken } from '../lib/auth';
+
+// Cek apakah user sudah login
+let user = null;
+const token = Astro.cookies.get('token');
+if (token) {
+  const tokenValue = typeof token === 'string' ? token : token.value;
+  if (tokenValue) {
+    const decoded = verifyToken(tokenValue);
+    if (decoded) {
+      user = await getUserByToken(tokenValue);
+    }
+  }
+}
+
+// Data untuk form
+const categories = [
+  { value: '5K', label: '5K Fun Run (Rp 150.000)' },
+  { value: '10K', label: '10K Fun Run (Rp 200.000)' },
+  { value: 'Pelajar', label: 'Pelajar 5K (Rp 99.000)' },
+];
+
+const jerseySizes = [
+  { value: 'S', label: 'S' },
+  { value: 'M', label: 'M' },
+  { value: 'L', label: 'L' },
+  { value: 'XL', label: 'XL' },
+  { value: 'XXL', label: 'XXL' },
+  { value: 'XXXL', label: 'XXXL' },
+  { value: '4XL', label: '4XL' },
+  { value: '5XL', label: '5XL' },
+];
+
+const paymentMethods = [
+  { value: 'bank_transfer', label: 'Transfer Bank (BCA, BRI, Mandiri)' },
+  { value: 'qris', label: 'QRIS (Gopay, Ovo, DANA, ShopeePay)' },
+  { value: 'cash', label: 'Bayar di Tempat (Kantor Radar Kediri)' },
+];
+---
+
+<BaseLayout title="Pendaftaran Lomba - Waru Turi Fun Run 2026">
+  <Navbar />
+
+  <section class="min-h-screen py-16 sm:py-20 lg:py-28 bg-gradient-to-b from-[#F4F7FC] to-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Header -->
+      <div class="text-center mb-8 sm:mb-12">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900">
+          Pendaftaran <span class="text-[#0033A0]">Waru Turi Fun Run 2026</span>
+        </h1>
+        <p class="text-gray-500 text-base sm:text-lg mt-2 max-w-2xl mx-auto">
+          Daftarkan diri Anda sekarang dan dapatkan pengalaman lari yang tak terlupakan di Bendung Waru Turi!
+        </p>
+        <div class="flex items-center justify-center gap-2 mt-4 text-sm text-[#FF6B00]">
+          <i class="bi bi-clock-history"></i>
+          <span>Pendaftaran ditutup 10 Februari 2026 atau hingga kuota terpenuhi</span>
+        </div>
+      </div>
+
+      <!-- ===== CEK STATUS LOGIN ===== -->
+      {!user ? (
+        <!-- Belum Login -->
+        <div class="max-w-2xl mx-auto">
+          <Card padding="lg" shadow="lg" class="rounded-2xl text-center">
+            <div class="py-8">
+              <div class="w-20 h-20 rounded-full bg-[#FF6B00]/10 text-[#FF6B00] flex items-center justify-center text-4xl mx-auto mb-4">
+                <i class="bi bi-person-lock"></i>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900 mb-3">Anda Belum Login</h2>
+              <p class="text-gray-500 mb-6 max-w-md mx-auto">
+                Silakan login atau buat akun terlebih dahulu untuk mendaftar sebagai peserta 
+                Waru Turi Fun Run 2026.
+              </p>
+              <div class="flex flex-wrap justify-center gap-4">
+                <a href="/auth/login" class="inline-flex items-center gap-2 bg-[#0033A0] hover:bg-[#002A86] text-white font-semibold px-8 py-3 rounded-xl transition-all hover:-translate-y-0.5 shadow-lg">
+                  <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+                <a href="/auth/register" class="inline-flex items-center gap-2 bg-[#20B082] hover:bg-[#00825E] text-white font-semibold px-8 py-3 rounded-xl transition-all hover:-translate-y-0.5 shadow-lg">
+                  <i class="bi bi-person-plus"></i> Daftar Akun
+                </a>
+              </div>
+              <p class="text-sm text-gray-400 mt-4">
+                <i class="bi bi-info-circle"></i> Mendaftar akun gratis dan hanya butuh 2 menit!
+              </p>
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <!-- ===== SUDAH LOGIN - Tampilkan Form Pendaftaran ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+          
+          <!-- Form Pendaftaran -->
+          <div class="lg:col-span-2">
+            <Card padding="lg" shadow="lg" class="rounded-2xl">
+              <!-- Info User -->
+              <div class="bg-[#F0F7FF] rounded-xl p-4 mb-6 flex items-center gap-3 border border-[#0033A0]/10">
+                <div class="w-10 h-10 rounded-full bg-[#0033A0] text-white flex items-center justify-center font-bold text-lg">
+                  {user.name.charAt(0)}
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-gray-900">Login sebagai: {user.name}</p>
+                  <p class="text-xs text-gray-500">{user.email}</p>
+                </div>
+                <span class="ml-auto text-xs bg-[#20B082]/10 text-[#20B082] px-3 py-1 rounded-full">
+                  <i class="bi bi-check-circle-fill"></i> Terverifikasi
+                </span>
+              </div>
+
+              <!-- Success Message -->
+              <div id="successMessage" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center text-xl">
+                    <i class="bi bi-check-lg"></i>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-green-700">Pendaftaran Berhasil!</p>
+                    <p class="text-sm text-green-600" id="successDetail">Terima kasih telah mendaftar.</p>
+                  </div>
+                </div>
+              </div>
+
+              <form id="registrationForm" class="space-y-6">
+                
+                <!-- Informasi Peserta -->
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+                    <span class="w-8 h-8 rounded-full bg-[#0033A0] text-white flex items-center justify-center text-sm">1</span>
+                    Informasi Peserta
+                  </h3>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="form-group">
+                      <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Nama Lengkap <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-person"></i>
+                        </div>
+                        <input 
+                          type="text" 
+                          id="fullName" 
+                          name="fullName"
+                          value={user.name}
+                          required
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm"
+                          placeholder="Masukkan nama lengkap"
+                        />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Email Aktif <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-envelope"></i>
+                        </div>
+                        <input 
+                          type="email" 
+                          id="email" 
+                          name="email"
+                          value={user.email}
+                          disabled
+                          class="w-full pl-11 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl cursor-not-allowed text-gray-500 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="phone" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Nomor WhatsApp <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-whatsapp"></i>
+                        </div>
+                        <input 
+                          type="tel" 
+                          id="phone" 
+                          name="phone"
+                          value={user.phone || ''}
+                          required
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm"
+                          placeholder="08xx-xxxx-xxxx"
+                        />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="gender" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Jenis Kelamin <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-gender-ambiguous"></i>
+                        </div>
+                        <select 
+                          id="gender" 
+                          name="gender"
+                          required
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm appearance-none"
+                        >
+                          <option value="">Pilih jenis kelamin</option>
+                          <option value="Pria" selected={user.gender === 'Pria'}>Pria</option>
+                          <option value="Wanita" selected={user.gender === 'Wanita'}>Wanita</option>
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <i class="bi bi-chevron-down"></i>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="birthDate" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Tanggal Lahir
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-calendar"></i>
+                        </div>
+                        <input 
+                          type="date" 
+                          id="birthDate" 
+                          name="birthDate"
+                          value={user.birthDate || ''}
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="institution" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Instansi / Komunitas
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-building"></i>
+                        </div>
+                        <input 
+                          type="text" 
+                          id="institution" 
+                          name="institution"
+                          value={user.institution || ''}
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm"
+                          placeholder="Nama instansi atau komunitas"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Detail Lomba -->
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+                    <span class="w-8 h-8 rounded-full bg-[#0033A0] text-white flex items-center justify-center text-sm">2</span>
+                    Detail Lomba
+                  </h3>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="form-group">
+                      <label for="category" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Kategori Lomba <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-flag"></i>
+                        </div>
+                        <select 
+                          id="category" 
+                          name="category"
+                          required
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm appearance-none"
+                        >
+                          <option value="">Pilih kategori</option>
+                          {categories.map(cat => (
+                            <option value={cat.value}>{cat.label}</option>
+                          ))}
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <i class="bi bi-chevron-down"></i>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="jerseySize" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Ukuran Jersey <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-tshirt"></i>
+                        </div>
+                        <select 
+                          id="jerseySize" 
+                          name="jerseySize"
+                          required
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm appearance-none"
+                        >
+                          <option value="">Pilih ukuran</option>
+                          {jerseySizes.map(size => (
+                            <option value={size.value}>{size.label}</option>
+                          ))}
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <i class="bi bi-chevron-down"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Alamat & Kontak Darurat -->
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+                    <span class="w-8 h-8 rounded-full bg-[#0033A0] text-white flex items-center justify-center text-sm">3</span>
+                    Alamat & Kontak Darurat
+                  </h3>
+                  
+                  <div class="grid grid-cols-1 gap-4">
+                    <div class="form-group">
+                      <label for="address" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Alamat Lengkap
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-3 text-gray-400">
+                          <i class="bi bi-geo-alt"></i>
+                        </div>
+                        <textarea 
+                          id="address" 
+                          name="address"
+                          rows="2"
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm resize-none"
+                          placeholder="Jl. Contoh No. 123, RT/RW, Kelurahan, Kecamatan, Kabupaten"
+                        >{user.address || ''}</textarea>
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div class="form-group">
+                        <label for="emergencyContact" class="block text-sm font-medium text-gray-700 mb-1.5">
+                          Kontak Darurat (Nama)
+                        </label>
+                        <div class="relative">
+                          <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="bi bi-person"></i>
+                          </div>
+                          <input 
+                            type="text" 
+                            id="emergencyContact" 
+                            name="emergencyContact"
+                            value={user.emergencyContact || ''}
+                            class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm"
+                            placeholder="Nama keluarga/kerabat"
+                          />
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="emergencyPhone" class="block text-sm font-medium text-gray-700 mb-1.5">
+                          Kontak Darurat (Nomor)
+                        </label>
+                        <div class="relative">
+                          <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="bi bi-phone"></i>
+                          </div>
+                          <input 
+                            type="tel" 
+                            id="emergencyPhone" 
+                            name="emergencyPhone"
+                            value={user.emergencyPhone || ''}
+                            class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm"
+                            placeholder="08xx-xxxx-xxxx"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pembayaran -->
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+                    <span class="w-8 h-8 rounded-full bg-[#0033A0] text-white flex items-center justify-center text-sm">4</span>
+                    Metode Pembayaran
+                  </h3>
+                  
+                  <div class="grid grid-cols-1 gap-4">
+                    <div class="form-group">
+                      <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Pilih Metode Pembayaran <span class="text-red-500">*</span>
+                      </label>
+                      <div class="relative">
+                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                          <i class="bi bi-wallet2"></i>
+                        </div>
+                        <select 
+                          id="paymentMethod" 
+                          name="paymentMethod"
+                          required
+                          class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:bg-white focus:border-[#0033A0] focus:ring-4 focus:ring-[#0033A0]/10 transition-all outline-none text-gray-900 text-sm appearance-none"
+                        >
+                          <option value="">Pilih metode pembayaran</option>
+                          {paymentMethods.map(pm => (
+                            <option value={pm.value}>{pm.label}</option>
+                          ))}
+                        </select>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <i class="bi bi-chevron-down"></i>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="bg-[#FFF8E6] border border-[#FFE4B3] rounded-xl p-4 flex items-start gap-3">
+                      <i class="bi bi-info-circle text-[#FF6B00] text-xl flex-shrink-0 mt-0.5"></i>
+                      <div>
+                        <p class="text-sm font-semibold text-gray-800">Informasi Pembayaran</p>
+                        <p class="text-xs text-gray-600 mt-0.5">
+                          Setelah mendaftar, Anda akan menerima email dengan instruksi pembayaran. 
+                          Harap selesaikan pembayaran maksimal 1x24 jam.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Terms & Submit -->
+                <div class="space-y-4">
+                  <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" id="terms" required class="mt-1 w-4 h-4 rounded border-gray-300 text-[#0033A0] focus:ring-[#0033A0]">
+                    <span class="text-sm text-gray-600">
+                      Saya setuju dengan 
+                      <a href="/regulasi" class="text-[#0033A0] font-semibold hover:underline">syarat & ketentuan</a> 
+                      yang berlaku dan menyatakan bahwa data yang saya isikan adalah benar.
+                    </span>
+                  </label>
+                  
+                  <button type="submit" id="submitBtn" class="w-full py-4 bg-[#0033A0] hover:bg-[#002A86] text-white font-bold rounded-xl transition-all hover:-translate-y-0.5 shadow-lg flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed">
+                    <i class="bi bi-ticket-perforated"></i>
+                    <span id="submitText">Daftar Sekarang</span>
+                  </button>
+                </div>
+
+              </form>
+            </Card>
+          </div>
+
+          <!-- Sidebar - Info Penting -->
+          <div class="lg:col-span-1 space-y-6">
+            
+            <!-- Ringkasan Biaya -->
+            <Card padding="lg" shadow="lg" class="rounded-2xl sticky top-24">
+              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="bi bi-wallet2 text-[#0033A0]"></i>
+                Ringkasan Biaya
+              </h3>
+              
+              <div id="summaryContent">
+                <div class="space-y-3">
+                  <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Kategori Lomba</span>
+                    <span class="font-semibold text-gray-900" id="selectedCategory">-</span>
+                  </div>
+                  <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Ukuran Jersey</span>
+                    <span class="font-semibold text-gray-900" id="selectedSize">-</span>
+                  </div>
+                  <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Biaya Pendaftaran</span>
+                    <span class="font-semibold text-gray-900" id="registrationFee">Rp 0</span>
+                  </div>
+                  <div class="flex justify-between py-2 border-b border-gray-100">
+                    <span class="text-gray-600">Biaya Admin</span>
+                    <span class="font-semibold text-gray-900">Gratis</span>
+                  </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t-2 border-gray-200">
+                  <div class="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span class="text-[#0033A0]" id="totalPrice">Rp 0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 bg-[#F0F7FF] rounded-xl p-3 flex items-start gap-2 text-xs text-gray-600">
+                <i class="bi bi-shield-check text-[#0033A0] text-base flex-shrink-0 mt-0.5"></i>
+                <p>Pembayaran aman dan terpercaya. Data Anda akan dijaga kerahasiaannya.</p>
+              </div>
+            </Card>
+
+            <!-- Fasilitas -->
+            <Card padding="lg" shadow="lg" class="rounded-2xl">
+              <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <i class="bi bi-gift text-[#0033A0]"></i>
+                Fasilitas Peserta
+              </h3>
+              <ul class="space-y-2 text-sm text-gray-600">
+                <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill text-[#20B082]"></i> Jersey Official</li>
+                <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill text-[#20B082]"></i> Nomor BIB</li>
+                <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill text-[#20B082]"></i> Medali Finisher</li>
+                <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill text-[#20B082]"></i> Goodie Bag</li>
+                <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill text-[#20B082]"></i> E-Sertifikat</li>
+                <li class="flex items-center gap-2"><i class="bi bi-check-circle-fill text-[#20B082]"></i> Doorprize Menarik</li>
+              </ul>
+            </Card>
+
+          </div>
+
+        </div>
+      )}
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>
+
+<script>
+  // Data kategori dengan harga
+  const categoriesData = {
+    '5K': { label: '5K Fun Run', price: 150000, priceFormatted: 'Rp 150.000' },
+    '10K': { label: '10K Fun Run', price: 200000, priceFormatted: 'Rp 200.000' },
+    'Pelajar': { label: 'Pelajar 5K', price: 99000, priceFormatted: 'Rp 99.000' },
+  };
+
+  const sizeData = {
+    'S': 'S (Small)',
+    'M': 'M (Medium)',
+    'L': 'L (Large)',
+    'XL': 'XL (Extra Large)',
+    'XXL': 'XXL (Double Extra Large)',
+    'XXXL': 'XXXL (3X Large)',
+    '4XL': '4XL (4X Large)',
+    '5XL': '5XL (5X Large)',
+  };
+
+  // Update total biaya
+  function updateTotal() {
+    const categorySelect = document.getElementById('category');
+    const sizeSelect = document.getElementById('jerseySize');
+    const selectedCategory = document.getElementById('selectedCategory');
+    const selectedSize = document.getElementById('selectedSize');
+    const registrationFee = document.getElementById('registrationFee');
+    const totalPrice = document.getElementById('totalPrice');
+    
+    if (categorySelect && categorySelect.value) {
+      const data = categoriesData[categorySelect.value];
+      if (data) {
+        selectedCategory.textContent = data.label;
+        registrationFee.textContent = data.priceFormatted;
+        totalPrice.textContent = data.priceFormatted;
+      }
+    } else {
+      selectedCategory.textContent = '-';
+      registrationFee.textContent = 'Rp 0';
+      totalPrice.textContent = 'Rp 0';
+    }
+    
+    if (sizeSelect && sizeSelect.value) {
+      selectedSize.textContent = sizeData[sizeSelect.value] || sizeSelect.value;
+    } else {
+      selectedSize.textContent = '-';
+    }
+  }
+
+   // Handle form submit
+  document.getElementById('registrationForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const terms = document.getElementById('terms');
+    const successMessage = document.getElementById('successMessage');
+    const successDetail = document.getElementById('successDetail');
+    const form = document.getElementById('registrationForm');
+    
+    // Validasi terms
+    if (!terms.checked) {
+      alert('⚠️ Harap setujui syarat & ketentuan terlebih dahulu.');
+      return;
+    }
+    
+    // Disable button
+    btn.disabled = true;
+    submitText.textContent = 'Memproses...';
+    
+    const formData = {
+      fullName: document.getElementById('fullName').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      gender: document.getElementById('gender').value,
+      birthDate: document.getElementById('birthDate').value,
+      category: document.getElementById('category').value,
+      jerseySize: document.getElementById('jerseySize').value,
+      institution: document.getElementById('institution').value.trim(),
+      address: document.getElementById('address').value.trim(),
+      emergencyContact: document.getElementById('emergencyContact').value.trim(),
+      emergencyPhone: document.getElementById('emergencyPhone').value.trim(),
+      paymentMethod: document.getElementById('paymentMethod').value,
+    };
+    
+    // Validasi dasar
+    if (!formData.fullName || !formData.email || !formData.phone || !formData.category || !formData.jerseySize || !formData.paymentMethod) {
+      alert('⚠️ Mohon lengkapi semua data yang diperlukan (tanda *).');
+      btn.disabled = false;
+      submitText.textContent = 'Daftar Sekarang';
+      return;
+    }
+    
+    try {
+      console.log('📝 Mengirim pendaftaran:', formData);
+      
+      const response = await fetch('/api/participants/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      const result = await response.json();
+      console.log('📦 Response:', result);
+      
+      if (result.success) {
+        // Tampilkan pesan sukses
+        successMessage.classList.remove('hidden');
+        successDetail.textContent = `Nomor BIB Anda: #${result.data?.bibNumber || '-'}. Terima kasih telah mendaftar!`;
+        
+        // Sembunyikan form
+        form.style.display = 'none';
+        
+        // Redirect ke BERANDA setelah 3 detik (bukan /dashboard)
+        setTimeout(() => {
+          window.location.href = '/';  // ← Redirect ke beranda
+        }, 3000);
+      } else {
+        alert('❌ ' + (result.message || 'Pendaftaran gagal. Silakan coba lagi.'));
+        btn.disabled = false;
+        submitText.textContent = 'Daftar Sekarang';
+      }
+    } catch (error) {
+      console.error('❌ Error:', error);
+      alert('❌ Terjadi kesalahan. Silakan coba lagi.');
+      btn.disabled = false;
+      submitText.textContent = 'Daftar Sekarang';
+    }
+  });
+
+  // Inisialisasi
+  document.addEventListener('DOMContentLoaded', function() {
+    updateTotal();
+    
+    document.getElementById('jerseySize')?.addEventListener('change', updateTotal);
+    document.getElementById('category')?.addEventListener('change', updateTotal);
+  });
+</script>
+
+<style>
+  .form-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 44px;
+  }
+
+  .spinner-border {
+    display: inline-block;
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 0.2em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
+  }
+
+  @keyframes spinner-border {
+    to { transform: rotate(360deg); }
+  }
+</style>

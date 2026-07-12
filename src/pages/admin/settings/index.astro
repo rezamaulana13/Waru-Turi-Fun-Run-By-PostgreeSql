@@ -1,0 +1,69 @@
+---
+// src/pages/admin/settings/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Pengaturan - Waru Turi Fun Run 2027">
+  <div class="space-y-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Pengaturan</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+        Kelola pengaturan sistem Waru Turi Fun Run 2027
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- General Settings -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pengaturan Umum</h2>
+        <form class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Event</label>
+            <input type="text" value="Waru Turi Fun Run 2027" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Event</label>
+            <input type="date" value="2027-07-10" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lokasi</label>
+            <input type="text" value="Waru Turi, Indonesia" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+            Simpan Pengaturan
+          </button>
+        </form>
+      </div>
+
+      <!-- Other Settings -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pengaturan Lainnya</h2>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">Registrasi Dibuka</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Aktifkan/nonaktifkan pendaftaran</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-700 rounded-lg">
+            <div>
+              <p class="text-sm font-medium text-gray-900 dark:text-white">Pembayaran Online</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Aktifkan pembayaran online</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+          <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+            Simpan Pengaturan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>

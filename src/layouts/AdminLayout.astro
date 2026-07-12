@@ -1,0 +1,810 @@
+---
+// src/layouts/AdminLayout.astro
+import { db, users, participants } from '../db/index.js';
+import { eq, count } from 'drizzle-orm';
+import { verifyToken } from '../lib/auth';
+
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+// ===== CEK AUTH & AMBIL DATA =====
+let isAdmin = false;
+let userData = null;
+let totalParticipants = 0;
+
+try {
+  const token = Astro.cookies.get('token')?.value;
+  if (token) {
+    const decoded = verifyToken(token);
+    if (decoded && typeof decoded !== 'string') {
+      const user = await db.select().from(users).where(eq(users.id, decoded.id));
+      if (user && user.length > 0 && (user[0].role === 'admin' || user[0].role === 'super_admin')) {
+        isAdmin = true;
+        userData = user[0];
+      }
+    }
+  }
+} catch (error) {
+  console.error('Error checking auth:', error);
+}
+
+// ===== AMBIL JUMLAH PESERTA =====
+try {
+  const result = await db.select({ count: count() }).from(participants);
+  totalParticipants = Number(result[0]?.count) || 0;
+} catch (error) {
+  console.error('Error fetching participant count:', error);
+}
+
+// ===== REDIRECT JIKA BUKAN ADMIN =====
+if (!isAdmin) {
+  return Astro.redirect('/auth/login');
+}
+---
+
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
+  
+  <style>
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    .container-custom {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #0033A0, #20B082);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .nav-link {
+      @apply relative text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200;
+    }
+    
+    .nav-link::after {
+      content: '';
+      @apply absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 dark:bg-blue-400 transition-all duration-300;
+    }
+    
+    .nav-link:hover::after {
+      @apply w-full;
+    }
+    
+    .user-dropdown {
+      @apply absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 opacity-0 invisible scale-95 origin-top-right transition-all duration-200;
+    }
+    
+    .user-dropdown.show {
+      @apply opacity-100 visible scale-100;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+    
+    .dark ::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #4b5563;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+
+    .sidebar-link {
+      @apply transition-all duration-200;
+    }
+    .sidebar-link.active {
+      @apply bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400;
+    }
+    .sidebar-link.active i {
+      @apply text-blue-600 dark:text-blue-400;
+    }
+
+    /* Mobile sidebar overlay */
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 40;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Mobile sidebar */
+    .sidebar-mobile {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100vh;
+      background: white;
+      z-index: 50;
+      transition: left 0.3s ease;
+      overflow-y: auto;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dark .sidebar-mobile {
+      background: #1f2937;
+    }
+    
+    .sidebar-mobile.open {
+      left: 0;
+    }
+
+    /* Submenu - Perbaikan */
+    .submenu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: rgba(0, 0, 0, 0.02);
+      border-radius: 8px;
+      margin-left: 0.5rem;
+    }
+    
+    .dark .submenu {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .submenu.open {
+      max-height: 500px;
+    }
+    
+    .submenu-link {
+      @apply flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200;
+      padding-left: 2.5rem;
+      margin: 2px 4px;
+    }
+    
+    .submenu-link:hover {
+      @apply bg-gray-100 dark:bg-gray-700;
+    }
+    
+    .submenu-link.active {
+      @apply bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400;
+    }
+    
+    .submenu-link.active i {
+      @apply text-blue-600 dark:text-blue-400;
+    }
+
+    /* Mobile hamburger button */
+    .hamburger-btn {
+      display: none;
+    }
+    
+    @media (max-width: 768px) {
+      .hamburger-btn {
+        display: block;
+      }
+    }
+
+    /* Smooth transitions */
+    .sidebar-link i {
+      transition: transform 0.2s ease;
+    }
+    
+    .sidebar-link:hover i {
+      transform: scale(1.1);
+    }
+
+    /* Informasi menu item - active state */
+    .informasi-active .sidebar-link {
+      @apply text-blue-600 dark:text-blue-400;
+    }
+    .informasi-active .sidebar-link i {
+      @apply text-blue-600 dark:text-blue-400;
+    }
+
+    /* Dark mode fix for sidebar */
+    .dark .sidebar-mobile {
+      background: #1f2937;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  <!-- ===== NAVBAR ===== -->
+  <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-sm">
+    <div class="container-custom">
+      <div class="flex items-center justify-between h-16">
+        <!-- Left - Brand & Hamburger -->
+        <div class="flex items-center gap-3">
+          <!-- Hamburger Button for Mobile -->
+          <button id="hamburger-btn" class="hamburger-btn p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Toggle sidebar">
+            <i class="bi bi-list text-2xl"></i>
+          </button>
+          
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-md shadow-blue-500/20">
+              <i class="bi bi-speedometer2 text-white text-sm"></i>
+            </div>
+            <div>
+              <a href="/admin" class="text-lg font-bold gradient-text tracking-tight">Admin Panel</a>
+              <span class="hidden sm:inline-block text-[10px] font-medium text-gray-400 dark:text-gray-500 ml-1.5 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full">v2.0</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right - Actions -->
+        <div class="flex items-center gap-2">
+          <button class="nav-link p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Cari">
+            <i class="bi bi-search text-lg"></i>
+          </button>
+          
+          <button class="nav-link p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition relative" title="Notifikasi">
+            <i class="bi bi-bell text-lg"></i>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+          </button>
+          
+          <div class="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
+          
+          <!-- User Dropdown -->
+          <div class="relative" id="user-dropdown-container">
+            <button 
+              id="user-dropdown-toggle"
+              class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group"
+            >
+              <div class="relative">
+                <span class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center text-xs font-semibold shadow-md shadow-blue-500/20" id="user-avatar">
+                  {userData?.name?.charAt(0)?.toUpperCase() || 'A'}
+                </span>
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></span>
+              </div>
+              <div class="hidden sm:block text-left">
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-200 leading-tight" id="user-name">{userData?.name || 'Admin'}</p>
+                <p class="text-[10px] text-gray-400 dark:text-gray-500 leading-tight" id="user-role">
+                  {userData?.role === 'super_admin' ? 'Super Admin' : userData?.role === 'admin' ? 'Administrator' : 'User'}
+                </p>
+              </div>
+              <i class="bi bi-chevron-down text-xs text-gray-400 dark:text-gray-500 transition-transform duration-200" id="dropdown-arrow"></i>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div class="user-dropdown" id="user-dropdown">
+              <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                <p class="text-sm font-medium text-gray-900 dark:text-white" id="dropdown-name">{userData?.name || 'Admin'}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate" id="dropdown-email">{userData?.email || 'admin@waruturirun.com'}</p>
+              </div>
+              <a href="/admin/profile" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <i class="bi bi-person text-gray-400 dark:text-gray-500"></i>
+                Profil
+              </a>
+              <a href="/admin/settings" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                <i class="bi bi-gear text-gray-400 dark:text-gray-500"></i>
+                Pengaturan
+              </a>
+              <hr class="my-1 border-gray-100 dark:border-gray-700" />
+              <button onclick="handleLogout()" class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
+                <i class="bi bi-box-arrow-right text-red-400 dark:text-red-500"></i>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== BODY ===== -->
+  <div class="flex">
+    <!-- Overlay for Mobile -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Mobile Sidebar -->
+    <div id="sidebar-mobile" class="sidebar-mobile">
+      <div class="p-4">
+        <!-- Close button -->
+        <button id="close-sidebar" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition ml-auto block">
+          <i class="bi bi-x-lg text-xl"></i>
+        </button>
+      </div>
+      <!-- Sidebar content same as desktop -->
+      <div class="px-4 pb-4">
+        <div class="mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <p class="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Menu Utama</p>
+        </div>
+        <nav class="space-y-0.5" id="mobile-nav">
+          <!-- Beranda -->
+          <a href="/admin" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin">
+            <i class="bi bi-house text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Beranda</span>
+          </a>
+
+          <!-- Pendaftaran Peserta -->
+          <a href="/admin/participants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/participants">
+            <i class="bi bi-person-plus text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Pendaftaran Peserta</span>
+            <span class="ml-auto text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{totalParticipants}</span>
+          </a>
+
+          <!-- About -->
+          <a href="/admin/about" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/about">
+            <i class="bi bi-info-circle text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">About</span>
+          </a>
+
+          <!-- Informasi with submenu -->
+          <div class="informasi-container">
+            <button onclick="toggleSubmenu('informasi')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group w-full" id="informasi-toggle-mobile">
+              <i class="bi bi-info-square text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Informasi</span>
+              <i class="bi bi-chevron-down ml-auto text-xs text-gray-400 transition-transform duration-300" id="informasi-arrow-mobile"></i>
+            </button>
+            <div id="informasi-submenu-mobile" class="submenu">
+              <a href="/admin/certificates" class="submenu-link" data-path="/admin/certificates">
+                <i class="bi bi-file-earmark-text text-sm text-gray-400"></i>
+                <span class="text-sm">Sertifikat</span>
+              </a>
+              <a href="/admin/gallery" class="submenu-link" data-path="/admin/gallery">
+                <i class="bi bi-images text-sm text-gray-400"></i>
+                <span class="text-sm">Galeri</span>
+              </a>
+              <a href="/admin/race" class="submenu-link" data-path="/admin/race">
+                <i class="bi bi-flag text-sm text-gray-400"></i>
+                <span class="text-sm">Race</span>
+              </a>
+              <a href="/admin/jerseys" class="submenu-link" data-path="/admin/jerseys">
+                <i class="bi bi-tshirt text-sm text-gray-400"></i>
+                <span class="text-sm">Jersey</span>
+              </a>
+              <a href="/admin/medals" class="submenu-link" data-path="/admin/medals">
+                <i class="bi bi-trophy text-sm text-gray-400"></i>
+                <span class="text-sm">Medali</span>
+              </a>
+              <a href="/admin/routes" class="submenu-link" data-path="/admin/routes">
+                <i class="bi bi-map text-sm text-gray-400"></i>
+                <span class="text-sm">Rute</span>
+              </a>
+              <a href="/admin/regulations" class="submenu-link" data-path="/admin/regulations">
+                <i class="bi bi-file-text text-sm text-gray-400"></i>
+                <span class="text-sm">Regulasi</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="my-3 border-t border-gray-200/50 dark:border-gray-700/50"></div>
+
+          <!-- Artikel -->
+          <a href="/admin/articles" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/articles">
+            <i class="bi bi-newspaper text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Artikel</span>
+          </a>
+
+          <!-- Kontak -->
+          <a href="/admin/contacts" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/contacts">
+            <i class="bi bi-envelope text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Kontak</span>
+          </a>
+
+          <div class="my-3 border-t border-gray-200/50 dark:border-gray-700/50"></div>
+
+          <!-- Logout -->
+          <button onclick="handleLogout()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition group w-full">
+            <i class="bi bi-box-arrow-right text-lg text-red-400 dark:text-red-500 group-hover:text-red-600 dark:group-hover:text-red-400 transition"></i>
+            <span class="text-sm font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 transition">Logout</span>
+          </button>
+
+          <!-- Pengaturan -->
+          <a href="/admin/settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/settings">
+            <i class="bi bi-gear text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Pengaturan</span>
+          </a>
+        </nav>
+        
+        <!-- Sidebar Footer -->
+        <div class="mt-6 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
+          <div class="px-3 py-2">
+            <p class="text-[10px] text-gray-400 dark:text-gray-500">
+              <i class="bi bi-shield-check mr-1"></i>
+              Admin Access
+            </p>
+            <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+              v2.0 • Waru Turi 2027
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Sidebar -->
+    <aside class="hidden md:block w-64 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-r border-gray-200/50 dark:border-gray-700/50 min-h-screen p-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto flex-shrink-0">
+      <div class="mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+        <p class="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Menu Utama</p>
+      </div>
+      <nav class="space-y-0.5">
+        <!-- Beranda -->
+        <a href="/admin" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin">
+          <i class="bi bi-house text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Beranda</span>
+        </a>
+
+        <!-- Pendaftaran Peserta -->
+        <a href="/admin/participants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/participants">
+          <i class="bi bi-person-plus text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Pendaftaran Peserta</span>
+          <span class="ml-auto text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{totalParticipants}</span>
+        </a>
+
+        <!-- About -->
+        <a href="/admin/about" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/about">
+          <i class="bi bi-info-circle text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">About</span>
+        </a>
+
+        <!-- Informasi with submenu -->
+        <div class="informasi-container">
+          <button onclick="toggleSubmenu('informasi')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group w-full" id="informasi-toggle">
+            <i class="bi bi-info-square text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Informasi</span>
+            <i class="bi bi-chevron-down ml-auto text-xs text-gray-400 transition-transform duration-300" id="informasi-arrow"></i>
+          </button>
+          <div id="informasi-submenu" class="submenu">
+            <a href="/admin/certificates" class="submenu-link" data-path="/admin/certificates">
+              <i class="bi bi-file-earmark-text text-sm text-gray-400"></i>
+              <span class="text-sm">Sertifikat</span>
+            </a>
+            <a href="/admin/gallery" class="submenu-link" data-path="/admin/gallery">
+              <i class="bi bi-images text-sm text-gray-400"></i>
+              <span class="text-sm">Galeri</span>
+            </a>
+            <a href="/admin/race" class="submenu-link" data-path="/admin/race">
+              <i class="bi bi-flag text-sm text-gray-400"></i>
+              <span class="text-sm">Race</span>
+            </a>
+            <a href="/admin/jerseys" class="submenu-link" data-path="/admin/jerseys">
+              <i class="bi bi-tshirt text-sm text-gray-400"></i>
+              <span class="text-sm">Jersey</span>
+            </a>
+            <a href="/admin/medals" class="submenu-link" data-path="/admin/medals">
+              <i class="bi bi-trophy text-sm text-gray-400"></i>
+              <span class="text-sm">Medali</span>
+            </a>
+            <a href="/admin/routes" class="submenu-link" data-path="/admin/routes">
+              <i class="bi bi-map text-sm text-gray-400"></i>
+              <span class="text-sm">Rute</span>
+            </a>
+            <a href="/admin/regulations" class="submenu-link" data-path="/admin/regulations">
+              <i class="bi bi-file-text text-sm text-gray-400"></i>
+              <span class="text-sm">Regulasi</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="my-3 border-t border-gray-200/50 dark:border-gray-700/50"></div>
+
+        <!-- Artikel -->
+        <a href="/admin/articles" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/articles">
+          <i class="bi bi-newspaper text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Artikel</span>
+        </a>
+
+        <!-- Kontak -->
+        <a href="/admin/contacts" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/contacts">
+          <i class="bi bi-envelope text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Kontak</span>
+        </a>
+
+        <div class="my-3 border-t border-gray-200/50 dark:border-gray-700/50"></div>
+
+        <!-- Logout -->
+        <button onclick="handleLogout()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition group w-full">
+          <i class="bi bi-box-arrow-right text-lg text-red-400 dark:text-red-500 group-hover:text-red-600 dark:group-hover:text-red-400 transition"></i>
+          <span class="text-sm font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 transition">Logout</span>
+        </button>
+
+        <!-- Pengaturan -->
+        <a href="/admin/settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/settings">
+          <i class="bi bi-gear text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Pengaturan</span>
+        </a>
+      </nav>
+      
+      <!-- Sidebar Footer -->
+      <div class="mt-6 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
+        <div class="px-3 py-2">
+          <p class="text-[10px] text-gray-400 dark:text-gray-500">
+            <i class="bi bi-shield-check mr-1"></i>
+            Admin Access
+          </p>
+          <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">
+            v2.0 • Waru Turi 2027
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-6 min-h-[calc(100vh-4rem)]">
+      <slot />
+    </main>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SCRIPT -->
+  <!-- ============================================================ -->
+  <script>
+    // ============================================================
+    // LOGOUT FUNCTION - GLOBAL
+    // ============================================================
+    window.handleLogout = async function() {
+      if (confirm('Yakin ingin logout dari akun ini?')) {
+        try {
+          const btns = document.querySelectorAll('[onclick*="handleLogout"]');
+          btns.forEach(btn => {
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Logout...';
+            btn.disabled = true;
+          });
+          
+          await fetch('/api/auth/logout', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+        } catch (e) {
+          console.error('Logout error:', e);
+        }
+        
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.clear();
+        window.location.href = '/';
+      }
+    };
+
+    // ============================================================
+    // TOGGLE SUBMENU - GLOBAL dengan localStorage
+    // ============================================================
+    window.toggleSubmenu = function(id) {
+      const submenu = document.getElementById(id + '-submenu');
+      const arrow = document.getElementById(id + '-arrow');
+      const submenuMobile = document.getElementById(id + '-submenu-mobile');
+      const arrowMobile = document.getElementById(id + '-arrow-mobile');
+      
+      // Toggle desktop
+      if (submenu) {
+        submenu.classList.toggle('open');
+        if (arrow) {
+          arrow.classList.toggle('rotate-180');
+        }
+      }
+      
+      // Toggle mobile
+      if (submenuMobile) {
+        submenuMobile.classList.toggle('open');
+        if (arrowMobile) {
+          arrowMobile.classList.toggle('rotate-180');
+        }
+      }
+      
+      // Save state to localStorage
+      const isOpen = submenu ? submenu.classList.contains('open') : false;
+      localStorage.setItem('submenu-' + id, isOpen ? 'open' : 'closed');
+    };
+
+    // ============================================================
+    // RESTORE SUBMENU STATE
+    // ============================================================
+    function restoreSubmenuState() {
+      const submenus = ['informasi'];
+      submenus.forEach(id => {
+        const state = localStorage.getItem('submenu-' + id);
+        
+        // Desktop
+        const submenu = document.getElementById(id + '-submenu');
+        const arrow = document.getElementById(id + '-arrow');
+        
+        // Mobile
+        const submenuMobile = document.getElementById(id + '-submenu-mobile');
+        const arrowMobile = document.getElementById(id + '-arrow-mobile');
+        
+        if (state === 'open') {
+          // Desktop
+          if (submenu) {
+            submenu.classList.add('open');
+            if (arrow) arrow.classList.add('rotate-180');
+          }
+          // Mobile
+          if (submenuMobile) {
+            submenuMobile.classList.add('open');
+            if (arrowMobile) arrowMobile.classList.add('rotate-180');
+          }
+        }
+      });
+    }
+
+    // ============================================================
+    // MOBILE SIDEBAR
+    // ============================================================
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    const sidebarMobile = document.getElementById('sidebar-mobile');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    function openMobileSidebar() {
+      sidebarMobile?.classList.add('open');
+      sidebarOverlay?.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileSidebar() {
+      sidebarMobile?.classList.remove('open');
+      sidebarOverlay?.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    hamburgerBtn?.addEventListener('click', openMobileSidebar);
+    closeSidebarBtn?.addEventListener('click', closeMobileSidebar);
+    sidebarOverlay?.addEventListener('click', closeMobileSidebar);
+
+    // Close mobile sidebar when clicking a link
+    document.querySelectorAll('#sidebar-mobile .sidebar-link, #sidebar-mobile .submenu-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          setTimeout(closeMobileSidebar, 300);
+        }
+      });
+    });
+
+    // ============================================================
+    // USER DROPDOWN
+    // ============================================================
+    const dropdownToggle = document.getElementById('user-dropdown-toggle');
+    const dropdown = document.getElementById('user-dropdown');
+    const arrow = document.getElementById('dropdown-arrow');
+
+    dropdownToggle?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown?.classList.toggle('show');
+      arrow?.classList.toggle('rotate-180');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!dropdownToggle?.contains(e.target) && !dropdown?.contains(e.target)) {
+        dropdown?.classList.remove('show');
+        arrow?.classList.remove('rotate-180');
+      }
+    });
+
+    // ============================================================
+    // CEK LOGIN
+    // ============================================================
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/auth/login';
+    }
+
+    // ============================================================
+    // TAMPILKAN USER
+    // ============================================================
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        
+        const elements = {
+          name: document.getElementById('user-name'),
+          avatar: document.getElementById('user-avatar'),
+          role: document.getElementById('user-role'),
+          dropdownName: document.getElementById('dropdown-name'),
+          dropdownEmail: document.getElementById('dropdown-email')
+        };
+        
+        const roleMap = {
+          'admin': 'Administrator',
+          'super_admin': 'Super Admin',
+          'user': 'User'
+        };
+        
+        if (elements.name && user.name) elements.name.textContent = user.name;
+        if (elements.avatar && user.name) elements.avatar.textContent = user.name.charAt(0).toUpperCase();
+        if (elements.role) elements.role.textContent = roleMap[user.role] || user.role || 'User';
+        if (elements.dropdownName && user.name) elements.dropdownName.textContent = user.name;
+        if (elements.dropdownEmail && user.email) elements.dropdownEmail.textContent = user.email;
+      }
+    } catch (e) {
+      console.error('Error loading user:', e);
+    }
+
+    // ============================================================
+    // ACTIVE MENU
+    // ============================================================
+    function setActiveMenu() {
+      const currentPath = window.location.pathname;
+      const links = document.querySelectorAll('.sidebar-link, .submenu-link');
+      
+      links.forEach(link => {
+        link.classList.remove('active');
+        const path = link.getAttribute('data-path');
+        if (path && currentPath.includes(path)) {
+          link.classList.add('active');
+          
+          // If it's a submenu link, open parent submenu
+          if (link.classList.contains('submenu-link')) {
+            const parentSubmenu = link.closest('.submenu');
+            if (parentSubmenu) {
+              parentSubmenu.classList.add('open');
+              const parentId = parentSubmenu.id.replace('-submenu', '');
+              // Also handle mobile version
+              const parentIdMobile = parentSubmenu.id.replace('-submenu', '-submenu-mobile');
+              const submenuMobile = document.getElementById(parentIdMobile);
+              if (submenuMobile) {
+                submenuMobile.classList.add('open');
+              }
+              
+              const arrow = document.getElementById(parentId + '-arrow');
+              if (arrow) {
+                arrow.classList.add('rotate-180');
+              }
+              const arrowMobile = document.getElementById(parentId + '-arrow-mobile');
+              if (arrowMobile) {
+                arrowMobile.classList.add('rotate-180');
+              }
+              
+              localStorage.setItem('submenu-' + parentId, 'open');
+            }
+          }
+        }
+      });
+    }
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      restoreSubmenuState();
+      setActiveMenu();
+    });
+
+    // ============================================================
+    // KEYBOARD SHORTCUT - Ctrl+Shift+L = Logout
+    // ============================================================
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+        e.preventDefault();
+        window.handleLogout();
+      }
+    });
+
+    console.log('✅ Admin Panel loaded');
+    console.log('📌 Keyboard shortcut: Ctrl+Shift+L for logout');
+  </script>
+</body>
+</html>

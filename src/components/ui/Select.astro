@@ -1,0 +1,148 @@
+---
+// src/components/ui/Select.astro
+export interface Props {
+  name: string;
+  id?: string;
+  label?: string;
+  options: { value: string; label: string; disabled?: boolean }[];
+  placeholder?: string;
+  value?: string;
+  required?: boolean;
+  disabled?: boolean;
+  error?: string;
+  className?: string;
+  hint?: string;
+  multiple?: boolean;
+  size?: number;
+}
+
+const { 
+  name,
+  id = name,
+  label,
+  options = [],
+  placeholder = 'Pilih...',
+  value,
+  required = false,
+  disabled = false,
+  error,
+  className = '',
+  hint,
+  multiple = false,
+  size,
+} = Astro.props;
+
+const hasError = error && error.length > 0;
+
+// ===== OPTIONS =====
+const selectOptions = options.map(opt => ({
+  ...opt,
+  selected: opt.value === value
+}));
+
+// ===== CLASSES =====
+const baseClasses = `
+  w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 bg-white
+  focus:outline-none focus:ring-4
+  ${multiple ? 'h-auto min-h-[120px]' : 'appearance-none pr-12'}
+  ${hasError 
+    ? 'border-red-500 focus:border-red-500 focus:ring-red-100' 
+    : 'border-gray-200 focus:border-blue-600 focus:ring-blue-100'
+  }
+  ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white'}
+  ${className}
+`;
+---
+
+<div class={`form-group ${className}`}>
+  {label && (
+    <label for={id} class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+      {label}
+      {required && <span class="text-red-500 ml-0.5">*</span>}
+    </label>
+  )}
+  
+  <div class="relative">
+    <select
+      id={id}
+      name={multiple ? name + '[]' : name}
+      required={required}
+      disabled={disabled}
+      multiple={multiple}
+      size={size}
+      class={baseClasses}
+    >
+      {placeholder && !multiple && (
+        <option value="">{placeholder}</option>
+      )}
+      {selectOptions.map((opt) => (
+        <option 
+          key={opt.value} 
+          value={opt.value} 
+          selected={opt.selected}
+          disabled={opt.disabled || false}
+        >
+          {opt.label}
+        </option>
+      ))}
+    </select>
+    
+    {!multiple && (
+      <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+        <i class="bi bi-chevron-down text-gray-400 transition-transform"></i>
+      </div>
+    )}
+    
+    {hasError && (
+      <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+        <i class="bi bi-exclamation-circle-fill text-red-500 text-lg"></i>
+      </div>
+    )}
+  </div>
+  
+  {hint && !hasError && (
+    <p class="text-xs text-gray-400 mt-1.5">{hint}</p>
+  )}
+  
+  {hasError && (
+    <p class="text-sm text-red-500 mt-1.5 flex items-center gap-1.5">
+      <i class="bi bi-exclamation-circle"></i>
+      {error}
+    </p>
+  )}
+</div>
+
+<style>
+  .form-group {
+    contain: layout paint;
+  }
+  
+  select {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  select:focus + .bi-chevron-down {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    select {
+      transition: none !important;
+    }
+  }
+
+  /* Dark mode */
+  @media (prefers-color-scheme: dark) {
+    select {
+      background-color: #1f2937;
+      border-color: #374151;
+      color: #f3f4f6;
+    }
+    select:focus {
+      border-color: #3b82f6;
+    }
+    select option {
+      background-color: #1f2937;
+    }
+  }
+</style>

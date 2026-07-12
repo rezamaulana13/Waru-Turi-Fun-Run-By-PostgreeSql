@@ -1,0 +1,319 @@
+---
+// src/pages/admin/participants/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+// ✅ Import dari db
+import { db, users, participants } from '../../../db';
+import { eq, desc } from 'drizzle-orm';
+import { verifyToken } from '../../../lib/auth';
+import { getParticipants, deleteParticipant, updateParticipant } from '../../../lib/participants';
+
+// ===== CEK AUTH =====
+const token = Astro.cookies.get('token')?.value;
+let isAdmin = false;
+let userData = null;
+
+if (token) {
+  const decoded = verifyToken(token);
+  if (decoded && typeof decoded !== 'string') {
+    const user = await db.select().from(users).where(eq(users.id, decoded.id));
+    if (user && user.length > 0 && (user[0].role === 'admin' || user[0].role === 'super_admin')) {
+      isAdmin = true;
+      userData = user[0];
+    }
+  }
+}
+
+// Redirect jika bukan admin
+if (!isAdmin) {
+  return Astro.redirect('/');
+}
+
+// ===== AMBIL DATA PESERTA =====
+let participantsData = [];
+let totalParticipants = 0;
+
+try {
+  const result = await getParticipants({
+    limit: 100,
+    offset: 0,
+  });
+  
+  participantsData = result.data || [];
+  totalParticipants = result.total || 0;
+  console.log('📊 Total participants:', totalParticipants);
+} catch (error) {
+  console.error('Error fetching participants:', error);
+}
+
+// Map status ke label dan warna
+const statusMap: Record<string, { label: string; color: string }> = {
+  'registered': { label: 'Terdaftar', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  'confirmed': { label: 'Dikonfirmasi', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  'checked_in': { label: 'Check In', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  'finished': { label: 'Selesai', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
+  'cancelled': { label: 'Dibatalkan', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  'dnf': { label: 'DNF', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
+};
+
+const paymentStatusMap: Record<string, { label: string; color: string }> = {
+  'pending': { label: 'Pending', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  'paid': { label: 'Lunas', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  'failed': { label: 'Gagal', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  'refunded': { label: 'Refund', color: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' },
+  'expired': { label: 'Expired', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
+};
+
+const categoryLabels: Record<string, string> = {
+  '5K': '5K Fun Run',
+  '10K': '10K Fun Run',
+  'pelajar': 'Pelajar 5K',
+};
+---
+
+<AdminLayout title="Kelola Peserta - Waru Turi Fun Run 2027">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kelola Peserta</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          Kelola data pendaftaran peserta Waru Turi Fun Run 2027
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg">
+          Total: {totalParticipants} Peserta
+        </span>
+        <a href="/admin/participants/create" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md">
+          <i class="bi bi-plus-lg"></i>
+          Tambah
+        </a>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cari</label>
+          <input 
+            id="searchInput"
+            type="text" 
+            placeholder="Nama atau email..." 
+            class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            onkeyup="filterTable()"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kategori</label>
+          <select id="categoryFilter" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" onchange="filterTable()">
+            <option value="">Semua</option>
+            <option value="5K">5K Fun Run</option>
+            <option value="10K">10K Fun Run</option>
+            <option value="pelajar">Pelajar 5K</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
+          <select id="statusFilter" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" onchange="filterTable()">
+            <option value="">Semua</option>
+            <option value="registered">Terdaftar</option>
+            <option value="confirmed">Dikonfirmasi</option>
+            <option value="checked_in">Check In</option>
+            <option value="finished">Selesai</option>
+            <option value="cancelled">Dibatalkan</option>
+            <option value="dnf">DNF</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Pembayaran</label>
+          <select id="paymentFilter" class="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" onchange="filterTable()">
+            <option value="">Semua</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Lunas</option>
+            <option value="failed">Gagal</option>
+            <option value="refunded">Refund</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">#</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Peserta</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">BIB</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pembayaran</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            {participantsData.length > 0 ? (
+              participantsData.map((p, index) => {
+                const status = statusMap[p.status] || { label: p.status || 'Registered', color: 'bg-gray-100 text-gray-800' };
+                const payment = paymentStatusMap[p.paymentStatus] || { label: p.paymentStatus || 'Pending', color: 'bg-gray-100 text-gray-800' };
+                const category = categoryLabels[p.category] || p.category || '-';
+                const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+                
+                return (
+                  <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition" data-category={p.category} data-status={p.status} data-payment={p.paymentStatus}>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{index + 1}</td>
+                    <td class="px-4 py-3">
+                      <div>
+                        <p class="font-medium text-gray-900 dark:text-white">{p.fullName || '-'}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{p.email || '-'}</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500">{p.phone || '-'}</p>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="text-xs font-medium text-gray-700 dark:text-gray-300">{category}</span>
+                      {p.jerseySize && <span class="text-xs text-gray-400 dark:text-gray-500 block">Jersey: {p.jerseySize}</span>}
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                        #{String(p.bibNumber || index + 1).padStart(4, '0')}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.color}`}>
+                        {status.label}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3">
+                      <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${payment.color}`}>
+                        {payment.label}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{date}</td>
+                    <td class="px-4 py-3">
+                      <!-- ✅ AKSI: Detail, Edit, Hapus -->
+                      <div class="flex items-center gap-2">
+                        <a 
+                          href={`/admin/participants/${p.id}`} 
+                          class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition p-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                          title="Detail"
+                        >
+                          <i class="bi bi-eye text-lg"></i>
+                        </a>
+                        <a 
+                          href={`/admin/participants/${p.id}/edit`} 
+                          class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 transition p-1 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded"
+                          title="Edit"
+                        >
+                          <i class="bi bi-pencil text-lg"></i>
+                        </a>
+                        <button 
+                          onclick="deleteParticipant({id: ${p.id}})" 
+                          class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                          title="Hapus"
+                        >
+                          <i class="bi bi-trash text-lg"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <i class="bi bi-inbox text-2xl block mb-2"></i>
+                  Belum ada data peserta
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex items-center justify-between">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Menampilkan <span id="totalDisplay">{totalParticipants}</span> data
+      </p>
+      <div class="flex gap-2">
+        <button class="px-3 py-1 border border-gray-200 dark:border-gray-700 rounded-lg text-sm disabled:opacity-50" disabled>Previous</button>
+        <button class="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm">1</button>
+        <button class="px-3 py-1 border border-gray-200 dark:border-gray-700 rounded-lg text-sm" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // FILTER TABLE
+    // ============================================================
+    function filterTable() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const category = document.getElementById('categoryFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const payment = document.getElementById('paymentFilter').value;
+      
+      const rows = document.querySelectorAll('#tableBody tr');
+      let visibleCount = 0;
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowCategory = row.getAttribute('data-category');
+        const rowStatus = row.getAttribute('data-status');
+        const rowPayment = row.getAttribute('data-payment');
+        
+        let show = true;
+        
+        if (search && !text.includes(search)) show = false;
+        if (category && rowCategory !== category) show = false;
+        if (status && rowStatus !== status) show = false;
+        if (payment && rowPayment !== payment) show = false;
+        
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+      });
+      
+      document.getElementById('totalDisplay').textContent = visibleCount;
+    }
+
+    // ============================================================
+    // DELETE PARTICIPANT
+    // ============================================================
+    async function deleteParticipant(data) {
+      if (!confirm(`⚠️ Hapus Peserta\n\nYakin ingin menghapus peserta ID: ${data.id}?\n\nTindakan ini tidak dapat dibatalkan!`)) {
+        return;
+      }
+      
+      try {
+        // Cari button yang diklik
+        const btn = document.querySelector(`button[onclick*="deleteParticipant"]`);
+        if (btn) {
+          btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+          btn.disabled = true;
+        }
+        
+        const response = await fetch(`/api/admin/participants?id=${data.id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('✅ Peserta berhasil dihapus!');
+          window.location.reload();
+        } else {
+          alert('❌ Gagal menghapus: ' + (result.error || result.message));
+          window.location.reload();
+        }
+      } catch (error) {
+        alert('❌ Terjadi kesalahan: ' + error.message);
+        window.location.reload();
+      }
+    }
+  </script>
+</AdminLayout>

@@ -1,0 +1,890 @@
+---
+// src/pages/admin/race/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Race - Admin Panel">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <i class="bi bi-flag text-blue-600 dark:text-blue-400 mr-2"></i>
+            Manajemen Race
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Kelola semua race dan kategori lari Waru Turi Run
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="bi bi-download"></i>
+            Export
+          </button>
+          <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2" onclick="openModal()">
+            <i class="bi bi-plus-lg"></i>
+            Tambah Race
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1 relative">
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          <input 
+            type="text" 
+            placeholder="Cari race..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            id="searchInput"
+          />
+        </div>
+        <div class="flex gap-3">
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Semua Status</option>
+            <option value="upcoming">Akan Datang</option>
+            <option value="ongoing">Berlangsung</option>
+            <option value="completed">Selesai</option>
+            <option value="cancelled">Dibatalkan</option>
+          </select>
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="newest">Terbaru</option>
+            <option value="oldest">Terlama</option>
+            <option value="name">Nama</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Race</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">8</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-trophy text-2xl text-blue-600 dark:text-blue-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-green-600 dark:text-green-400">↑ 2 race baru</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Akan Datang</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">3</p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-calendar-event text-2xl text-yellow-600 dark:text-yellow-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Next: 15 Agu 2026</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Berlangsung</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">1</p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-play-circle text-2xl text-green-600 dark:text-green-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Race aktif</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Peserta</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">4,231</p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-people text-2xl text-purple-600 dark:text-purple-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-green-600 dark:text-green-400">↑ 15% dari tahun lalu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Race Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="raceGrid">
+      <!-- Race Card 1 - Upcoming -->
+      <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+        <div class="relative h-48 overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race2027/600/400" 
+            alt="Waru Turi Run 2027" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-3 left-3">
+            <span class="px-3 py-1 bg-yellow-500 text-white text-xs font-medium rounded-full">
+              <i class="bi bi-calendar-event mr-1"></i>
+              Akan Datang
+            </span>
+          </div>
+          <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit" onclick="openEditModal()">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteRace(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+            <div class="flex items-center gap-4 text-white">
+              <div class="flex items-center gap-1">
+                <i class="bi bi-calendar3"></i>
+                <span class="text-sm">15 Agu 2026</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <i class="bi bi-clock"></i>
+                <span class="text-sm">06:00 WIB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-5">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Waru Turi Run 2027</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+            Race tahunan Waru Turi dengan rute yang menantang dan pemandangan alam yang indah.
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <span class="flex items-center gap-1">
+                <i class="bi bi-people text-blue-500"></i>
+                1,847 peserta
+              </span>
+              <span class="flex items-center gap-1">
+                <i class="bi bi-trophy text-yellow-500"></i>
+                3 kategori
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
+                <i class="bi bi-check-circle-fill mr-1 text-[10px]"></i>
+                Open
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Race Card 2 - Ongoing -->
+      <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+        <div class="relative h-48 overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race2026/600/400" 
+            alt="Waru Turi Run 2026" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-3 left-3">
+            <span class="px-3 py-1 bg-green-500 text-white text-xs font-medium rounded-full animate-pulse">
+              <i class="bi bi-play-circle mr-1"></i>
+              Berlangsung
+            </span>
+          </div>
+          <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit" onclick="openEditModal()">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteRace(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+            <div class="flex items-center gap-4 text-white">
+              <div class="flex items-center gap-1">
+                <i class="bi bi-calendar3"></i>
+                <span class="text-sm">10 Jul 2026</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <i class="bi bi-clock"></i>
+                <span class="text-sm">06:00 WIB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-5">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Waru Turi Run 2026</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+            Race dengan kategori 5K, 10K, dan Half Marathon yang diikuti oleh ribuan peserta.
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <span class="flex items-center gap-1">
+                <i class="bi bi-people text-blue-500"></i>
+                2,384 peserta
+              </span>
+              <span class="flex items-center gap-1">
+                <i class="bi bi-trophy text-yellow-500"></i>
+                3 kategori
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-medium rounded-full">
+                <i class="bi bi-clock mr-1 text-[10px]"></i>
+                Live
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Race Card 3 - Completed -->
+      <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+        <div class="relative h-48 overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race2025/600/400" 
+            alt="Waru Turi Run 2025" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-3 left-3">
+            <span class="px-3 py-1 bg-gray-500 text-white text-xs font-medium rounded-full">
+              <i class="bi bi-check-circle mr-1"></i>
+              Selesai
+            </span>
+          </div>
+          <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit" onclick="openEditModal()">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteRace(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+            <div class="flex items-center gap-4 text-white">
+              <div class="flex items-center gap-1">
+                <i class="bi bi-calendar3"></i>
+                <span class="text-sm">12 Jul 2025</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <i class="bi bi-clock"></i>
+                <span class="text-sm">06:00 WIB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-5">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Waru Turi Run 2025</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+            Race pertama dengan kategori Marathon yang sukses menarik peserta dari luar kota.
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <span class="flex items-center gap-1">
+                <i class="bi bi-people text-blue-500"></i>
+                1,562 peserta
+              </span>
+              <span class="flex items-center gap-1">
+                <i class="bi bi-trophy text-yellow-500"></i>
+                4 kategori
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium rounded-full">
+                <i class="bi bi-archive mr-1 text-[10px]"></i>
+                Arsip
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Race Card 4 - Upcoming -->
+      <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300">
+        <div class="relative h-48 overflow-hidden">
+          <img 
+            src="https://picsum.photos/seed/race2028/600/400" 
+            alt="Waru Turi Run 2028" 
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+          <div class="absolute top-3 left-3">
+            <span class="px-3 py-1 bg-yellow-500 text-white text-xs font-medium rounded-full">
+              <i class="bi bi-calendar-event mr-1"></i>
+              Akan Datang
+            </span>
+          </div>
+          <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit" onclick="openEditModal()">
+              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+            </button>
+            <button class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteRace(this)">
+              <i class="bi bi-trash text-sm text-red-500"></i>
+            </button>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+            <div class="flex items-center gap-4 text-white">
+              <div class="flex items-center gap-1">
+                <i class="bi bi-calendar3"></i>
+                <span class="text-sm">20 Jan 2027</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <i class="bi bi-clock"></i>
+                <span class="text-sm">05:30 WIB</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="p-5">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Waru Turi Run 2028</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+            Persiapan race tahun depan dengan konsep baru dan rute yang lebih menantang.
+          </p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+              <span class="flex items-center gap-1">
+                <i class="bi bi-people text-blue-500"></i>
+                0 peserta
+              </span>
+              <span class="flex items-center gap-1">
+                <i class="bi bi-trophy text-yellow-500"></i>
+                4 kategori
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs font-medium rounded-full">
+                <i class="bi bi-star mr-1 text-[10px]"></i>
+                Planning
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add New Race Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
+        <div class="h-48 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+          <button onclick="openModal()" class="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition">
+            <i class="bi bi-plus-circle text-5xl"></i>
+            <span class="text-sm font-medium">Tambah Race Baru</span>
+          </button>
+        </div>
+        <div class="p-5">
+          <h3 class="text-lg font-bold text-gray-400 dark:text-gray-500 text-center">Buat Race Baru</h3>
+          <p class="text-sm text-gray-400 dark:text-gray-500 text-center mt-1">Klik untuk menambahkan race</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load More -->
+    <div class="mt-8 text-center">
+      <button class="px-8 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium">
+        Load More
+        <i class="bi bi-arrow-down ml-2"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal Tambah Race -->
+  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0 invisible transition-all duration-300">
+    <div class="absolute inset-0 bg-black/50" onclick="closeModal()"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform scale-95 transition-all duration-300">
+      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <i class="bi bi-plus-circle text-blue-600 dark:text-blue-400 mr-2"></i>
+          Tambah Race Baru
+        </h3>
+        <button onclick="closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Nama Race <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Masukkan nama race"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Status <span class="text-red-500">*</span>
+            </label>
+            <select class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              <option value="upcoming">Akan Datang</option>
+              <option value="ongoing">Berlangsung</option>
+              <option value="completed">Selesai</option>
+              <option value="cancelled">Dibatalkan</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Deskripsi Race <span class="text-red-500">*</span>
+          </label>
+          <textarea 
+            rows="3" 
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+            placeholder="Masukkan deskripsi race..."
+          ></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tanggal <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="date" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              value="2026-07-10"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Waktu Mulai <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="time" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              value="06:00"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Waktu Selesai <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="time" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              value="12:00"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Lokasi <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Masukkan lokasi"
+              value="Waru Turi, Indonesia"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Kapasitas Maksimal
+            </label>
+            <input 
+              type="number" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Masukkan kapasitas"
+              value="5000"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Kategori Race <span class="text-red-500">*</span>
+          </label>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <label class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+              <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">5K</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+              <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">10K</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+              <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Half Marathon</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+              <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Marathon</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Gambar Race
+          </label>
+          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer" id="uploadArea">
+            <input type="file" accept="image/*" class="hidden" id="raceImageInput" />
+            <i class="bi bi-cloud-upload text-3xl text-gray-400 dark:text-gray-500 mb-2 block"></i>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Klik untuk upload gambar race</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG, PNG (Max 2MB)</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Harga Pendaftaran (Rp)
+            </label>
+            <input 
+              type="text" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Masukkan harga"
+              value="250,000"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Kuota Peserta
+            </label>
+            <input 
+              type="number" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Masukkan kuota"
+              value="5000"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="flex items-center gap-3">
+            <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" />
+            <span class="text-sm text-gray-700 dark:text-gray-300">Aktifkan pendaftaran untuk race ini</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-white dark:bg-gray-800 px-6 py-4 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end gap-3">
+        <button onclick="closeModal()" class="px-6 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          Batal
+        </button>
+        <button onclick="saveRace()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+          <i class="bi bi-check-lg"></i>
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Edit Race -->
+  <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0 invisible transition-all duration-300">
+    <div class="absolute inset-0 bg-black/50" onclick="closeEditModal()"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform scale-95 transition-all duration-300">
+      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <i class="bi bi-pencil-square text-yellow-600 dark:text-yellow-400 mr-2"></i>
+          Edit Race
+        </h3>
+        <button onclick="closeEditModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <!-- Sama seperti modal tambah tapi dengan data terisi -->
+      <div class="p-6 space-y-4">
+        <!-- Form fields sama dengan modal tambah -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Nama Race <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              value="Waru Turi Run 2027"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Status <span class="text-red-500">*</span>
+            </label>
+            <select class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              <option value="upcoming" selected>Akan Datang</option>
+              <option value="ongoing">Berlangsung</option>
+              <option value="completed">Selesai</option>
+              <option value="cancelled">Dibatalkan</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Deskripsi Race <span class="text-red-500">*</span>
+          </label>
+          <textarea 
+            rows="3" 
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+          >Race tahunan Waru Turi dengan rute yang menantang dan pemandangan alam yang indah.</textarea>
+        </div>
+
+        <!-- Rest of form fields same as modal tambah -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tanggal <span class="text-red-500">*</span>
+            </label>
+            <input type="date" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" value="2026-08-15" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Waktu Mulai <span class="text-red-500">*</span>
+            </label>
+            <input type="time" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" value="06:00" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Waktu Selesai <span class="text-red-500">*</span>
+            </label>
+            <input type="time" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" value="12:00" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Lokasi <span class="text-red-500">*</span>
+            </label>
+            <input type="text" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" value="Waru Turi, Indonesia" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Kapasitas Maksimal
+            </label>
+            <input type="number" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" value="5000" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Kategori Race <span class="text-red-500">*</span>
+          </label>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <label class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+              <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">5K</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+              <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">10K</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+              <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Half Marathon</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+              <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Marathon</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Gambar Race
+          </label>
+          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer">
+            <input type="file" accept="image/*" class="hidden" />
+            <i class="bi bi-cloud-upload text-3xl text-gray-400 dark:text-gray-500 mb-2 block"></i>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Klik untuk upload gambar race</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">JPG, PNG (Max 2MB)</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Harga Pendaftaran (Rp)
+            </label>
+            <input type="text" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" value="250,000" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Kuota Peserta
+            </label>
+            <input type="number" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" value="5000" />
+          </div>
+        </div>
+
+        <div>
+          <label class="flex items-center gap-3">
+            <input type="checkbox" checked class="rounded border-gray-300 dark:border-gray-600" />
+            <span class="text-sm text-gray-700 dark:text-gray-300">Aktifkan pendaftaran untuk race ini</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-white dark:bg-gray-800 px-6 py-4 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end gap-3">
+        <button onclick="closeEditModal()" class="px-6 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          Batal
+        </button>
+        <button onclick="updateRace()" class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition flex items-center gap-2">
+          <i class="bi bi-check-lg"></i>
+          Update
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+    <i class="bi bi-check-circle-fill text-green-400"></i>
+    <span id="toast-message">Race berhasil disimpan!</span>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <script>
+    // Modal functions
+    const modal = document.getElementById('modal');
+    const editModal = document.getElementById('editModal');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    // Open Add Modal
+    function openModal() {
+      modal.classList.remove('opacity-0', 'invisible');
+      modal.querySelector('.relative').classList.remove('scale-95');
+      modal.querySelector('.relative').classList.add('scale-100');
+      document.body.style.overflow = 'hidden';
+    }
+    window.openModal = openModal;
+
+    // Close Add Modal
+    function closeModal() {
+      modal.classList.add('opacity-0', 'invisible');
+      modal.querySelector('.relative').classList.remove('scale-100');
+      modal.querySelector('.relative').classList.add('scale-95');
+      document.body.style.overflow = '';
+    }
+    window.closeModal = closeModal;
+
+    // Open Edit Modal
+    function openEditModal() {
+      editModal.classList.remove('opacity-0', 'invisible');
+      editModal.querySelector('.relative').classList.remove('scale-95');
+      editModal.querySelector('.relative').classList.add('scale-100');
+      document.body.style.overflow = 'hidden';
+    }
+    window.openEditModal = openEditModal;
+
+    // Close Edit Modal
+    function closeEditModal() {
+      editModal.classList.add('opacity-0', 'invisible');
+      editModal.querySelector('.relative').classList.remove('scale-100');
+      editModal.querySelector('.relative').classList.add('scale-95');
+      document.body.style.overflow = '';
+    }
+    window.closeEditModal = closeEditModal;
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        closeEditModal();
+      }
+    });
+
+    // Save race
+    function saveRace() {
+      closeModal();
+      showToast('Race berhasil ditambahkan!');
+    }
+    window.saveRace = saveRace;
+
+    // Update race
+    function updateRace() {
+      closeEditModal();
+      showToast('Race berhasil diupdate!');
+    }
+    window.updateRace = updateRace;
+
+    // Delete race
+    function deleteRace(btn) {
+      if (confirm('Yakin ingin menghapus race ini?')) {
+        const card = btn.closest('.group');
+        if (card) {
+          card.style.transform = 'scale(0.9)';
+          card.style.opacity = '0';
+          setTimeout(() => {
+            card.remove();
+            showToast('Race berhasil dihapus!');
+          }, 300);
+        }
+      }
+    }
+    window.deleteRace = deleteRace;
+
+    // Upload area
+    const uploadArea = document.getElementById('uploadArea');
+    const raceImageInput = document.getElementById('raceImageInput');
+
+    uploadArea?.addEventListener('click', () => {
+      raceImageInput?.click();
+    });
+
+    uploadArea?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+      showToast('Gambar berhasil diupload!');
+    });
+
+    raceImageInput?.addEventListener('change', () => {
+      showToast('Gambar berhasil diupload!');
+    });
+
+    // Toast notification
+    function showToast(message) {
+      toastMessage.textContent = message;
+      toast.classList.remove('translate-y-full', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      
+      setTimeout(hideToast, 3000);
+    }
+    window.showToast = showToast;
+
+    function hideToast() {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-full', 'opacity-0');
+    }
+    window.hideToast = hideToast;
+
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    searchInput?.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const cards = document.querySelectorAll('#raceGrid .group:not(:last-child)');
+      
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+
+    console.log('✅ Race Admin Panel loaded');
+  </script>
+</AdminLayout>

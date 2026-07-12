@@ -1,0 +1,58 @@
+[
+  {
+    "id": 1,
+    "question": "Apa itu Waru Turi Fun Run?",
+    "answer": "Waru Turi Fun Run adalah ajang lomba lari kategori 5K dan 10K dengan lintasan jalan raya, jalan pedesaan, dan area persawahan yang dimulai dari Bendung Gerak Waru Turi.",
+    "order": 1,
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "question": "Siapa saja yang boleh ikut?",
+    "answer": "Acara ini terbuka untuk semua kalangan, baik pemula, pelajar, komunitas lari, keluarga, hingga pelari profesional.",
+    "order": 2,
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "question": "Di mana lokasi start dan finish?",
+    "answer": "Lokasi start dan finish berada di area utama Bendung Gerak Waru Turi.",
+    "order": 3,
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 4,
+    "question": "Fasilitas apa saja yang didapat peserta?",
+    "answer": "Peserta akan mendapatkan jersey run eksklusif, medali finisher, BIB number, snack, e-sertifikat, doorprize, dokumentasi, dan refreshment.",
+    "order": 4,
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 5,
+    "question": "Bagaimana cara mendaftar?",
+    "answer": "Pendaftaran dilakukan secara online melalui website resmi lomba serta pendaftaran offline di kantor Jawa Pos Radar Kediri.",
+    "order": 5,
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 6,
+    "question": "Bagaimana jika saya datang terlambat?",
+    "answer": "Peserta masih diperbolehkan melakukan start maksimal 10 menit setelah flag off.",
+    "order": 6,
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 7,
+    "question": "Apakah boleh membawa hewan peliharaan?",
+    "answer": "Hewan peliharaan tidak diperbolehkan masuk ke jalur lari demi keamanan dan kenyamanan seluruh peserta.",
+    "order": 7,
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 8,
+    "question": "Apa yang menyebabkan event dihentikan?",
+    "answer": "Event dapat dihentikan apabila terjadi kondisi cuaca ekstrem seperti hujan deras, angin puting beliung, atau tanah longsor sesuai arahan pihak berwenang.",
+    "order": 8,
+    "created_at": "2027-01-01T00:00:00.000Z"
+  }
+]

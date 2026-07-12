@@ -1,0 +1,614 @@
+---
+// src/pages/admin/routes/edit/[id].astro
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+
+// Get ID from params
+const { id } = Astro.params;
+
+// Data dummy untuk sementara
+const dummyRoutes = [
+  {
+    id: '1',
+    name: 'Rute 5K - Fun Run',
+    category: '5K',
+    distance: '5 km',
+    description: 'Rute fun run sejauh 5 kilometer dengan pemandangan indah sepanjang jalan. Cocok untuk pemula dan keluarga.',
+    difficulty: 'Mudah',
+    elevation: '50 m',
+    duration: '30-45 menit',
+    image: 'https://picsum.photos/seed/route5k/800/500',
+    startPoint: 'Bendung Gerak Waru Turi',
+    endPoint: 'Bendung Gerak Waru Turi',
+    status: 'active',
+    waypoints: [
+      { id: '1', name: 'Start - Bendung Gerak', distance: '0 km', description: 'Area start di depan Bendung Gerak Waru Turi' },
+      { id: '2', name: 'Pos 1 - Jalan Raya', distance: '1.2 km', description: 'Melewati jalan raya utama dengan pemandangan persawahan' },
+      { id: '3', name: 'Pos 2 - Persawahan', distance: '2.5 km', description: 'Jalur menyusuri area persawahan dengan udara segar' },
+      { id: '4', name: 'Pos 3 - Jembatan', distance: '3.8 km', description: 'Melintasi jembatan dengan pemandangan sungai' },
+      { id: '5', name: 'Finish - Bendung Gerak', distance: '5 km', description: 'Garis finish di depan Bendung Gerak Waru Turi' },
+    ],
+    createdAt: '2026-07-10',
+  },
+  {
+    id: '2',
+    name: 'Rute 10K - Challenge',
+    category: '10K',
+    distance: '10 km',
+    description: 'Rute menantang sejauh 10 kilometer dengan kombinasi jalan datar dan tanjakan ringan. Direkomendasikan untuk pelari berpengalaman.',
+    difficulty: 'Sedang',
+    elevation: '120 m',
+    duration: '60-90 menit',
+    image: 'https://picsum.photos/seed/route10k/800/500',
+    startPoint: 'Bendung Gerak Waru Turi',
+    endPoint: 'Bendung Gerak Waru Turi',
+    status: 'active',
+    waypoints: [
+      { id: '1', name: 'Start - Bendung Gerak', distance: '0 km', description: 'Area start di depan Bendung Gerak Waru Turi' },
+      { id: '2', name: 'Pos 1 - Perumahan', distance: '2 km', description: 'Melewati kawasan perumahan dengan jalan yang landai' },
+      { id: '3', name: 'Pos 2 - Bukit Kecil', distance: '4.5 km', description: 'Tanjakan ringan dengan pemandangan kota dari atas' },
+      { id: '4', name: 'Pos 3 - Hutan Kota', distance: '6.5 km', description: 'Jalur menembus hutan kota yang rindang' },
+      { id: '5', name: 'Pos 4 - Jembatan', distance: '8.2 km', description: 'Melintasi jembatan dengan pemandangan sungai yang indah' },
+      { id: '6', name: 'Finish - Bendung Gerak', distance: '10 km', description: 'Garis finish dengan semangat juang tinggi' },
+    ],
+    createdAt: '2026-07-10',
+  },
+  {
+    id: '3',
+    name: 'Rute Half Marathon',
+    category: 'Half Marathon',
+    distance: '21.1 km',
+    description: 'Rute half marathon dengan pemandangan spektakuler dan tantangan yang menguji ketahanan fisik dan mental. Untuk pelari elit.',
+    difficulty: 'Sulit',
+    elevation: '250 m',
+    duration: '120-180 menit',
+    image: 'https://picsum.photos/seed/halfmarathon/800/500',
+    startPoint: 'Bendung Gerak Waru Turi',
+    endPoint: 'Bendung Gerak Waru Turi',
+    status: 'inactive',
+    waypoints: [
+      { id: '1', name: 'Start - Bendung Gerak', distance: '0 km', description: 'Area start di depan Bendung Gerak Waru Turi' },
+      { id: '2', name: 'Pos 1 - Perumahan', distance: '3.5 km', description: 'Melewati kawasan perumahan dengan jalan yang landai' },
+      { id: '3', name: 'Pos 2 - Bukit Kecil', distance: '7.2 km', description: 'Tanjakan dengan pemandangan alam yang memukau' },
+      { id: '4', name: 'Pos 3 - Hutan Kota', distance: '10.8 km', description: 'Jalur menembus hutan kota yang rindang' },
+      { id: '5', name: 'Pos 4 - Jembatan', distance: '14.5 km', description: 'Melintasi jembatan ikonik dengan pemandangan sungai' },
+      { id: '6', name: 'Pos 5 - Puncak', distance: '17.3 km', description: 'Titik tertinggi dengan pemandangan spektakuler' },
+      { id: '7', name: 'Finish - Bendung Gerak', distance: '21.1 km', description: 'Garis finish - pencapaian epik!' },
+    ],
+    createdAt: '2026-07-09',
+  },
+];
+
+// Cari route berdasarkan ID
+const route = dummyRoutes.find(r => r.id === id);
+
+// Jika tidak ditemukan, redirect
+if (!route) {
+  return Astro.redirect('/admin/routes');
+}
+---
+
+<AdminLayout title={`Edit ${route.name} - Rute`}>
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <i class="bi bi-pencil-square text-yellow-600 dark:text-yellow-400 mr-2"></i>
+            Edit Rute
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Update data rute {route.name}
+          </p>
+        </div>
+        <a 
+          href="/admin/routes" 
+          class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2"
+        >
+          <i class="bi bi-arrow-left"></i>
+          Kembali
+        </a>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form id="routeForm" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-6 space-y-6">
+      <!-- Informasi Dasar -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <i class="bi bi-info-circle text-blue-600 dark:text-blue-400 mr-2"></i>
+          Informasi Dasar
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Nama Rute <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeName"
+              value={route.name}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Kategori <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="routeCategory"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            >
+              <option value="5K" selected={route.category === '5K'}>5K</option>
+              <option value="10K" selected={route.category === '10K'}>10K</option>
+              <option value="Half Marathon" selected={route.category === 'Half Marathon'}>Half Marathon</option>
+              <option value="Marathon" selected={route.category === 'Marathon'}>Marathon</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Jarak (km) <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeDistance"
+              value={route.distance}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Elevasi <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeElevation"
+              value={route.elevation}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Durasi <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeDuration"
+              value={route.duration}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Lokasi -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <i class="bi bi-geo-alt text-blue-600 dark:text-blue-400 mr-2"></i>
+          Lokasi
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Titik Start <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeStart"
+              value={route.startPoint}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Titik Finish <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeEnd"
+              value={route.endPoint}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <i class="bi bi-sliders text-blue-600 dark:text-blue-400 mr-2"></i>
+          Detail Rute
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tingkat Kesulitan <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="routeDifficulty"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            >
+              <option value="Mudah" selected={route.difficulty === 'Mudah'}>Mudah</option>
+              <option value="Sedang" selected={route.difficulty === 'Sedang'}>Sedang</option>
+              <option value="Sulit" selected={route.difficulty === 'Sulit'}>Sulit</option>
+              <option value="Sangat Sulit" selected={route.difficulty === 'Sangat Sulit'}>Sangat Sulit</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Status <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="routeStatus"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            >
+              <option value="active" selected={route.status === 'active'}>Aktif</option>
+              <option value="inactive" selected={route.status === 'inactive'}>Tidak Aktif</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Deskripsi <span class="text-red-500">*</span>
+          </label>
+          <textarea 
+            id="routeDescription"
+            rows="4" 
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+            required
+          >{route.description}</textarea>
+        </div>
+      </div>
+
+      <!-- Waypoints -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            <i class="bi bi-pin-map text-blue-600 dark:text-blue-400 mr-2"></i>
+            Checkpoint / Waypoints
+          </h3>
+          <span class="text-sm text-gray-500 dark:text-gray-400">{route.waypoints.length} titik</span>
+        </div>
+        
+        <div class="space-y-3" id="waypointsContainer">
+          {route.waypoints.map((wp, index) => (
+            <div key={wp.id} class="waypoint-item bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+              <div class="flex items-center gap-3 mb-3">
+                <span class="w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-bold rounded-full">
+                  {index + 1}
+                </span>
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input 
+                    type="text" 
+                    value={wp.name}
+                    placeholder="Nama checkpoint"
+                    class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
+                  />
+                  <input 
+                    type="text" 
+                    value={wp.distance}
+                    placeholder="Jarak (km)"
+                    class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
+                  />
+                </div>
+                <button type="button" onclick="removeWaypoint(this)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+              <div>
+                <textarea 
+                  rows="2"
+                  placeholder="Deskripsi checkpoint"
+                  class="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm resize-none"
+                >{wp.description}</textarea>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button type="button" onclick="addWaypoint()" class="mt-3 px-4 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center justify-center gap-2 w-full">
+          <i class="bi bi-plus-lg"></i>
+          Tambah Checkpoint
+        </button>
+      </div>
+
+      <!-- Gambar -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <i class="bi bi-image text-blue-600 dark:text-blue-400 mr-2"></i>
+          Gambar Rute
+        </h3>
+        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer" id="uploadArea">
+          <input type="file" accept="image/*" class="hidden" id="imageInput" />
+          <div id="imagePreview" class="mb-4">
+            <img src={route.image} alt="Preview" class="max-h-48 mx-auto rounded-lg" />
+          </div>
+          <i class="bi bi-cloud-upload text-4xl text-gray-400 dark:text-gray-500 mb-3 block" id="uploadIcon"></i>
+          <p class="text-gray-600 dark:text-gray-300 font-medium" id="uploadText">Klik atau drag & drop untuk mengganti gambar</p>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, GIF (Max 2MB)</p>
+        </div>
+      </div>
+
+      <!-- Submit Buttons -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6 flex flex-wrap justify-end gap-3">
+        <a 
+          href="/admin/routes" 
+          class="px-6 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+        >
+          Batal
+        </a>
+        <button 
+          type="submit" 
+          id="submitBtn"
+          class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i class="bi bi-check-lg"></i>
+          <span id="submitText">Update Rute</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+    <i class="bi bi-check-circle-fill text-green-400"></i>
+    <span id="toast-message">Rute berhasil diupdate!</span>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <script>
+    // ============================================================
+    // WAYPOINTS
+    // ============================================================
+    let waypointCount = document.querySelectorAll('.waypoint-item').length;
+
+    function addWaypoint() {
+      const container = document.getElementById('waypointsContainer');
+      const newIndex = waypointCount + 1;
+      
+      const waypointItem = document.createElement('div');
+      waypointItem.className = 'waypoint-item bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600 animate-fade-in';
+      waypointItem.innerHTML = `
+        <div class="flex items-center gap-3 mb-3">
+          <span class="w-8 h-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-bold rounded-full">
+            ${newIndex}
+          </span>
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <input 
+              type="text" 
+              placeholder="Nama checkpoint"
+              class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
+            />
+            <input 
+              type="text" 
+              placeholder="Jarak (km)"
+              class="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
+            />
+          </div>
+          <button type="button" onclick="removeWaypoint(this)" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+        <div>
+          <textarea 
+            rows="2"
+            placeholder="Deskripsi checkpoint"
+            class="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm resize-none"
+          ></textarea>
+        </div>
+      `;
+      
+      container.appendChild(waypointItem);
+      waypointCount++;
+      
+      // Scroll ke waypoint baru
+      waypointItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    window.addWaypoint = addWaypoint;
+
+    function removeWaypoint(btn) {
+      const item = btn.closest('.waypoint-item');
+      if (document.querySelectorAll('.waypoint-item').length <= 1) {
+        showToast('⚠️ Minimal harus ada 1 checkpoint');
+        return;
+      }
+      
+      if (confirm('Hapus checkpoint ini?')) {
+        item.style.transform = 'scale(0.9)';
+        item.style.opacity = '0';
+        setTimeout(() => {
+          item.remove();
+          updateWaypointNumbers();
+          waypointCount--;
+        }, 300);
+      }
+    }
+    window.removeWaypoint = removeWaypoint;
+
+    function updateWaypointNumbers() {
+      const items = document.querySelectorAll('.waypoint-item');
+      items.forEach((item, index) => {
+        const number = item.querySelector('.w-8.h-8');
+        if (number) number.textContent = index + 1;
+      });
+    }
+
+    // ============================================================
+    // IMAGE UPLOAD
+    // ============================================================
+    const uploadArea = document.getElementById('uploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadIcon = document.getElementById('uploadIcon');
+    const uploadText = document.getElementById('uploadText');
+
+    uploadArea?.addEventListener('click', () => {
+      imageInput?.click();
+    });
+
+    uploadArea?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleImageFile(files[0]);
+      }
+    });
+
+    imageInput?.addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files.length > 0) {
+        handleImageFile(files[0]);
+      }
+    });
+
+    function handleImageFile(file) {
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        showToast('Format file tidak didukung. Gunakan JPG, PNG, atau GIF.');
+        return;
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran file terlalu besar. Maksimal 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = imagePreview.querySelector('img');
+        if (img) {
+          img.src = e.target.result;
+          imagePreview.classList.remove('hidden');
+          uploadIcon.classList.add('hidden');
+          uploadText.textContent = file.name;
+          uploadText.classList.add('text-blue-600', 'dark:text-blue-400');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ============================================================
+    // FORM SUBMISSION
+    // ============================================================
+    const form = document.getElementById('routeForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Validasi form
+      const name = document.getElementById('routeName').value.trim();
+      const category = document.getElementById('routeCategory').value;
+      const distance = document.getElementById('routeDistance').value.trim();
+      const elevation = document.getElementById('routeElevation').value.trim();
+      const duration = document.getElementById('routeDuration').value.trim();
+      const start = document.getElementById('routeStart').value.trim();
+      const end = document.getElementById('routeEnd').value.trim();
+      const difficulty = document.getElementById('routeDifficulty').value;
+      const status = document.getElementById('routeStatus').value;
+      const description = document.getElementById('routeDescription').value.trim();
+      
+      if (!name || !category || !distance || !elevation || !duration || !start || !end || !difficulty || !description) {
+        showToast('⚠️ Mohon lengkapi semua field yang wajib diisi');
+        return;
+      }
+
+      // Validasi waypoints
+      const waypointItems = document.querySelectorAll('.waypoint-item');
+      if (waypointItems.length === 0) {
+        showToast('⚠️ Tambahkan minimal 1 checkpoint');
+        return;
+      }
+
+      // Simpan data
+      submitBtn.disabled = true;
+      submitText.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...';
+
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        showToast('✅ Rute berhasil diupdate!');
+        
+        setTimeout(() => {
+          window.location.href = `/admin/routes/${'{route.id}'}`;
+        }, 1500);
+      } catch (error) {
+        console.error('Error updating route:', error);
+        showToast('❌ Terjadi kesalahan saat mengupdate rute');
+        submitBtn.disabled = false;
+        submitText.textContent = 'Update Rute';
+      }
+    });
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('translate-y-full', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        setTimeout(hideToast, 3000);
+      }
+    }
+    window.showToast = showToast;
+
+    function hideToast() {
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-full', 'opacity-0');
+      }
+    }
+    window.hideToast = hideToast;
+
+    console.log('✅ Edit Rute Admin Panel loaded');
+  </script>
+
+  <style>
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+  </style>
+</AdminLayout>

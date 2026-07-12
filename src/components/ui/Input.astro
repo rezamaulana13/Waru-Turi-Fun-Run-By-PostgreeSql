@@ -1,0 +1,165 @@
+---
+// src/components/ui/Input.astro
+export interface Props {
+  type?: 'text' | 'email' | 'tel' | 'number' | 'password' | 'date' | 'file' | 'search' | 'url';
+  name: string;
+  id?: string;
+  label?: string;
+  placeholder?: string;
+  value?: string;
+  required?: boolean;
+  disabled?: boolean;
+  readonly?: boolean;
+  error?: string;
+  className?: string;
+  icon?: string;
+  iconPosition?: 'left' | 'right';
+  autocomplete?: string;
+  min?: number | string;
+  max?: number | string;
+  step?: number | string;
+  rows?: number;
+  hint?: string;
+}
+
+const { 
+  type = 'text',
+  name,
+  id = name,
+  label,
+  placeholder,
+  value,
+  required = false,
+  disabled = false,
+  readonly = false,
+  error,
+  className = '',
+  icon,
+  iconPosition = 'left',
+  autocomplete,
+  min,
+  max,
+  step,
+  rows,
+  hint,
+} = Astro.props;
+
+const hasError = error && error.length > 0;
+
+// ===== INPUT CLASSES =====
+const baseInputClasses = `
+  w-full px-4 py-3 rounded-xl border-2 transition-all duration-200
+  focus:outline-none focus:ring-4
+  ${disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white'}
+  ${readonly ? 'bg-gray-50 cursor-default' : ''}
+  ${icon && iconPosition === 'left' ? 'pl-11' : ''}
+  ${icon && iconPosition === 'right' ? 'pr-11' : ''}
+`;
+
+const borderClasses = hasError
+  ? 'border-red-500 focus:border-red-500 focus:ring-red-100'
+  : 'border-gray-200 focus:border-blue-600 focus:ring-blue-100';
+
+const textareaClasses = `
+  ${baseInputClasses}
+  resize-y min-h-[80px]
+`;
+
+const inputClasses = `
+  ${baseInputClasses}
+  ${borderClasses}
+  ${hasError ? 'text-red-700' : 'text-gray-900'}
+  placeholder:text-gray-400
+`;
+
+// ===== IS TEXTAREA =====
+const isTextarea = type === 'textarea';
+const Tag = isTextarea ? 'textarea' : 'input';
+const inputProps = isTextarea 
+  ? { rows: rows || 3 }
+  : { type, min, max, step };
+---
+
+<div class={`form-group ${className}`}>
+  {label && (
+    <label for={id} class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+      {label}
+      {required && <span class="text-red-500 ml-0.5">*</span>}
+    </label>
+  )}
+  
+  <div class="relative">
+    {icon && iconPosition === 'left' && (
+      <i class={`${icon} absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none transition-colors`}></i>
+    )}
+    
+    <Tag
+      {...inputProps}
+      id={id}
+      name={name}
+      placeholder={placeholder}
+      value={isTextarea ? undefined : value}
+      required={required}
+      disabled={disabled}
+      readOnly={readonly}
+      autocomplete={autocomplete}
+      class={isTextarea ? textareaClasses : inputClasses}
+    >
+      {isTextarea ? value : ''}
+    </Tag>
+    
+    {icon && iconPosition === 'right' && (
+      <i class={`${icon} absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none transition-colors`}></i>
+    )}
+    
+    {hasError && (
+      <div class="absolute right-3.5 top-1/2 -translate-y-1/2">
+        <i class="bi bi-exclamation-circle-fill text-red-500 text-lg"></i>
+      </div>
+    )}
+  </div>
+  
+  {hint && !hasError && (
+    <p class="text-xs text-gray-400 mt-1.5">{hint}</p>
+  )}
+  
+  {hasError && (
+    <p class="text-sm text-red-500 mt-1.5 flex items-center gap-1.5">
+      <i class="bi bi-exclamation-circle"></i>
+      {error}
+    </p>
+  )}
+</div>
+
+<style>
+  .form-group {
+    contain: layout paint;
+  }
+  
+  input:focus + .bi,
+  textarea:focus + .bi {
+    color: #2563eb;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    input, textarea {
+      transition: none !important;
+    }
+  }
+
+  /* Dark mode */
+  @media (prefers-color-scheme: dark) {
+    input, textarea {
+      background-color: #1f2937;
+      border-color: #374151;
+      color: #f3f4f6;
+    }
+    input:focus, textarea:focus {
+      border-color: #3b82f6;
+      ring-color: #1e3a5f;
+    }
+    input::placeholder, textarea::placeholder {
+      color: #6b7280;
+    }
+  }
+</style>

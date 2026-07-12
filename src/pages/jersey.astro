@@ -1,0 +1,403 @@
+---
+// src/pages/jersey.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+
+const jerseySizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL'];
+
+const sizeChart = [
+  { size: 'S', chest: '94', length: '66', weight: '55 kg' },
+  { size: 'M', chest: '100', length: '69', weight: '55-65 kg' },
+  { size: 'L', chest: '106', length: '72', weight: '65-75 kg' },
+  { size: 'XL', chest: '112', length: '75', weight: '75-85 kg' },
+  { size: 'XXL', chest: '118', length: '78', weight: '85-95 kg' },
+  { size: 'XXXL', chest: '124', length: '81', weight: '95-105 kg' },
+  { size: '4XL', chest: '130', length: '84', weight: '105-115 kg' },
+  { size: '5XL', chest: '136', length: '87', weight: '115-125 kg' },
+];
+
+const jerseyImage = '/images/jersey-waruturi.png';
+---
+
+<BaseLayout title="Jersey 3D - Waru Turi Fun Run 2026">
+  <Navbar />
+
+  <!-- ===== HERO ===== -->
+  <section class="relative py-20 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white overflow-hidden">
+    <div class="absolute inset-0">
+      <div class="absolute top-[-50%] right-[-20%] w-[800px] h-[800px] bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
+      <div class="absolute bottom-[-40%] left-[-10%] w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-3xl animate-float-delay"></div>
+    </div>
+    
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="max-w-4xl mx-auto text-center">
+        <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-5 py-2.5 rounded-full text-sm font-semibold mb-6 border border-white/20 animate-fade-down">
+          <i class="bi bi-hdd-stack text-[#FFD700]"></i>
+          3D Interactive Jersey
+        </div>
+        <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold mb-6 animate-fade-down animation-delay-200">
+          Jersey <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FFD700] to-[#FFA500]">3D</span>
+        </h1>
+        <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed animate-fade-down animation-delay-400">
+          Putar, zoom, dan pilih warna favoritmu secara real-time.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 3D JERSEY ===== -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start max-w-7xl mx-auto">
+        
+        <!-- 3D Viewer -->
+        <div class="relative">
+          <div class="bg-white rounded-3xl p-6 shadow-2xl border border-gray-200">
+            <div id="jersey-container" class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#e8edf5] to-[#d5dde8]" style="height: 520px; min-height: 400px; width: 100%;">
+              <div id="loading-text" class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-sm gap-3">
+                <div class="w-12 h-12 border-4 border-gray-200 border-t-[#0045FF] rounded-full animate-spin"></div>
+                <span>Loading 3D Jersey...</span>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md text-white text-xs px-5 py-2.5 rounded-full flex items-center gap-5 z-10 border border-white/10">
+              <span class="flex items-center gap-2"><i class="bi bi-mouse text-[#FFD700]"></i> Drag</span>
+              <span class="w-px h-4 bg-white/20"></span>
+              <span class="flex items-center gap-2"><i class="bi bi-zoom-in text-[#FFD700]"></i> Zoom</span>
+            </div>
+
+            <!-- Color Picker -->
+            <div class="mt-6 flex items-center justify-center gap-4">
+              <span class="text-sm font-medium text-gray-700">Pilih Warna:</span>
+              <div class="flex gap-3">
+                <button onclick="changeJerseyColor('#1a2a6c', 'Navy')" class="color-btn w-10 h-10 rounded-full border-2 border-[#0045FF] ring-2 ring-[#0045FF]/20 scale-110 transition-all" style="background:#1a2a6c" data-color="Navy"></button>
+                <button onclick="changeJerseyColor('#ffffff', 'Putih')" class="color-btn w-10 h-10 rounded-full border-2 border-gray-300 transition-all" style="background:#ffffff" data-color="Putih"></button>
+                <button onclick="changeJerseyColor('#dc2626', 'Merah')" class="color-btn w-10 h-10 rounded-full border-2 border-gray-300 transition-all" style="background:#dc2626" data-color="Merah"></button>
+              </div>
+            </div>
+            <p class="text-center text-xs text-gray-500 mt-2">Warna: <span id="colorDisplay" class="font-semibold text-[#0045FF]">Navy</span></p>
+          </div>
+          <div class="absolute -top-3 -right-3 bg-[#FFD700] text-gray-900 px-4 py-1.5 rounded-full font-bold text-xs shadow-lg z-20">
+            <i class="bi bi-star-fill mr-1"></i> 3D
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div>
+          <span class="text-[#0045FF] font-semibold text-sm uppercase tracking-wider">Official Merchandise</span>
+          <h2 class="text-3xl font-bold text-gray-900 mt-2 mb-4">Jersey Waru Turi Fun Run 2026</h2>
+          <p class="text-gray-600 leading-relaxed mb-6">Jersey resmi Waru Turi Fun Run 2026 dirancang khusus untuk mendukung performa dan kenyamanan peserta. Bahan Dry-Fit premium, desain eksklusif, dan teknologi anti-keringat.</p>
+
+          <!-- Features -->
+          <div class="space-y-3 mb-6">
+            <div class="flex items-start gap-3 p-3 bg-[#F7F8FC] rounded-xl border border-gray-100">
+              <i class="bi bi-check-circle-fill text-[#0045FF] text-lg flex-shrink-0 mt-0.5"></i>
+              <div><h4 class="font-semibold text-gray-900 text-sm">Bahan Dry-Fit Premium</h4><p class="text-gray-500 text-sm">Bahan ringan & breathable, cepat menyerap keringat.</p></div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-[#F7F8FC] rounded-xl border border-gray-100">
+              <i class="bi bi-check-circle-fill text-[#0045FF] text-lg flex-shrink-0 mt-0.5"></i>
+              <div><h4 class="font-semibold text-gray-900 text-sm">Sablon Full Print</h4><p class="text-gray-500 text-sm">Sablon berkualitas tinggi, warna tajam & tahan lama.</p></div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-[#F7F8FC] rounded-xl border border-gray-100">
+              <i class="bi bi-check-circle-fill text-[#0045FF] text-lg flex-shrink-0 mt-0.5"></i>
+              <div><h4 class="font-semibold text-gray-900 text-sm">Desain Eksklusif</h4><p class="text-gray-500 text-sm">Motif khusus Waru Turi Fun Run 2026.</p></div>
+            </div>
+          </div>
+
+          <!-- Price -->
+          <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="bg-[#F7F8FC] rounded-xl p-3 text-center border border-gray-100">
+              <p class="text-xs text-gray-500">5K Fun Run</p><p class="font-bold text-gray-900 text-sm">Rp 150.000</p>
+            </div>
+            <div class="bg-[#F7F8FC] rounded-xl p-3 text-center border border-gray-100">
+              <p class="text-xs text-gray-500">10K Fun Run</p><p class="font-bold text-gray-900 text-sm">Rp 200.000</p>
+            </div>
+            <div class="bg-[#F7F8FC] rounded-xl p-3 text-center border border-gray-100">
+              <p class="text-xs text-gray-500">Pelajar 5K</p><p class="font-bold text-gray-900 text-sm">Rp 99.000</p>
+            </div>
+          </div>
+
+          <!-- Sizes -->
+          <div class="mb-6">
+            <h4 class="font-semibold text-gray-900 text-sm mb-2">Ukuran Tersedia</h4>
+            <div class="flex flex-wrap gap-2">
+              {jerseySizes.map((size) => (
+                <span key={size} class="px-4 py-2 bg-[#F7F8FC] rounded-lg text-sm font-medium text-gray-700 border border-gray-200 hover:border-[#0045FF] hover:text-[#0045FF] transition cursor-pointer">
+                  {size}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <a href="/daftar" class="inline-flex items-center gap-2 bg-[#5652E5] hover:bg-[#4338CA] text-white font-semibold px-8 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
+            <i class="bi bi-ticket-perforated"></i> Dapatkan Sekarang
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SIZE CHART ===== -->
+  <section class="py-16 bg-[#F7F8FC]">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-10">
+        <span class="text-[#0045FF] font-semibold text-sm uppercase tracking-wider">Panduan Ukuran</span>
+        <h2 class="text-3xl font-bold text-gray-900 mt-2 mb-3">Size Chart Jersey</h2>
+        <p class="text-gray-500 text-base max-w-2xl mx-auto">Pilih ukuran yang sesuai dengan mengacu pada tabel berikut (dalam cm).</p>
+      </div>
+
+      <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-[#0045FF] text-white">
+                <th class="px-6 py-4 text-left font-semibold text-sm">Ukuran</th>
+                <th class="px-6 py-4 text-left font-semibold text-sm">Lebar Dada (cm)</th>
+                <th class="px-6 py-4 text-left font-semibold text-sm">Panjang Badan (cm)</th>
+                <th class="px-6 py-4 text-left font-semibold text-sm">Rekomendasi Berat</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sizeChart.map((item, i) => (
+                <tr key={i} class={`border-b border-gray-200 hover:bg-[#F7F8FC] transition ${i % 2 === 0 ? 'bg-white' : 'bg-[#FAFBFF]'}`}>
+                  <td class="px-6 py-4 font-bold text-gray-900 text-base">{item.size}</td>
+                  <td class="px-6 py-4 text-gray-700 font-medium">{item.chest}</td>
+                  <td class="px-6 py-4 text-gray-700 font-medium">{item.length}</td>
+                  <td class="px-6 py-4">
+                    <span class="inline-block px-3 py-1 bg-[#0045FF]/10 text-[#0045FF] text-xs font-medium rounded-full">
+                      {item.weight}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div class="p-4 bg-[#F7F8FC] border-t border-gray-200">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-xs text-gray-500">
+            <span class="flex items-center gap-2"><i class="bi bi-info-circle text-[#0045FF]"></i> Ukuran dalam cm</span>
+            <span class="hidden sm:block text-gray-300">|</span>
+            <span class="flex items-center gap-2"><i class="bi bi-rulers text-[#0045FF]"></i> Jika ragu, pilih lebih besar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="py-16 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Dapatkan Jersey <span class="text-[#FFD700]">Eksklusif</span> Anda!</h2>
+        <p class="text-white/80 text-base mb-8 leading-relaxed">Jersey Waru Turi Fun Run 2026 adalah merchandise terbatas. Daftar sekarang!</p>
+        <a href="/daftar" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
+          <i class="bi bi-ticket-perforated text-lg"></i> Daftar Sekarang
+        </a>
+        <p class="text-white/40 text-xs mt-4"><i class="bi bi-clock-history mr-1"></i> Kuota terbatas, segera daftar!</p>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>
+
+<!-- Three.js -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+  let scene, camera, renderer, controls;
+  let jerseyMesh, glowMesh;
+  let currentColor = '#1a2a6c';
+  let isInitialized = false;
+  
+  const imageUrl = '/images/jersey-waruturi.png';
+
+  function init() {
+    if (isInitialized) return;
+    isInitialized = true;
+
+    const container = document.getElementById('jersey-container');
+    if (!container) return;
+
+    const loading = document.getElementById('loading-text');
+    if (loading) loading.style.display = 'none';
+
+    const w = container.clientWidth || 500;
+    const h = container.clientHeight || 520;
+
+    // Scene - Background lebih terang agar jersey terlihat jelas
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xd5dde8);
+
+    // Camera
+    camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
+    camera.position.set(0, 0, 5.5);
+    camera.lookAt(0, 0, 0);
+
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Controls
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.5;
+    controls.minDistance = 2.5;
+    controls.maxDistance = 10;
+    controls.target.set(0, 0, 0);
+
+    // Lights
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambient);
+    
+    const main = new THREE.DirectionalLight(0xffffff, 1.5);
+    main.position.set(3, 3, 5);
+    scene.add(main);
+    
+    const fill = new THREE.DirectionalLight(0x8888ff, 0.6);
+    fill.position.set(-3, 1, -3);
+    scene.add(fill);
+    
+    const rim = new THREE.DirectionalLight(0xffffff, 0.4);
+    rim.position.set(0, -2, 4);
+    scene.add(rim);
+
+    // Texture
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load(imageUrl);
+    
+    // Jersey
+    const geometry = new THREE.PlaneGeometry(2.8, 3.8);
+    const material = new THREE.MeshPhysicalMaterial({
+      map: texture,
+      transparent: true,
+      side: THREE.DoubleSide,
+      metalness: 0.02,
+      roughness: 0.3,
+      clearcoat: 0.1,
+    });
+    
+    jerseyMesh = new THREE.Mesh(geometry, material);
+    jerseyMesh.position.z = 0;
+    scene.add(jerseyMesh);
+
+    // Glow ring di belakang jersey
+    const glowMat = new THREE.MeshPhysicalMaterial({
+      color: currentColor,
+      transparent: true,
+      opacity: 0.15,
+      side: THREE.DoubleSide,
+      roughness: 0.5,
+    });
+    const glowGeo = new THREE.PlaneGeometry(3.2, 4.2);
+    glowMesh = new THREE.Mesh(glowGeo, glowMat);
+    glowMesh.position.z = -0.08;
+    scene.add(glowMesh);
+
+    // Shadow
+    const shadowMat = new THREE.MeshPhysicalMaterial({
+      color: 0x000000,
+      transparent: true,
+      opacity: 0.08,
+      side: THREE.DoubleSide,
+    });
+    const shadowGeo = new THREE.PlaneGeometry(3.0, 4.0);
+    const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+    shadow.position.z = -0.12;
+    scene.add(shadow);
+
+    window.addEventListener('resize', resize);
+    
+    renderer.domElement.addEventListener('mousedown', () => { controls.autoRotate = false; });
+    renderer.domElement.addEventListener('mouseup', () => { setTimeout(() => { controls.autoRotate = true; }, 3000); });
+
+    animate();
+  }
+
+  window.changeJerseyColor = function(color, name) {
+    currentColor = color;
+    
+    if (glowMesh && glowMesh.material) {
+      glowMesh.material.color.set(color);
+    }
+    
+    document.getElementById('colorDisplay').textContent = name;
+    document.querySelectorAll('.color-btn').forEach(b => {
+      b.classList.remove('border-[#0045FF]', 'ring-2', 'ring-[#0045FF]/20', 'scale-110');
+      b.classList.add('border-gray-300');
+    });
+    const active = document.querySelector(`.color-btn[data-color="${name}"]`);
+    if (active) {
+      active.classList.remove('border-gray-300');
+      active.classList.add('border-[#0045FF]', 'ring-2', 'ring-[#0045FF]/20', 'scale-110');
+    }
+  };
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if (controls) controls.update();
+    if (renderer && scene && camera) renderer.render(scene, camera);
+  }
+
+  function resize() {
+    const container = document.getElementById('jersey-container');
+    if (!container) return;
+    const w = container.clientWidth || 500;
+    const h = container.clientHeight || 520;
+    if (camera) { camera.aspect = w / h; camera.updateProjectionMatrix(); }
+    if (renderer) renderer.setSize(w, h);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => setTimeout(init, 300));
+</script>
+
+<style>
+  @keyframes float { 0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(-30px,-20px)scale(1.1)} }
+  @keyframes float-delay { 0%,100%{transform:translate(0,0)scale(1)}50%{transform:translate(30px,20px)scale(1.1)} }
+  @keyframes fade-down { from{opacity:0;transform:translateY(-30px)} to{opacity:1;transform:translateY(0)} }
+  .animate-float { animation: float 8s ease-in-out infinite; }
+  .animate-float-delay { animation: float-delay 10s ease-in-out infinite; }
+  .animate-fade-down { animation: fade-down 0.8s ease-out forwards; }
+  .animation-delay-200 { animation-delay: 0.2s; }
+  .animation-delay-400 { animation-delay: 0.4s; }
+  
+  .color-btn { 
+    transition: all 0.3s ease; 
+    cursor: pointer; 
+    border: 2px solid #d1d5db;
+  }
+  .color-btn:hover { 
+    transform: scale(1.15) !important; 
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+  
+  #jersey-container { 
+    width: 100%; 
+    height: 520px; 
+    min-height: 400px; 
+    position: relative; 
+  }
+  
+  @media (max-width: 768px) { 
+    #jersey-container { 
+      height: 380px; 
+      min-height: 320px; 
+    }
+  }
+</style>

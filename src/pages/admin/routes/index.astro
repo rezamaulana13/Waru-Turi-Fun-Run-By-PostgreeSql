@@ -1,0 +1,981 @@
+---
+// src/pages/admin/routes/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Data dummy untuk sementara
+const routes = [
+  {
+    id: '1',
+    name: 'Rute 5K - Fun Run',
+    category: '5K',
+    distance: '5 km',
+    description: 'Rute fun run sejauh 5 kilometer dengan pemandangan indah sepanjang jalan. Cocok untuk pemula dan keluarga.',
+    difficulty: 'Mudah',
+    elevation: '50 m',
+    duration: '30-45 menit',
+    image: 'https://picsum.photos/seed/route5k/600/400',
+    startPoint: 'Bendung Gerak Waru Turi',
+    endPoint: 'Bendung Gerak Waru Turi',
+    status: 'active',
+    waypoints: ['Start - Bendung Gerak', 'Pos 1 - Jalan Raya', 'Pos 2 - Persawahan', 'Pos 3 - Jembatan', 'Finish - Bendung Gerak'],
+    createdAt: '2026-07-10',
+  },
+  {
+    id: '2',
+    name: 'Rute 10K - Challenge',
+    category: '10K',
+    distance: '10 km',
+    description: 'Rute menantang sejauh 10 kilometer dengan kombinasi jalan datar dan tanjakan ringan. Direkomendasikan untuk pelari berpengalaman.',
+    difficulty: 'Sedang',
+    elevation: '120 m',
+    duration: '60-90 menit',
+    image: 'https://picsum.photos/seed/route10k/600/400',
+    startPoint: 'Bendung Gerak Waru Turi',
+    endPoint: 'Bendung Gerak Waru Turi',
+    status: 'active',
+    waypoints: ['Start - Bendung Gerak', 'Pos 1 - Perumahan', 'Pos 2 - Bukit Kecil', 'Pos 3 - Hutan Kota', 'Pos 4 - Jembatan', 'Finish - Bendung Gerak'],
+    createdAt: '2026-07-10',
+  },
+  {
+    id: '3',
+    name: 'Rute Half Marathon',
+    category: 'Half Marathon',
+    distance: '21.1 km',
+    description: 'Rute half marathon dengan pemandangan spektakuler dan tantangan yang menguji ketahanan fisik dan mental. Untuk pelari elit.',
+    difficulty: 'Sulit',
+    elevation: '250 m',
+    duration: '120-180 menit',
+    image: 'https://picsum.photos/seed/halfmarathon/600/400',
+    startPoint: 'Bendung Gerak Waru Turi',
+    endPoint: 'Bendung Gerak Waru Turi',
+    status: 'inactive',
+    waypoints: ['Start - Bendung Gerak', 'Pos 1 - Perumahan', 'Pos 2 - Bukit Kecil', 'Pos 3 - Hutan Kota', 'Pos 4 - Jembatan', 'Pos 5 - Puncak', 'Pos 6 - Kembali', 'Finish - Bendung Gerak'],
+    createdAt: '2026-07-09',
+  },
+  {
+    id: '4',
+    name: 'Rute Marathon',
+    category: 'Marathon',
+    distance: '42.2 km',
+    description: 'Rute marathon penuh yang melintasi berbagai medan dan pemandangan alam yang memukau. Tantangan tertinggi untuk pelari sejati.',
+    difficulty: 'Sangat Sulit',
+    elevation: '450 m',
+    duration: '240-360 menit',
+    image: 'https://picsum.photos/seed/marathon/600/400',
+    startPoint: 'Bendung Gerak Waru Turi',
+    endPoint: 'Bendung Gerak Waru Turi',
+    status: 'inactive',
+    waypoints: ['Start - Bendung Gerak', 'Pos 1 - Perumahan', 'Pos 2 - Bukit', 'Pos 3 - Hutan', 'Pos 4 - Jembatan', 'Pos 5 - Puncak', 'Pos 6 - Kembali', 'Pos 7 - Desa', 'Finish - Bendung Gerak'],
+    createdAt: '2026-07-08',
+  },
+];
+
+// Helper function untuk format tanggal
+function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+// Helper function untuk get color difficulty
+function getDifficultyColor(difficulty: string): string {
+  const colors: Record<string, string> = {
+    'Mudah': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    'Sedang': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+    'Sulit': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+    'Sangat Sulit': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+  };
+  return colors[difficulty] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
+}
+---
+
+<AdminLayout title="Rute - Admin Panel">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <i class="bi bi-map text-blue-600 dark:text-blue-400 mr-2"></i>
+            Manajemen Rute
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Kelola rute lari Waru Turi Run
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="bi bi-download"></i>
+            Export
+          </button>
+          <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2" onclick="openModal()">
+            <i class="bi bi-plus-lg"></i>
+            Tambah Rute
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1 relative">
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          <input 
+            type="text" 
+            placeholder="Cari rute..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            id="searchInput"
+          />
+        </div>
+        <div class="flex gap-3">
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Semua Kategori</option>
+            <option value="5K">5K</option>
+            <option value="10K">10K</option>
+            <option value="Half Marathon">Half Marathon</option>
+            <option value="Marathon">Marathon</option>
+          </select>
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Semua Tingkat</option>
+            <option value="Mudah">Mudah</option>
+            <option value="Sedang">Sedang</option>
+            <option value="Sulit">Sulit</option>
+            <option value="Sangat Sulit">Sangat Sulit</option>
+          </select>
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Semua Status</option>
+            <option value="active">Aktif</option>
+            <option value="inactive">Tidak Aktif</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Rute</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{routes.length}</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-map text-2xl text-blue-600 dark:text-blue-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-green-600 dark:text-green-400">↑ 2 rute aktif</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Aktif</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {routes.filter(r => r.status === 'active').length}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-check-circle text-2xl text-green-600 dark:text-green-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Rute tersedia</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Jarak</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {routes.reduce((acc, r) => acc + parseFloat(r.distance), 0).toFixed(1)} km
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-rulers text-2xl text-purple-600 dark:text-purple-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Total distance</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Waypoints</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {routes.reduce((acc, r) => acc + r.waypoints.length, 0)}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-pin-map text-2xl text-yellow-600 dark:text-yellow-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Total checkpoint</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Routes Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="routesGrid">
+      {routes.map((route) => (
+        <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300" data-id={route.id}>
+          <!-- Image -->
+          <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
+            {route.image ? (
+              <img 
+                src={route.image} 
+                alt={route.name}
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+            ) : (
+              <div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                <i class="bi bi-map text-5xl"></i>
+              </div>
+            )}
+            
+            <!-- Status Badge -->
+            <div class="absolute top-3 left-3">
+              <span class={`
+                px-3 py-1 text-white text-xs font-medium rounded-full
+                ${route.status === 'active' ? 'bg-green-500' : 'bg-red-500'}
+              `}>
+                {route.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
+              </span>
+            </div>
+
+            <!-- Category Badge -->
+            <div class="absolute top-3 right-3">
+              <span class="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-full">
+                {route.category}
+              </span>
+            </div>
+
+            <!-- Distance & Difficulty -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+              <div class="flex items-center justify-between text-white">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-1">
+                    <i class="bi bi-flag"></i>
+                    <span class="text-sm font-medium">{route.distance}</span>
+                  </div>
+                  <div class="flex items-center gap-1">
+                    <i class="bi bi-arrow-up"></i>
+                    <span class="text-sm">{route.elevation}</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1">
+                  <i class="bi bi-clock"></i>
+                  <span class="text-sm">{route.duration}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="absolute top-3 right-[90px] flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onclick="editRoute('{route.id}')" 
+                class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md"
+                title="Edit"
+              >
+                <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+              </button>
+              <button 
+                onclick="deleteRoute('{route.id}')" 
+                class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md"
+                title="Hapus"
+              >
+                <i class="bi bi-trash text-sm text-red-500"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="p-5">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1">
+              {route.name}
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              <i class="bi bi-geo-alt mr-1"></i>
+              {route.startPoint}
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
+              {route.description}
+            </p>
+
+            <!-- Difficulty & Waypoints -->
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <span class={`
+                px-3 py-1 text-xs font-medium rounded-full
+                ${getDifficultyColor(route.difficulty)}
+              `}>
+                {route.difficulty}
+              </span>
+              <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                <i class="bi bi-pin-map"></i>
+                <span>{route.waypoints.length} Checkpoint</span>
+              </div>
+            </div>
+
+            <!-- Waypoints Preview -->
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 overflow-x-auto pb-1">
+                {route.waypoints.slice(0, 3).map((wp, index) => (
+                  <span key={index} class="flex items-center gap-1 whitespace-nowrap">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                    {wp}
+                    {index < Math.min(route.waypoints.length - 1, 2) && (
+                      <i class="bi bi-chevron-right text-[10px]"></i>
+                    )}
+                  </span>
+                ))}
+                {route.waypoints.length > 3 && (
+                  <span class="text-gray-400">+{route.waypoints.length - 3} more</span>
+                )}
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+              <span class="text-xs text-gray-400 dark:text-gray-500">
+                <i class="bi bi-calendar3 mr-1"></i>
+                {formatDate(route.createdAt)}
+              </span>
+              <button onclick="viewRoute('{route.id}')" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                Lihat Detail
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <!-- Add New Route Card -->
+      <div 
+        onclick="openModal()"
+        class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 flex items-center justify-center min-h-[400px] cursor-pointer"
+      >
+        <div class="text-center p-6">
+          <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition">
+            <i class="bi bi-plus-lg text-4xl text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+            Tambah Rute Baru
+          </h3>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Klik untuk menambahkan rute</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-8 flex items-center justify-between flex-wrap gap-3">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Menampilkan <span class="font-medium">1</span> - <span class="font-medium">{Math.min(10, routes.length)}</span> dari <span class="font-medium">{routes.length}</span> data
+      </p>
+      <div class="flex items-center gap-2">
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50" disabled>
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="px-3 py-1.5 rounded-lg bg-blue-600 text-white">1</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">2</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">3</button>
+        <span class="text-gray-500 dark:text-gray-400">...</span>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">10</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit Rute -->
+  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0 invisible transition-all duration-300">
+    <div class="absolute inset-0 bg-black/50" onclick="closeModal()"></div>
+    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform scale-95 transition-all duration-300">
+      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <i class="bi bi-plus-circle text-blue-600 dark:text-blue-400 mr-2"></i>
+          <span id="modalTitle">Tambah Rute Baru</span>
+        </h3>
+        <button onclick="closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <form id="routeForm" class="p-6 space-y-4">
+        <!-- Nama Rute -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Nama Rute <span class="text-red-500">*</span>
+          </label>
+          <input 
+            type="text" 
+            id="routeName"
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            placeholder="Masukkan nama rute"
+            required
+          />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Kategori -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Kategori <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="routeCategory"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            >
+              <option value="">Pilih Kategori</option>
+              <option value="5K">5K</option>
+              <option value="10K">10K</option>
+              <option value="Half Marathon">Half Marathon</option>
+              <option value="Marathon">Marathon</option>
+            </select>
+          </div>
+
+          <!-- Jarak -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Jarak (km) <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeDistance"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="5 km"
+              required
+            />
+          </div>
+
+          <!-- Elevasi -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Elevasi <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeElevation"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="50 m"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Titik Start -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Titik Start <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeStart"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Titik start"
+              required
+            />
+          </div>
+
+          <!-- Titik Finish -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Titik Finish <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeEnd"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="Titik finish"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Tingkat Kesulitan -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Tingkat Kesulitan <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="routeDifficulty"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            >
+              <option value="">Pilih Tingkat</option>
+              <option value="Mudah">Mudah</option>
+              <option value="Sedang">Sedang</option>
+              <option value="Sulit">Sulit</option>
+              <option value="Sangat Sulit">Sangat Sulit</option>
+            </select>
+          </div>
+
+          <!-- Durasi -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Durasi <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="routeDuration"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              placeholder="60-90 menit"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Status <span class="text-red-500">*</span>
+          </label>
+          <select 
+            id="routeStatus"
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            required
+          >
+            <option value="active">Aktif</option>
+            <option value="inactive">Tidak Aktif</option>
+          </select>
+        </div>
+
+        <!-- Deskripsi -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Deskripsi <span class="text-red-500">*</span>
+          </label>
+          <textarea 
+            id="routeDescription"
+            rows="3" 
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+            placeholder="Masukkan deskripsi rute..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Waypoints -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Checkpoint / Waypoints <span class="text-red-500">*</span>
+          </label>
+          <div id="waypointsContainer" class="space-y-2">
+            <div class="flex gap-2">
+              <input 
+                type="text" 
+                class="waypoint-input flex-1 px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                placeholder="Masukkan checkpoint..."
+              />
+              <button type="button" onclick="addWaypoint(this)" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+            <div id="waypointsList" class="space-y-1"></div>
+          </div>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Tambahkan checkpoint rute secara berurutan</p>
+        </div>
+
+        <!-- Upload Gambar -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Gambar Rute <span class="text-red-500">*</span>
+          </label>
+          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer" id="uploadArea">
+            <input type="file" accept="image/*" class="hidden" id="imageInput" />
+            <div id="imagePreview" class="hidden mb-4">
+              <img src="" alt="Preview" class="max-h-48 mx-auto rounded-lg" />
+            </div>
+            <i class="bi bi-cloud-upload text-4xl text-gray-400 dark:text-gray-500 mb-3 block" id="uploadIcon"></i>
+            <p class="text-gray-600 dark:text-gray-300 font-medium" id="uploadText">Klik atau drag & drop untuk upload</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, GIF (Max 2MB)</p>
+          </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="sticky bottom-0 bg-white dark:bg-gray-800 pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end gap-3">
+          <button type="button" onclick="closeModal()" class="px-6 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            Batal
+          </button>
+          <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+            <i class="bi bi-check-lg"></i>
+            <span id="submitText">Simpan</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+    <i class="bi bi-check-circle-fill text-green-400"></i>
+    <span id="toast-message">Rute berhasil disimpan!</span>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <script>
+    // ============================================================
+    // MODAL FUNCTIONS
+    // ============================================================
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const submitText = document.getElementById('submitText');
+    const routeForm = document.getElementById('routeForm');
+    let editingId = null;
+    let waypoints = [];
+
+    function openModal() {
+      modal.classList.remove('opacity-0', 'invisible');
+      modal.querySelector('.relative').classList.remove('scale-95');
+      modal.querySelector('.relative').classList.add('scale-100');
+      document.body.style.overflow = 'hidden';
+      resetForm();
+    }
+    window.openModal = openModal;
+
+    function closeModal() {
+      modal.classList.add('opacity-0', 'invisible');
+      modal.querySelector('.relative').classList.remove('scale-100');
+      modal.querySelector('.relative').classList.add('scale-95');
+      document.body.style.overflow = '';
+      resetForm();
+    }
+    window.closeModal = closeModal;
+
+    function resetForm() {
+      routeForm.reset();
+      editingId = null;
+      waypoints = [];
+      document.getElementById('waypointsList').innerHTML = '';
+      modalTitle.textContent = 'Tambah Rute Baru';
+      submitText.textContent = 'Simpan';
+      document.getElementById('imagePreview').classList.add('hidden');
+      document.getElementById('uploadIcon').classList.remove('hidden');
+      document.getElementById('uploadText').textContent = 'Klik atau drag & drop untuk upload';
+      document.getElementById('uploadText').classList.remove('text-blue-600', 'dark:text-blue-400');
+    }
+
+    // ============================================================
+    // WAYPOINTS
+    // ============================================================
+    function addWaypoint(btn) {
+      const container = btn.closest('.flex');
+      const input = container.querySelector('.waypoint-input');
+      const value = input.value.trim();
+      
+      if (!value) {
+        showToast('⚠️ Masukkan checkpoint terlebih dahulu');
+        return;
+      }
+
+      waypoints.push(value);
+      renderWaypoints();
+      input.value = '';
+      input.focus();
+    }
+    window.addWaypoint = addWaypoint;
+
+    function removeWaypoint(index) {
+      waypoints.splice(index, 1);
+      renderWaypoints();
+    }
+    window.removeWaypoint = removeWaypoint;
+
+    function renderWaypoints() {
+      const list = document.getElementById('waypointsList');
+      list.innerHTML = waypoints.map((wp, index) => `
+        <div class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <span class="w-6 h-6 flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-bold rounded-full">
+            ${index + 1}
+          </span>
+          <span class="flex-1 text-sm text-gray-700 dark:text-gray-300">${wp}</span>
+          <button type="button" onclick="removeWaypoint(${index})" class="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition">
+            <i class="bi bi-x-lg text-sm"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Handle Enter key on waypoint input
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.classList.contains('waypoint-input')) {
+        e.preventDefault();
+        const btn = e.target.closest('.flex').querySelector('button');
+        if (btn) addWaypoint(btn);
+      }
+    });
+
+    // ============================================================
+    // IMAGE UPLOAD
+    // ============================================================
+    const uploadArea = document.getElementById('uploadArea');
+    const imageInput = document.getElementById('imageInput');
+
+    uploadArea?.addEventListener('click', () => {
+      imageInput?.click();
+    });
+
+    uploadArea?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleImageFile(files[0]);
+      }
+    });
+
+    imageInput?.addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files.length > 0) {
+        handleImageFile(files[0]);
+      }
+    });
+
+    function handleImageFile(file) {
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        showToast('Format file tidak didukung. Gunakan JPG, PNG, atau GIF.');
+        return;
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran file terlalu besar. Maksimal 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const preview = document.getElementById('imagePreview');
+        const img = preview.querySelector('img');
+        if (img) {
+          img.src = e.target.result;
+          preview.classList.remove('hidden');
+          document.getElementById('uploadIcon').classList.add('hidden');
+          document.getElementById('uploadText').textContent = file.name;
+          document.getElementById('uploadText').classList.add('text-blue-600', 'dark:text-blue-400');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ============================================================
+    // EDIT ROUTE
+    // ============================================================
+    function editRoute(id) {
+      const routes = document.querySelectorAll('#routesGrid .group:not(:last-child)');
+      let routeData = null;
+      
+      routes.forEach(card => {
+        if (card.dataset.id === id) {
+          const name = card.querySelector('h3')?.textContent || '';
+          const description = card.querySelector('p.text-sm')?.textContent || '';
+          const image = card.querySelector('img')?.src || '';
+          const category = card.querySelector('.absolute.top-3.right-3 span')?.textContent || '';
+          const status = card.querySelector('.absolute.top-3.left-3 span')?.textContent || '';
+          const distance = card.querySelector('.absolute.bottom-0 .text-sm.font-medium')?.textContent || '';
+          const elevation = card.querySelectorAll('.absolute.bottom-0 .text-sm')[1]?.textContent || '';
+          const duration = card.querySelectorAll('.absolute.bottom-0 .text-sm')[2]?.textContent || '';
+          const startPoint = card.querySelector('.text-xs.text-gray-500')?.textContent?.replace('📍 ', '') || '';
+          
+          routeData = { 
+            id, name, description, image, category, status, distance, elevation, duration, startPoint 
+          };
+        }
+      });
+
+      if (routeData) {
+        editingId = id;
+        modalTitle.textContent = 'Edit Rute';
+        submitText.textContent = 'Update';
+        
+        document.getElementById('routeName').value = routeData.name;
+        document.getElementById('routeCategory').value = routeData.category;
+        document.getElementById('routeDistance').value = routeData.distance;
+        document.getElementById('routeElevation').value = routeData.elevation;
+        document.getElementById('routeDuration').value = routeData.duration;
+        document.getElementById('routeStart').value = routeData.startPoint;
+        document.getElementById('routeStatus').value = routeData.status === 'Aktif' ? 'active' : 'inactive';
+        document.getElementById('routeDescription').value = routeData.description;
+        
+        // Set waypoints (dummy data for edit)
+        waypoints = ['Start - Bendung Gerak', 'Pos 1 - Jalan Raya', 'Pos 2 - Persawahan', 'Finish - Bendung Gerak'];
+        renderWaypoints();
+        
+        if (routeData.image) {
+          const preview = document.getElementById('imagePreview');
+          const img = preview.querySelector('img');
+          if (img) {
+            img.src = routeData.image;
+            preview.classList.remove('hidden');
+            document.getElementById('uploadIcon').classList.add('hidden');
+            document.getElementById('uploadText').textContent = 'Gambar saat ini';
+          }
+        }
+        
+        openModal();
+      }
+    }
+    window.editRoute = editRoute;
+
+    // ============================================================
+    // VIEW ROUTE DETAIL
+    // ============================================================
+    function viewRoute(id) {
+      showToast('📋 Detail rute akan ditampilkan');
+    }
+    window.viewRoute = viewRoute;
+
+    // ============================================================
+    // FORM SUBMISSION
+    // ============================================================
+    routeForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const name = document.getElementById('routeName').value;
+      const category = document.getElementById('routeCategory').value;
+      const distance = document.getElementById('routeDistance').value;
+      const elevation = document.getElementById('routeElevation').value;
+      const start = document.getElementById('routeStart').value;
+      const end = document.getElementById('routeEnd').value;
+      const difficulty = document.getElementById('routeDifficulty').value;
+      const duration = document.getElementById('routeDuration').value;
+      const status = document.getElementById('routeStatus').value;
+      const description = document.getElementById('routeDescription').value;
+      
+      if (!name || !category || !distance || !elevation || !start || !end || !difficulty || !duration || !description) {
+        showToast('⚠️ Mohon lengkapi semua field yang wajib diisi');
+        return;
+      }
+
+      if (waypoints.length === 0) {
+        showToast('⚠️ Tambahkan minimal 1 checkpoint');
+        return;
+      }
+
+      // Simulate save
+      showToast(editingId ? '✅ Rute berhasil diupdate!' : '✅ Rute berhasil ditambahkan!');
+      
+      setTimeout(() => {
+        closeModal();
+        setTimeout(() => location.reload(), 500);
+      }, 1000);
+    });
+
+    // ============================================================
+    // DELETE ROUTE
+    // ============================================================
+    function deleteRoute(id) {
+      if (!confirm('Yakin ingin menghapus rute ini?')) return;
+      
+      const card = document.querySelector(`#routesGrid .group[data-id="${id}"]`);
+      if (card) {
+        card.style.transform = 'scale(0.9)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          card.remove();
+          showToast('Rute berhasil dihapus!');
+          updateStats();
+        }, 300);
+      }
+    }
+    window.deleteRoute = deleteRoute;
+
+    // ============================================================
+    // UPDATE STATISTICS
+    // ============================================================
+    function updateStats() {
+      const cards = document.querySelectorAll('#routesGrid .group:not(:last-child)');
+      const total = cards.length;
+      const active = document.querySelectorAll('#routesGrid .group .bg-green-500').length;
+      const totalDistance = Array.from(document.querySelectorAll('#routesGrid .group .absolute.bottom-0 .text-sm.font-medium'))
+        .reduce((acc, el) => acc + parseFloat(el.textContent || '0'), 0);
+      
+      const statCards = document.querySelectorAll('.grid-cols-1.sm\\:grid-cols-2 .bg-white');
+      if (statCards.length >= 4) {
+        const totalCount = statCards[0].querySelector('.text-2xl');
+        if (totalCount) totalCount.textContent = total;
+        
+        const activeCount = statCards[1].querySelector('.text-2xl');
+        if (activeCount) activeCount.textContent = active;
+        
+        const distanceCount = statCards[2].querySelector('.text-2xl');
+        if (distanceCount) distanceCount.textContent = totalDistance.toFixed(1) + ' km';
+        
+        const waypointCount = statCards[3].querySelector('.text-2xl');
+        if (waypointCount) {
+          const totalWaypoints = Array.from(document.querySelectorAll('#routesGrid .group .bg-blue-100')).length;
+          waypointCount.textContent = totalWaypoints;
+        }
+      }
+    }
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+    const searchInput = document.getElementById('searchInput');
+    searchInput?.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const cards = document.querySelectorAll('#routesGrid .group:not(:last-child)');
+      
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('translate-y-full', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        setTimeout(hideToast, 3000);
+      }
+    }
+    window.showToast = showToast;
+
+    function hideToast() {
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-full', 'opacity-0');
+      }
+    }
+    window.hideToast = hideToast;
+
+    // ============================================================
+    // KEYBOARD SHORTCUTS
+    // ============================================================
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    console.log('✅ Rute Admin Panel loaded');
+  </script>
+</AdminLayout>

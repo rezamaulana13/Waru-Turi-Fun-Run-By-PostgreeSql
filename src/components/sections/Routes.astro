@@ -1,0 +1,148 @@
+---
+// src/components/sections/Routes.astro
+import { db, aboutContent } from '../../db/index.js';
+import { eq, asc } from 'drizzle-orm';
+
+// ===== AMBIL DATA ROUTES DARI DATABASE =====
+let routesData: Record<string, string> = {};
+
+try {
+  const result = await db.select().from(aboutContent)
+    .where(eq(aboutContent.section, 'routes'))
+    .orderBy(asc(aboutContent.order));
+  
+  if (result.length > 0) {
+    result.forEach((item: any) => {
+      routesData[item.key] = item.value || '';
+    });
+  }
+} catch (error) {
+  console.error('Error fetching routes data:', error);
+}
+
+// Fallback data
+const title = routesData.title || 'PETA RUTE LARI';
+const subtitle = routesData.subtitle || 'Kenali rute tantanganmu dan nikmati pemandangan Bendung Waru Turi';
+
+// Route 5K
+const route5kTitle = routesData.route_5k_title || 'Rute 5K (Fun Run)';
+const route5kImage = routesData.route_5k_image || 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2I4heYzBewgiLvnBU4e9Vwsg_XPIEbT1J6_MtZcr7B-GNKkebrSsiHcxXsrG3tg3wd-YVc7zY0oqnyXLTzzKWv_JnOFYK-Q0-C6lF2fNa25rJeKUKACdOFAcf27K6eap4RNawWYBOZJB3PVCQ4LYFQDXNoejoMHcb__tSVDna530wICVUS1NLUweEizvj/s4273/Rute%20Fun%20Run%20Waru%20Turi%20-%205K.webp';
+const route5kDesc = routesData.route_5k_desc || 'Plan Route : Start (Lap. Bendungan Waru Turi)- Kantor Jasa Tirta - Jembatan Utama -Ujung Jembatan Utama ke Kanan - Jembatan Kedua ke Kiri - Patung Badak ke Kanan - Pintu Gerbang Waduk Sisi Barat ke Kiri – Simpang Tiga Jabon Gg 8 ke Kanan – Simpang Tiga 2 Jabon Gg 8 ke Kanan - Pintu Gerbang Waduk Sisi Barat – Jembatan Utama ke Kanan – Kantor Jasa Tirta - Finish';
+const route5kStart = routesData.route_5k_start || 'Bendung Gerak Waru Turi';
+const route5kCOT = routesData.route_5k_cot || '1 Jam 30 Menit';
+const route5kWater = routesData.route_5k_water || 'KM 2.5';
+
+// Route 10K
+const route10kTitle = routesData.route_10k_title || 'Rute 10K (Fun Run)';
+const route10kImage = routesData.route_10k_image || 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgaplbe_h8Xx-JINUcBGLGqV9qrgNJ77K46qdhRrQNQugQx9ptahHcyPO0OgjRnzDzFxqmPRxxSy3kvFX3bkBMMREgR26wV3xVWo2V9bfagLhUiDP7oaZyHxl_QPUCEBoupqh-cqjbKfgcJOtEUYmtiN0Zv21gQWJl3ne64v3raRU9uTLaJeeutXNp5weMw/s4273/Rute%20Fun%20Run%20Waru%20Turi%20-%2010K.webp';
+const route10kDesc = routesData.route_10k_desc || 'Plan Route : Start (Lap. Bendungan Waru Turi)- Kantor Jasa Tirta -Jembatan Utama -Ujung Jembatan Utama ke Kanan - Jembatan Kedua ke Kiri - Patung Badak ke Kanan - Pintu Gerbang Waduk Sisi Barat Lurus - Perempatan Dusun Tanjung - Simpang Empat Desa Ngablak ke Kiri – Simpang Empat Kelurahan Dermo ke Kiri -  Simpang Empat Jl. Merbabu Lurus – Jabon Gg 4 – Jabon Gg 5 - Simpang Tiga Jabon Gg 9 ke Kiri - Pintu Gerbang Waduk - Patung Badak ke Ke Kiri - Jembatan Kedua ke Kanan -Jembatan Utama -  Area Food Court ke Kanan - Jembatan Kecil ke Kanan – Finish';
+const route10kStart = routesData.route_10k_start || 'Bendung Gerak Waru Turi';
+const route10kCOT = routesData.route_10k_cot || '2 Jam';
+const route10kWater = routesData.route_10k_water || 'KM 2.5, KM 5, KM 7.5';
+---
+
+<section id="routes" class="py-16 sm:py-20 lg:py-24 bg-[#F4F7FC]">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8 sm:mb-12">
+      <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900">{title}</h2>
+      <p class="text-gray-500 text-base sm:text-lg mt-2">{subtitle}</p>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto">
+      <!-- Route 5K -->
+      <div class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
+        <img 
+          src={route5kImage}
+          alt={route5kTitle} 
+          class="w-full h-48 sm:h-56 object-cover"
+          width="800"
+          height="400"
+          loading="lazy"
+          decoding="async"
+        />
+        <div class="p-4 sm:p-6">
+          <span class="inline-block bg-blue-100 text-[#0033A0] text-xs font-bold px-3 py-1 rounded-full mb-2">5K</span>
+          <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{route5kTitle}</h3>
+          <p class="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3">{route5kDesc}</p>
+          <ul class="space-y-2 text-sm border-t border-gray-100 pt-4">
+            <li class="flex items-start gap-2 font-medium text-gray-700">
+              <i class="bi bi-geo-alt-fill text-[#0033A0] mt-0.5"></i>
+              <span>Start: {route5kStart}</span>
+            </li>
+            <li class="flex items-start gap-2 font-medium text-gray-700">
+              <i class="bi bi-stopwatch-fill text-[#0033A0] mt-0.5"></i>
+              <span>COT: {route5kCOT}</span>
+            </li>
+            <li class="flex items-start gap-2 font-medium text-gray-700">
+              <i class="bi bi-droplet-fill text-[#0033A0] mt-0.5"></i>
+              <span>Water Station: {route5kWater}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Route 10K -->
+      <div class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100">
+        <img 
+          src={route10kImage}
+          alt={route10kTitle} 
+          class="w-full h-48 sm:h-56 object-cover"
+          width="800"
+          height="400"
+          loading="lazy"
+          decoding="async"
+        />
+        <div class="p-4 sm:p-6">
+          <span class="inline-block bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-full mb-2">10K</span>
+          <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{route10kTitle}</h3>
+          <p class="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3">{route10kDesc}</p>
+          <ul class="space-y-2 text-sm border-t border-gray-100 pt-4">
+            <li class="flex items-start gap-2 font-medium text-gray-700">
+              <i class="bi bi-geo-alt-fill text-[#0033A0] mt-0.5"></i>
+              <span>Start: {route10kStart}</span>
+            </li>
+            <li class="flex items-start gap-2 font-medium text-gray-700">
+              <i class="bi bi-stopwatch-fill text-[#0033A0] mt-0.5"></i>
+              <span>COT: {route10kCOT}</span>
+            </li>
+            <li class="flex items-start gap-2 font-medium text-gray-700">
+              <i class="bi bi-droplet-fill text-[#0033A0] mt-0.5"></i>
+              <span>Water Station: {route10kWater}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  #routes {
+    contain: layout paint;
+  }
+  
+  #routes img {
+    aspect-ratio: 16/9;
+    object-fit: cover;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #routes .hover\:-translate-y-1 {
+      transform: none !important;
+      transition: none !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    #routes .line-clamp-3 {
+      -webkit-line-clamp: 2;
+    }
+  }
+</style>

@@ -1,0 +1,468 @@
+---
+// src/pages/admin/profile/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Profil Admin - Waru Turi Fun Run 2027">
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Profil Admin</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          Kelola informasi profil dan akun Anda
+        </p>
+      </div>
+      <button 
+        id="save-profile-btn"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md"
+      >
+        <i class="bi bi-check-lg"></i>
+        Simpan Perubahan
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- ===== LEFT - AVATAR & INFO ===== -->
+      <div class="lg:col-span-1 space-y-4">
+        <!-- Avatar Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-6 text-center">
+          <div class="relative inline-block">
+            <div class="w-28 h-28 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-blue-500/20 mx-auto" id="avatar-display">
+              A
+            </div>
+            <button 
+              id="change-avatar-btn"
+              class="absolute bottom-0 right-0 w-9 h-9 bg-white dark:bg-gray-700 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center shadow-md hover:bg-gray-50 dark:hover:bg-gray-600 transition"
+              title="Ganti foto profil"
+            >
+              <i class="bi bi-camera text-gray-500 dark:text-gray-400 text-sm"></i>
+            </button>
+          </div>
+          
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white mt-4" id="profile-name">Admin</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400" id="profile-role">Administrator</p>
+          
+          <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span class="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              Aktif
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-4">
+          <h3 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Statistik Akun</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-600 dark:text-gray-400">Terakhir login</span>
+              <span class="text-gray-900 dark:text-white font-medium" id="last-login">-</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-600 dark:text-gray-400">Bergabung sejak</span>
+              <span class="text-gray-900 dark:text-white font-medium" id="joined-at">-</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-600 dark:text-gray-400">Total peserta</span>
+              <span class="text-gray-900 dark:text-white font-medium" id="total-participants">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== RIGHT - FORM ===== -->
+      <div class="lg:col-span-2 space-y-4">
+        <!-- Profile Form -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-6">
+          <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">Informasi Pribadi</h3>
+          
+          <form id="profile-form" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Nama Lengkap <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="full-name"
+                  value="Admin Waru Turi"
+                  class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  placeholder="Masukkan nama lengkap"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Email <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="email" 
+                  id="email"
+                  value="admin@waruturirun.com"
+                  class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm cursor-not-allowed opacity-70"
+                  placeholder="email@domain.com"
+                  disabled
+                />
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Email tidak dapat diubah</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Nomor Telepon
+                </label>
+                <input 
+                  type="tel" 
+                  id="phone"
+                  value="+62 812 3456 7890"
+                  class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  placeholder="08xx-xxxx-xxxx"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Role
+                </label>
+                <input 
+                  type="text" 
+                  id="role"
+                  value="Administrator"
+                  class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm cursor-not-allowed opacity-70"
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Bio
+              </label>
+              <textarea 
+                id="bio"
+                rows="3"
+                class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
+                placeholder="Tuliskan deskripsi singkat tentang Anda..."
+              >Administrator Waru Turi Fun Run 2027. Bertanggung jawab atas manajemen event dan koordinasi peserta.</textarea>
+            </div>
+          </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 p-6">
+          <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">Ubah Password</h3>
+          
+          <form id="password-form" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Password Lama
+              </label>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="old-password"
+                  class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition pr-10"
+                  placeholder="Masukkan password lama"
+                />
+                <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Password Baru
+                </label>
+                <div class="relative">
+                  <input 
+                    type="password" 
+                    id="new-password"
+                    class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition pr-10"
+                    placeholder="Minimal 8 karakter"
+                  />
+                  <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Konfirmasi Password Baru
+                </label>
+                <div class="relative">
+                  <input 
+                    type="password" 
+                    id="confirm-password"
+                    class="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition pr-10"
+                    placeholder="Konfirmasi password baru"
+                  />
+                  <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              type="button"
+              id="change-password-btn"
+              class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2"
+            >
+              <i class="bi bi-lock"></i>
+              Ubah Password
+            </button>
+          </form>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-200 dark:border-red-800/30 p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+              <i class="bi bi-exclamation-triangle text-red-600 dark:text-red-400 text-lg"></i>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-sm font-semibold text-red-700 dark:text-red-400">Zona Bahaya</h4>
+              <p class="text-xs text-red-600 dark:text-red-300 mt-0.5">
+                Tindakan ini tidak dapat dibatalkan. Hapus akun akan menghapus semua data terkait.
+              </p>
+              <button 
+                id="delete-account-btn"
+                class="mt-3 px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition"
+              >
+                Hapus Akun
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 max-w-sm flex items-center gap-3 animate-slide-up">
+      <div id="toast-icon" class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+        <i class="bi bi-check-circle text-green-600 dark:text-green-400"></i>
+      </div>
+      <div>
+        <p class="text-sm font-medium text-gray-900 dark:text-white" id="toast-title">Berhasil</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400" id="toast-message">Perubahan telah disimpan</p>
+      </div>
+      <button onclick="closeToast()" class="text-gray-400 hover:text-gray-600 transition">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out forwards;
+  }
+</style>
+
+<script>
+  // ===== LOAD USER DATA =====
+  function loadUserData() {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        
+        // Avatar
+        const avatarEl = document.getElementById('avatar-display');
+        if (avatarEl && user.name) {
+          avatarEl.textContent = user.name.charAt(0).toUpperCase();
+        }
+        
+        // Name
+        const nameEl = document.getElementById('profile-name');
+        if (nameEl && user.name) {
+          nameEl.textContent = user.name;
+        }
+        
+        // Full name input
+        const fullNameEl = document.getElementById('full-name');
+        if (fullNameEl && user.name) {
+          fullNameEl.value = user.name;
+        }
+        
+        // Email
+        const emailEl = document.getElementById('email');
+        if (emailEl && user.email) {
+          emailEl.value = user.email;
+        }
+        
+        // Role
+        const roleMap = {
+          'admin': 'Administrator',
+          'super_admin': 'Super Admin',
+          'user': 'User'
+        };
+        const roleEl = document.getElementById('profile-role');
+        if (roleEl && user.role) {
+          roleEl.textContent = roleMap[user.role] || user.role;
+        }
+        
+        // Role input
+        const roleInputEl = document.getElementById('role');
+        if (roleInputEl && user.role) {
+          roleInputEl.value = roleMap[user.role] || user.role;
+        }
+        
+        // Last login
+        const lastLoginEl = document.getElementById('last-login');
+        if (lastLoginEl && user.lastLogin) {
+          const date = new Date(user.lastLogin);
+          lastLoginEl.textContent = date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+        
+        // Joined at
+        const joinedEl = document.getElementById('joined-at');
+        if (joinedEl && user.createdAt) {
+          const date = new Date(user.createdAt);
+          joinedEl.textContent = date.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Error loading user data:', e);
+    }
+  }
+
+  // ===== TOGGLE PASSWORD =====
+  document.querySelectorAll('.toggle-password').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const input = this.closest('.relative').querySelector('input');
+      const icon = this.querySelector('i');
+      if (input) {
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+      }
+    });
+  });
+
+  // ===== SAVE PROFILE =====
+  document.getElementById('save-profile-btn')?.addEventListener('click', function() {
+    const name = document.getElementById('full-name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const bio = document.getElementById('bio').value.trim();
+    
+    if (!name) {
+      showToast('error', 'Gagal', 'Nama lengkap wajib diisi');
+      return;
+    }
+    
+    // Simpan ke localStorage
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        user.name = name;
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+    } catch (e) {
+      console.error('Error saving profile:', e);
+    }
+    
+    showToast('success', 'Berhasil', 'Profil berhasil diperbarui');
+    loadUserData();
+  });
+
+  // ===== CHANGE PASSWORD =====
+  document.getElementById('change-password-btn')?.addEventListener('click', function() {
+    const oldPass = document.getElementById('old-password').value;
+    const newPass = document.getElementById('new-password').value;
+    const confirmPass = document.getElementById('confirm-password').value;
+    
+    if (!oldPass) {
+      showToast('error', 'Gagal', 'Masukkan password lama');
+      return;
+    }
+    
+    if (!newPass || newPass.length < 8) {
+      showToast('error', 'Gagal', 'Password baru minimal 8 karakter');
+      return;
+    }
+    
+    if (newPass !== confirmPass) {
+      showToast('error', 'Gagal', 'Password baru dan konfirmasi tidak sama');
+      return;
+    }
+    
+    // Simulasi sukses
+    showToast('success', 'Berhasil', 'Password berhasil diubah');
+    document.getElementById('old-password').value = '';
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-password').value = '';
+  });
+
+  // ===== DELETE ACCOUNT =====
+  document.getElementById('delete-account-btn')?.addEventListener('click', function() {
+    if (confirm('Yakin ingin menghapus akun? Tindakan ini tidak dapat dibatalkan!')) {
+      if (confirm('Konfirmasi: Hapus semua data akun Anda?')) {
+        showToast('error', 'Akun Dihapus', 'Akun Anda telah dihapus');
+        setTimeout(() => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/auth/login';
+        }, 2000);
+      }
+    }
+  });
+
+  // ===== TOAST =====
+  function showToast(type, title, message) {
+    const toast = document.getElementById('toast');
+    const icon = document.getElementById('toast-icon');
+    const titleEl = document.getElementById('toast-title');
+    const messageEl = document.getElementById('toast-message');
+    
+    toast.classList.remove('hidden');
+    
+    if (type === 'success') {
+      icon.className = 'w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0';
+      icon.innerHTML = '<i class="bi bi-check-circle text-green-600 dark:text-green-400"></i>';
+      titleEl.className = 'text-sm font-medium text-green-600 dark:text-green-400';
+    } else {
+      icon.className = 'w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0';
+      icon.innerHTML = '<i class="bi bi-x-circle text-red-600 dark:text-red-400"></i>';
+      titleEl.className = 'text-sm font-medium text-red-600 dark:text-red-400';
+    }
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    setTimeout(closeToast, 4000);
+  }
+
+  function closeToast() {
+    document.getElementById('toast').classList.add('hidden');
+  }
+
+  // ===== LOAD ON PAGE =====
+  document.addEventListener('DOMContentLoaded', loadUserData);
+</script>

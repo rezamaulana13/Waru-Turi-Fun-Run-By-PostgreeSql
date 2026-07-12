@@ -1,0 +1,52 @@
+{
+  "name": "waruturi-2027",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Waru Turi Fun Run 2027 - Fullstack Website with PostgreSQL",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:studio": "drizzle-kit studio",
+    "db:reset": "npm run db:migrate && npm run db:seed"
+  },
+  "dependencies": {
+    "@astrojs/node": "^8.3.4",
+    "@astrojs/react": "^3.6.0",
+    "@astrojs/tailwind": "^5.1.5",
+    "@googleapis/drive": "^20.2.0",
+    "@libsql/client": "^0.14.0",
+    "@types/pg": "^8.20.0",
+    "astro": "^4.16.19",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
+    "framer-motion": "^10.16.0",
+    "google-auth-library": "^10.9.0",
+    "html2canvas": "^1.4.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.2.0",
+    "pg": "^8.22.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.19"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^22.20.1",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.5.2",
+    "drizzle-kit": "^0.31.10",
+    "postcss": "^8.4.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.2.0"
+  }
+}

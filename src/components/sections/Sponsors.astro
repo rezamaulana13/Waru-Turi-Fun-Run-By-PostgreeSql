@@ -1,0 +1,131 @@
+---
+// src/components/sections/Sponsors.astro
+import { db, aboutContent } from '../../db/index.js';
+import { eq, asc } from 'drizzle-orm';
+
+// ===== AMBIL DATA SPONSORS DARI DATABASE =====
+let sponsorsData: Record<string, any> = {};
+let sponsorImages: string[] = [];
+
+try {
+  const result = await db.select().from(aboutContent)
+    .where(eq(aboutContent.section, 'sponsors'))
+    .orderBy(asc(aboutContent.order));
+  
+  if (result.length > 0) {
+    result.forEach((item: any) => {
+      sponsorsData[item.key] = item.value || '';
+    });
+  }
+} catch (error) {
+  console.error('Error fetching sponsors data:', error);
+}
+
+// Fallback data
+const title = sponsorsData.title || 'Didukung Oleh';
+const images = sponsorsData.images || [
+  'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgoG8puA2xLI3PwyTvhWpVvwOHYeF3nBbBwf6Bg73TwILQVM0KYxW4iDH-zHI59a4alantzKOaYikSwuo2bzEs4S8XSePRrG3lUqBsf55yjIIUgGaxbELgBB5GY1LQ5wFOLMX9ahqXUhAdcvAW3gZLISBATTwmDm8siznhkxVJNs-n83NX3wG6zORzm5yMJ/s4999/LOGO%20YAKULT%20MERAH.png',
+  'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEixg9Jrx3Nvi2_JHV3CwNtuyiVqag785W3-gqfk8Y5i8yuFaecPlii2YRimVgTHOhns1a_YRXd_3G0K7yigYhmqt1YGvn-L9DzchrDtMK8e95NB_zkRllyB2V0EtFMUKswUUOhclrc5ng6oFJJN3yKJNXPA1cfAdYBmK0EP2lNCQZ_SAVKTQLMLFvkoXHwB/s4735/LOGO%20ISO%20PLUS%20PUTIH.png',
+  'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhnx2pRmViqTgLgnGCg3StsSqDgiYBwbgA8yCt9cNzOq7DKNjx-FK2skUyoM03UZQDAwLWxmOHGUstbdEPLVu3tRhO27mNzUD-Q737Aun0qfGAKObLcQO5oZbs2b3u-xMPc9ySz_0Mnmp1KSZf52dHpdeqlSDA5bSlJTwAruNxKMqaaOLqKfA69dzMe0jDj/s4780/LOGO%20ARTUGO%20HITAM.png',
+  'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiAnHHHD0HqwvA0qSEOrSxy6zjAWVmV1kiBnBrOaUxbPDsNnPcuKy2VAmvgl6wOWXyY-AnZT3BegvOB2Keybn8Y8Vsvre3UdgJoSKLPIWPjMvoEy9B2vXGBus8QVYhuzWmU4WPE1LSjmG8QCxiTq8e1xZiCCi7Q7X1YFvQ0qbdikaN7Und628A60W6V0vNf/s6024/LOGO%20NAV%20KARAOKE%20WARNA.png'
+];
+
+// Parse images jika dari database berupa string JSON
+if (typeof images === 'string') {
+  try {
+    sponsorImages = JSON.parse(images);
+  } catch {
+    sponsorImages = images.split(',').map((s: string) => s.trim());
+  }
+} else if (Array.isArray(images)) {
+  sponsorImages = images;
+} else {
+  sponsorImages = [];
+}
+
+// Jika masih kosong, pakai default
+if (sponsorImages.length === 0) {
+  sponsorImages = [
+    'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgoG8puA2xLI3PwyTvhWpVvwOHYeF3nBbBwf6Bg73TwILQVM0KYxW4iDH-zHI59a4alantzKOaYikSwuo2bzEs4S8XSePRrG3lUqBsf55yjIIUgGaxbELgBB5GY1LQ5wFOLMX9ahqXUhAdcvAW3gZLISBATTwmDm8siznhkxVJNs-n83NX3wG6zORzm5yMJ/s4999/LOGO%20YAKULT%20MERAH.png',
+    'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEixg9Jrx3Nvi2_JHV3CwNtuyiVqag785W3-gqfk8Y5i8yuFaecPlii2YRimVgTHOhns1a_YRXd_3G0K7yigYhmqt1YGvn-L9DzchrDtMK8e95NB_zkRllyB2V0EtFMUKswUUOhclrc5ng6oFJJN3yKJNXPA1cfAdYBmK0EP2lNCQZ_SAVKTQLMLFvkoXHwB/s4735/LOGO%20ISO%20PLUS%20PUTIH.png',
+    'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhnx2pRmViqTgLgnGCg3StsSqDgiYBwbgA8yCt9cNzOq7DKNjx-FK2skUyoM03UZQDAwLWxmOHGUstbdEPLVu3tRhO27mNzUD-Q737Aun0qfGAKObLcQO5oZbs2b3u-xMPc9ySz_0Mnmp1KSZf52dHpdeqlSDA5bSlJTwAruNxKMqaaOLqKfA69dzMe0jDj/s4780/LOGO%20ARTUGO%20HITAM.png',
+    'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiAnHHHD0HqwvA0qSEOrSxy6zjAWVmV1kiBnBrOaUxbPDsNnPcuKy2VAmvgl6wOWXyY-AnZT3BegvOB2Keybn8Y8Vsvre3UdgJoSKLPIWPjMvoEy9B2vXGBus8QVYhuzWmU4WPE1LSjmG8QCxiTq8e1xZiCCi7Q7X1YFvQ0qbdikaN7Und628A60W6V0vNf/s6024/LOGO%20NAV%20KARAOKE%20WARNA.png'
+  ];
+}
+
+// Duplicate untuk infinite scroll
+const allSponsors = [...sponsorImages, ...sponsorImages];
+---
+
+<section id="sponsors" class="py-12 sm:py-16 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <h4 class="text-center text-gray-400 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] mb-6">
+      {title}
+    </h4>
+    <div class="sponsor-slider overflow-hidden whitespace-nowrap relative">
+      <div class="sponsor-track inline-flex animate-scroll-sponsors">
+        {allSponsors.map((src, index) => (
+          <div key={index} class="sponsor-group inline-flex items-center flex-shrink-0 px-3 sm:px-4">
+            <img 
+              src={src}
+              alt={`Sponsor ${index + 1}`}
+              class="h-8 sm:h-10 w-auto grayscale brightness-75 opacity-60 hover:grayscale-0 hover:brightness-100 hover:opacity-100 transition-all duration-300"
+              loading="lazy"
+              decoding="async"
+              onerror="this.style.display='none'"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  #sponsors {
+    contain: layout paint;
+  }
+
+  .sponsor-slider {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+
+  .sponsor-track {
+    display: flex;
+    width: fit-content;
+    animation: scrollSponsors 30s linear infinite;
+    will-change: transform;
+  }
+
+  .sponsor-group {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  @keyframes scrollSponsors {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sponsor-track {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .sponsor-group img {
+      height: 1.5rem;
+    }
+    .sponsor-group {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+  }
+</style>

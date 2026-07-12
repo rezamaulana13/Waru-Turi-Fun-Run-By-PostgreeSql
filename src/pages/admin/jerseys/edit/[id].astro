@@ -1,0 +1,560 @@
+---
+// src/pages/admin/jerseys/edit/[id].astro
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+
+// Get ID from params
+const { id } = Astro.params;
+
+// Data dummy untuk sementara
+const dummyJerseys = [
+  {
+    id: '1',
+    name: 'Jersey Elite 2027',
+    description: 'Jersey premium untuk Waru Turi Run 2027 dengan bahan berkualitas tinggi',
+    price: 350000,
+    stock: 150,
+    soldCount: 45,
+    status: 'available',
+    category: 'Premium',
+    image: 'https://picsum.photos/seed/jersey1/400/400',
+    raceId: '1',
+    race: { id: '1', name: 'Waru Turi Run 2027' },
+    sizes: ['S', 'M', 'L', 'XL'],
+    colors: ['Merah', 'Biru', 'Putih'],
+  },
+  {
+    id: '2',
+    name: 'Jersey Standard 2027',
+    description: 'Jersey standar untuk Waru Turi Run 2027',
+    price: 200000,
+    stock: 200,
+    soldCount: 120,
+    status: 'available',
+    category: 'Standar',
+    image: 'https://picsum.photos/seed/jersey2/400/400',
+    raceId: '1',
+    race: { id: '1', name: 'Waru Turi Run 2027' },
+    sizes: ['M', 'L', 'XL'],
+    colors: ['Hijau', 'Kuning'],
+  },
+  {
+    id: '3',
+    name: 'Jersey Limited Edition 2026',
+    description: 'Jersey edisi terbatas untuk Waru Turi Run 2026',
+    price: 450000,
+    stock: 50,
+    soldCount: 180,
+    status: 'sold_out',
+    category: 'Limited',
+    image: 'https://picsum.photos/seed/jersey3/400/400',
+    raceId: '2',
+    race: { id: '2', name: 'Waru Turi Run 2026' },
+    sizes: ['S', 'M', 'L', 'XL', 'XXL'],
+    colors: ['Ungu', 'Hitam'],
+  },
+];
+
+// Cari jersey berdasarkan ID
+const jersey = dummyJerseys.find(j => j.id === id);
+
+// Jika tidak ditemukan, redirect
+if (!jersey) {
+  return Astro.redirect('/admin/jerseys');
+}
+
+const dummyRaces = [
+  { id: '1', name: 'Waru Turi Run 2027' },
+  { id: '2', name: 'Waru Turi Run 2026' },
+  { id: '3', name: 'Waru Turi Run 2028' },
+  { id: '4', name: 'Waru Turi Run 2025' },
+];
+
+const availableSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+const availableColors = [
+  { name: 'Merah', hex: '#FF0000' },
+  { name: 'Biru', hex: '#0000FF' },
+  { name: 'Hijau', hex: '#00FF00' },
+  { name: 'Kuning', hex: '#FFFF00' },
+  { name: 'Hitam', hex: '#000000' },
+  { name: 'Putih', hex: '#FFFFFF' },
+  { name: 'Ungu', hex: '#800080' },
+  { name: 'Oranye', hex: '#FFA500' },
+];
+
+const races = dummyRaces;
+---
+
+<AdminLayout title={`Edit Jersey - ${jersey.name}`}>
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <i class="bi bi-pencil-square text-yellow-600 dark:text-yellow-400 mr-2"></i>
+            Edit Jersey
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Update data jersey {jersey.name}
+          </p>
+        </div>
+        <a 
+          href="/admin/jerseys" 
+          class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2"
+        >
+          <i class="bi bi-arrow-left"></i>
+          Kembali
+        </a>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form id="jerseyForm" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-6 space-y-6">
+      <!-- Basic Information -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <i class="bi bi-info-circle text-blue-600 dark:text-blue-400 mr-2"></i>
+          Informasi Dasar
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Nama Jersey <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              name="name"
+              id="jerseyName"
+              value={jersey.name}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Race <span class="text-red-500">*</span>
+            </label>
+            <select 
+              name="raceId"
+              id="raceId"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+            >
+              <option value="">Pilih Race</option>
+              {races.map((race) => (
+                <option key={race.id} value={race.id} selected={race.id === jersey.raceId}>
+                  {race.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Deskripsi Jersey
+          </label>
+          <textarea 
+            name="description"
+            id="description"
+            rows="3" 
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+          >{jersey.description}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Harga (Rp) <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="number" 
+              name="price"
+              id="price"
+              value={jersey.price}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+              min="0"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Stok <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="number" 
+              name="stock"
+              id="stock"
+              value={jersey.stock}
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              required
+              min="0"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Kategori
+            </label>
+            <select 
+              name="category"
+              id="category"
+              class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+              <option value="">Pilih Kategori</option>
+              <option value="Premium" selected={jersey.category === 'Premium'}>Premium</option>
+              <option value="Standar" selected={jersey.category === 'Standar'}>Standar</option>
+              <option value="Limited" selected={jersey.category === 'Limited'}>Limited Edition</option>
+              <option value="Regular" selected={jersey.category === 'Regular'}>Regular</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Status <span class="text-red-500">*</span>
+          </label>
+          <select 
+            name="status"
+            id="status"
+            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            required
+          >
+            <option value="available" selected={jersey.status === 'available'}>Tersedia</option>
+            <option value="pre_order" selected={jersey.status === 'pre_order'}>Pre-Order</option>
+            <option value="sold_out" selected={jersey.status === 'sold_out'}>Habis</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Sizes -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <i class="bi bi-rulers text-blue-600 dark:text-blue-400 mr-2"></i>
+          Ukuran Tersedia
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          Pilih ukuran yang tersedia untuk jersey ini
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {availableSizes.map((size) => (
+            <label key={size} class={`flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition border-2 ${jersey.sizes.includes(size) ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent hover:border-blue-300 dark:hover:border-blue-600'}`}>
+              <input type="checkbox" name="sizes" value={size} checked={jersey.sizes.includes(size)} class="rounded border-gray-300 dark:border-gray-600 size-checkbox" />
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{size}</span>
+            </label>
+          ))}
+        </div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2" id="sizeHelp">Pilih minimal 1 ukuran</p>
+      </div>
+
+      <!-- Colors -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <i class="bi bi-palette text-blue-600 dark:text-blue-400 mr-2"></i>
+          Warna Tersedia
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          Pilih warna yang tersedia untuk jersey ini
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {availableColors.map((color) => (
+            <label key={color.name} class={`flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition border-2 ${jersey.colors.includes(color.name) ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent hover:border-blue-300 dark:hover:border-blue-600'}`}>
+              <input type="checkbox" name="colors" value={color.name} checked={jersey.colors.includes(color.name)} class="rounded border-gray-300 dark:border-gray-600 color-checkbox" />
+              <span 
+                class="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600 flex-shrink-0"
+                style={{ backgroundColor: color.hex }}
+              ></span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">{color.name}</span>
+            </label>
+          ))}
+        </div>
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-2" id="colorHelp">Pilih minimal 1 warna</p>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <i class="bi bi-image text-blue-600 dark:text-blue-400 mr-2"></i>
+          Gambar Jersey
+        </h3>
+        <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer" id="uploadArea">
+          <input type="file" accept="image/*" name="image" class="hidden" id="imageInput" />
+          <div id="imagePreview" class={`${jersey.image ? '' : 'hidden'} mb-4`}>
+            <img src={jersey.image} alt="Preview" class="max-h-48 mx-auto rounded-lg" />
+          </div>
+          <i class={`bi bi-cloud-upload text-4xl text-gray-400 dark:text-gray-500 mb-3 block ${jersey.image ? 'hidden' : ''}`} id="uploadIcon"></i>
+          <p class="text-gray-600 dark:text-gray-300 font-medium" id="uploadText">
+            {jersey.image ? jersey.image.split('/').pop() || 'Gambar saat ini' : 'Klik atau drag & drop untuk upload'}
+          </p>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, GIF (Max 2MB)</p>
+        </div>
+      </div>
+
+      <!-- Submit Buttons -->
+      <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-6 flex flex-wrap justify-end gap-3">
+        <a 
+          href="/admin/jerseys" 
+          class="px-6 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+        >
+          Batal
+        </a>
+        <button 
+          type="submit" 
+          id="submitBtn"
+          class="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <i class="bi bi-check-lg"></i>
+          <span id="submitText">Update Jersey</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+    <i class="bi bi-check-circle-fill text-green-400"></i>
+    <span id="toast-message">Jersey berhasil diupdate!</span>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <script>
+    // ============================================================
+    // IMAGE UPLOAD
+    // ============================================================
+    const uploadArea = document.getElementById('uploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadIcon = document.getElementById('uploadIcon');
+    const uploadText = document.getElementById('uploadText');
+
+    uploadArea?.addEventListener('click', () => {
+      imageInput?.click();
+    });
+
+    uploadArea?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+    });
+
+    uploadArea?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleImageFile(files[0]);
+      }
+    });
+
+    imageInput?.addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files.length > 0) {
+        handleImageFile(files[0]);
+      }
+    });
+
+    function handleImageFile(file) {
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        showToast('Format file tidak didukung. Gunakan JPG, PNG, atau GIF.');
+        return;
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran file terlalu besar. Maksimal 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = imagePreview.querySelector('img');
+        if (img) {
+          img.src = e.target.result;
+          imagePreview.classList.remove('hidden');
+          uploadIcon.classList.add('hidden');
+          uploadText.textContent = file.name;
+          uploadText.classList.add('text-blue-600', 'dark:text-blue-400');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ============================================================
+    // FORM VALIDATION
+    // ============================================================
+    function validateSizes() {
+      const checked = document.querySelectorAll('.size-checkbox:checked');
+      const help = document.getElementById('sizeHelp');
+      if (checked.length === 0) {
+        help.classList.add('text-red-500');
+        help.textContent = '⚠️ Pilih minimal 1 ukuran';
+        return false;
+      }
+      help.classList.remove('text-red-500');
+      help.textContent = '✓ Ukuran dipilih';
+      help.classList.add('text-green-500');
+      return true;
+    }
+
+    function validateColors() {
+      const checked = document.querySelectorAll('.color-checkbox:checked');
+      const help = document.getElementById('colorHelp');
+      if (checked.length === 0) {
+        help.classList.add('text-red-500');
+        help.textContent = '⚠️ Pilih minimal 1 warna';
+        return false;
+      }
+      help.classList.remove('text-red-500');
+      help.textContent = '✓ Warna dipilih';
+      help.classList.add('text-green-500');
+      return true;
+    }
+
+    document.querySelectorAll('.size-checkbox').forEach(cb => {
+      cb.addEventListener('change', validateSizes);
+    });
+
+    document.querySelectorAll('.color-checkbox').forEach(cb => {
+      cb.addEventListener('change', validateColors);
+    });
+
+    // ============================================================
+    // FORM SUBMISSION
+    // ============================================================
+    const form = document.getElementById('jerseyForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!validateSizes() || !validateColors()) {
+        showToast('⚠️ Silakan pilih minimal 1 ukuran dan 1 warna');
+        return;
+      }
+
+      const formData = new FormData(form);
+      const data = {
+        id: '{jersey.id}',
+        name: formData.get('name'),
+        raceId: formData.get('raceId'),
+        description: formData.get('description'),
+        price: parseInt(formData.get('price')) || 0,
+        stock: parseInt(formData.get('stock')) || 0,
+        category: formData.get('category'),
+        status: formData.get('status'),
+        sizes: Array.from(form.querySelectorAll('input[name="sizes"]:checked')).map(el => el.value),
+        colors: Array.from(form.querySelectorAll('input[name="colors"]:checked')).map(el => el.value),
+      };
+
+      if (!data.name || !data.raceId || !data.price || data.price <= 0) {
+        showToast('⚠️ Mohon lengkapi semua field yang wajib diisi');
+        return;
+      }
+
+      const imageFile = imageInput?.files?.[0];
+      if (imageFile) {
+        const reader = new FileReader();
+        const imageData = await new Promise((resolve) => {
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(imageFile);
+        });
+        data.image = imageData;
+      }
+
+      submitBtn.disabled = true;
+      submitText.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...';
+
+      try {
+        // Update di localStorage
+        const existingData = JSON.parse(localStorage.getItem('jerseys') || '[]');
+        const index = existingData.findIndex(j => j.id === '{jersey.id}');
+        if (index !== -1) {
+          existingData[index] = { 
+            ...existingData[index], 
+            ...data,
+            race: { id: data.raceId, name: getRaceName(data.raceId) },
+            sizes: data.sizes.map(size => ({ id: Math.random().toString(), name: size })),
+            colors: data.colors.map(color => ({ 
+              id: Math.random().toString(), 
+              name: color, 
+              hexCode: getColorHex(color) 
+            })),
+          };
+          localStorage.setItem('jerseys', JSON.stringify(existingData));
+        }
+
+        showToast('✅ Jersey berhasil diupdate!');
+
+        setTimeout(() => {
+          window.location.href = '/admin/jerseys';
+        }, 1500);
+
+      } catch (error) {
+        console.error('Error updating jersey:', error);
+        showToast('❌ Terjadi kesalahan saat mengupdate jersey');
+        submitBtn.disabled = false;
+        submitText.textContent = 'Update Jersey';
+      }
+    });
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+    function getRaceName(raceId) {
+      const races = {
+        '1': 'Waru Turi Run 2027',
+        '2': 'Waru Turi Run 2026',
+        '3': 'Waru Turi Run 2028',
+        '4': 'Waru Turi Run 2025'
+      };
+      return races[raceId] || 'Waru Turi Run';
+    }
+
+    function getColorHex(colorName) {
+      const colorMap = {
+        'Merah': '#FF0000',
+        'Biru': '#0000FF',
+        'Hijau': '#00FF00',
+        'Kuning': '#FFFF00',
+        'Hitam': '#000000',
+        'Putih': '#FFFFFF',
+        'Ungu': '#800080',
+        'Oranye': '#FFA500'
+      };
+      return colorMap[colorName] || '#000000';
+    }
+
+    // ============================================================
+    // TOAST NOTIFICATION
+    // ============================================================
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('translate-y-full', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        setTimeout(hideToast, 3000);
+      }
+    }
+    window.showToast = showToast;
+
+    function hideToast() {
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-full', 'opacity-0');
+      }
+    }
+    window.hideToast = hideToast;
+
+    console.log('✅ Edit Jersey Admin Panel loaded');
+  </script>
+</AdminLayout>

@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1,
+    "name": "Yakult",
+    "logo": "/images/sponsors/yakult.png",
+    "url": "https://www.yakult.co.id",
+    "tier": "platinum",
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": "Iso Plus",
+    "logo": "/images/sponsors/iso-plus.png",
+    "url": "https://www.isoplus.co.id",
+    "tier": "platinum",
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 3,
+    "name": "Artugo",
+    "logo": "/images/sponsors/artugo.png",
+    "url": "https://www.artugo.com",
+    "tier": "gold",
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 4,
+    "name": "Bank Jatim",
+    "logo": "/images/sponsors/bank-jatim.png",
+    "url": "https://www.bankjatim.co.id",
+    "tier": "gold",
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 5,
+    "name": "Gudang Garam",
+    "logo": "/images/sponsors/gudang-garam.png",
+    "url": "https://www.gudanggaram.com",
+    "tier": "silver",
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 6,
+    "name": "Maxim",
+    "logo": "/images/sponsors/maxim.png",
+    "url": "https://www.maxim.co.id",
+    "tier": "silver",
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 7,
+    "name": "BRI",
+    "logo": "/images/sponsors/bri.png",
+    "url": "https://www.bri.co.id",
+    "tier": "bronze",
+    "created_at": "2027-01-01T00:00:00.000Z"
+  },
+  {
+    "id": 8,
+    "name": "Yamaha",
+    "logo": "/images/sponsors/yamaha.png",
+    "url": "https://www.yamaha-motor.co.id",
+    "tier": "bronze",
+    "created_at": "2027-01-01T00:00:00.000Z"
+  }
+]

@@ -1,0 +1,320 @@
+---
+// src/pages/profile.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { verifyToken, getUserByToken } from '../lib/auth';
+
+// Cek autentikasi
+let user = null;
+let isLoggedIn = false;
+let isAdmin = false;
+
+try {
+  const tokenCookie = Astro.cookies.get('token');
+  const tokenValue = tokenCookie?.value || null;
+  
+  if (tokenValue) {
+    const decoded = verifyToken(tokenValue);
+    if (decoded) {
+      user = await getUserByToken(tokenValue);
+      isLoggedIn = !!user;
+      isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+    }
+  }
+} catch (error) {
+  console.error('Error checking auth:', error);
+}
+
+// Jika admin, redirect ke dashboard
+if (isAdmin && user) {
+  return Astro.redirect('/admin');
+}
+
+// Jika tidak login, redirect ke login
+if (!isLoggedIn) {
+  return Astro.redirect('/auth/login');
+}
+
+// Format tanggal (tanpa waktu)
+const formatDate = (date: string | Date | null | undefined) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  // Cek apakah valid date
+  if (isNaN(d.getTime())) return '-';
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+};
+
+// Ambil inisial nama
+const getInitial = (name: string | null | undefined) => {
+  if (!name) return 'U';
+  return name.charAt(0).toUpperCase();
+};
+
+// Hitung umur dari tanggal lahir
+const calculateAge = (birthDate: string | null | undefined) => {
+  if (!birthDate) return null;
+  const today = new Date();
+  const birth = new Date(birthDate);
+  if (isNaN(birth.getTime())) return null;
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+};
+
+// ===== KONVERSI GENDER KE BAHASA INDONESIA =====
+const getGenderDisplay = (gender: string | null | undefined) => {
+  if (!gender) return '-';
+  const genderMap: Record<string, string> = {
+    'male': 'Pria',
+    'female': 'Wanita',
+    'Pria': 'Pria',
+    'Wanita': 'Wanita',
+    'Laki-laki': 'Pria',
+    'Perempuan': 'Wanita'
+  };
+  return genderMap[gender] || gender;
+};
+---
+
+<BaseLayout title="Profile Saya - Waru Turi Fun Run">
+  <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+        <a href="/" class="hover:text-primary-600 transition-colors">Beranda</a>
+        <span class="text-gray-300">/</span>
+        <span class="text-gray-700 font-medium">Profile Saya</span>
+      </nav>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Sidebar Kiri -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
+            <!-- Profile Header -->
+            <div class="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-8 text-center">
+              <div class="w-24 h-24 mx-auto rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-4xl font-bold text-white ring-4 ring-white/50">
+                {getInitial(user?.name)}
+              </div>
+              <h2 class="mt-4 text-xl font-semibold text-white">{user?.name || 'User'}</h2>
+              <p class="text-sm text-white/80">{user?.email || '-'}</p>
+              <span class="inline-block mt-2 px-3 py-1 text-xs font-medium bg-white/20 text-white rounded-full">
+                {user?.role === 'admin' ? 'Administrator' : 'Peserta'}
+              </span>
+            </div>
+
+            <!-- Menu Sidebar -->
+            <div class="p-4 space-y-1">
+              <a href="/profile" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary-600 bg-primary-50 rounded-xl transition-colors">
+                <i class="bi bi-person text-lg"></i>
+                Profile Saya
+              </a>
+              <a href="/profile/edit" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
+                <i class="bi bi-gear text-lg"></i>
+                Pengaturan
+              </a>
+              <a href="/registrasi" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
+                <i class="bi bi-ticket-perforated text-lg"></i>
+                Registrasi Lomba
+              </a>
+              <a href="/peserta" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors">
+                <i class="bi bi-people text-lg"></i>
+                Daftar Peserta
+              </a>
+              <hr class="my-2 border-gray-100" />
+              <button 
+                onclick="handleLogout()"
+                class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left"
+              >
+                <i class="bi bi-box-arrow-right text-lg"></i>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Konten Utama -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Status Registrasi Lomba -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-gray-800">
+                <i class="bi bi-trophy text-primary-600 mr-2"></i>
+                Status Registrasi Lomba
+              </h3>
+              <a href="/registrasi" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
+                {user?.registration_status ? 'Lihat Detail' : 'Daftar Sekarang'}
+                <i class="bi bi-chevron-right ml-1"></i>
+              </a>
+            </div>
+            <div class="px-6 py-4">
+              {user?.registration_status ? (
+                <div class="flex items-center gap-3 flex-wrap">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                    <i class="bi bi-check-circle-fill mr-1.5"></i>
+                    Terdaftar
+                  </span>
+                  <span class="text-sm text-gray-500">
+                    Kategori: <strong>{user?.race_category || '-'}</strong>
+                  </span>
+                  <span class="text-sm text-gray-500">
+                    No. BIB: <strong>{user?.bib_number || '-'}</strong>
+                  </span>
+                </div>
+              ) : (
+                <div class="flex items-center gap-3 text-gray-500">
+                  <i class="bi bi-info-circle text-xl text-gray-400"></i>
+                  <span>Anda belum mendaftar lomba. <a href="/registrasi" class="text-primary-600 hover:underline font-medium">Daftar sekarang</a></span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <!-- Informasi Profil -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+              <h3 class="text-lg font-semibold text-gray-800">
+                <i class="bi bi-info-circle text-primary-600 mr-2"></i>
+                Informasi Profil
+              </h3>
+            </div>
+            <div class="px-6 py-4">
+              <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Nama Lengkap</dt>
+                  <dd class="mt-1 text-gray-800 font-medium">{user?.name || '-'}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Email</dt>
+                  <dd class="mt-1 text-gray-800">{user?.email || '-'}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Nomor Telepon</dt>
+                  <dd class="mt-1 text-gray-800">{user?.phone || '-'}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Tanggal Lahir</dt>
+                  <dd class="mt-1 text-gray-800">
+                    {formatDate(user?.birthDate)}
+                    {user?.birthDate && (
+                      <span class="text-sm text-gray-400 ml-2">
+                        ({calculateAge(user.birthDate)} tahun)
+                      </span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Jenis Kelamin</dt>
+                  <dd class="mt-1 text-gray-800">
+                    {getGenderDisplay(user?.gender)}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Institusi</dt>
+                  <dd class="mt-1 text-gray-800">{user?.institution || '-'}</dd>
+                </div>
+                <div class="md:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500">Alamat</dt>
+                  <dd class="mt-1 text-gray-800">{user?.address || '-'}</dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Status Akun</dt>
+                  <dd class="mt-1">
+                    <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user?.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {user?.isActive ? 'Aktif' : 'Tidak Aktif'}
+                    </span>
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-sm font-medium text-gray-500">Role</dt>
+                  <dd class="mt-1 text-gray-800">
+                    <span class="capitalize">{user?.role || 'user'}</span>
+                  </dd>
+                </div>
+                <div class="md:col-span-2">
+                  <dt class="text-sm font-medium text-gray-500">Bergabung Sejak</dt>
+                  <dd class="mt-1 text-gray-800">
+                    {formatDate(user?.createdAt)}
+                  </dd>
+                </div>
+              </dl>
+
+              <div class="mt-6 pt-6 border-t border-gray-100 flex justify-end">
+                <a 
+                  href="/profile/edit" 
+                  class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5"
+                >
+                  <i class="bi bi-pencil me-1.5"></i>
+                  Edit Profile
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Riwayat Pendaftaran -->
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100">
+              <h3 class="text-lg font-semibold text-gray-800">
+                <i class="bi bi-clock-history text-primary-600 mr-2"></i>
+                Riwayat Pendaftaran
+              </h3>
+            </div>
+            <div class="px-6 py-4">
+              {user?.registrations && user.registrations.length > 0 ? (
+                <div class="space-y-3">
+                  {user.registrations.map((reg: any) => (
+                    <div key={reg.id} class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                      <div>
+                        <p class="font-medium text-gray-800">{reg.event_name || 'Waru Turi Fun Run'}</p>
+                        <p class="text-sm text-gray-500">{formatDate(reg.registration_date)}</p>
+                      </div>
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                        <i class="bi bi-check-circle-fill mr-1.5 text-xs"></i>
+                        {reg.status || 'Selesai'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div class="text-center py-8">
+                  <i class="bi bi-inbox text-4xl text-gray-300"></i>
+                  <p class="mt-2 text-gray-500">Belum ada riwayat pendaftaran</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fungsi Logout
+    window.handleLogout = async function() {
+      if (!confirm('Yakin ingin logout?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/logout', { 
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      sessionStorage.clear();
+      window.location.href = '/';
+    };
+  </script>
+</BaseLayout>

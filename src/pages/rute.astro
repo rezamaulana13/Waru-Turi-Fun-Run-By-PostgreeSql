@@ -1,0 +1,400 @@
+---
+// src/pages/rute.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/common/Navbar.astro';
+import Footer from '../components/common/Footer.astro';
+
+// Data Rute
+const routeData = [
+  {
+    id: '5k',
+    name: '5K Fun Run',
+    icon: 'bi-flag',
+    color: '#22c55e',
+    bgColor: 'from-emerald-500 to-green-600',
+    distance: '5 Kilometer',
+    description: 'Rute pendek yang cocok untuk pelari pemula atau yang ingin menikmati suasana santai. Melewati area perkampungan dengan pemandangan hijau yang asri.',
+    startTime: '06:30 WIB',
+    route: 'Start - Jl. Raya Waru Turi - Perumahan Asri - Bendungan - Finish',
+    elevation: 'Datar',
+    difficulty: 'Mudah',
+    terrain: 'Aspal & Jalan Kampung',
+    image: '/images/Rute Fun Run Waru Turi - 5K.jpg',
+  },
+  {
+    id: '10k',
+    name: '10K Fun Run',
+    icon: 'bi-trophy',
+    color: '#eab308',
+    bgColor: 'from-yellow-500 to-amber-600',
+    distance: '10 Kilometer',
+    description: 'Rute menantang dengan kombinasi jalan datar dan tanjakan ringan. Melewati area persawahan dan pemukiman dengan pemandangan Gunung Wilis di kejauhan.',
+    startTime: '06:00 WIB',
+    route: 'Start - Jl. Raya Waru Turi - Perumahan Asri - Bendungan - Jl. Raya - Finish',
+    elevation: 'Bergelombang',
+    difficulty: 'Sedang',
+    terrain: 'Aspal & Jalan Kampung',
+    image: '/images/Rute Fun Run Waru Turi - 10K.jpg',
+  },
+];
+
+const facilities = [
+  { icon: 'bi-water', label: 'Water Station', desc: 'Setiap 2 km' },
+  { icon: 'bi-heart-pulse', label: 'Medical', desc: 'Di start & finish' },
+  { icon: 'bi-clock', label: 'Time Limit', desc: '2 Jam (10K) / 1.5 Jam (5K)' },
+  { icon: 'bi-cup-hot', label: 'Refreshment', desc: 'Di finish' },
+  { icon: 'bi-shield-check', label: 'Safety', desc: 'Petugas keamanan' },
+  { icon: 'bi-pin-map', label: 'Checkpoint', desc: '5 titik' },
+];
+---
+
+<BaseLayout title="Rute Lomba - Waru Turi Fun Run 2026" description="Lihat rute lengkap Waru Turi Fun Run 2026 untuk kategori 5K dan 10K. Dilengkapi peta rute dan informasi jalur.">
+  <Navbar />
+
+  <!-- ===== HERO ===== -->
+  <section class="route-hero">
+    <div class="route-overlay"></div>
+    <div class="route-hero-content">
+      <h2 class="route-title">Rute Lomba</h2>
+      <p class="route-subtitle">
+        Pilih rute yang sesuai dengan kemampuanmu. Nikmati pemandangan indah Bendungan Waru Turi dan area sekitarnya.
+      </p>
+      <div class="route-breadcrumb">
+        <a href="/">Home</a>
+        <span>›</span>
+        <span>Rute</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ROUTE MAPS ===== -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <span class="text-[#2679ec] font-semibold text-sm uppercase tracking-wider">Peta Rute</span>
+        <h2 class="text-3xl font-bold text-gray-900 mt-2 mb-3">Peta Rute Waru Turi Fun Run 2026</h2>
+        <p class="text-gray-500 text-base max-w-2xl mx-auto">Klik gambar untuk memperbesar dan melihat detail rute.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        {routeData.map((route) => (
+          <div key={route.id} class="route-map-card group">
+            <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100/50 hover:border-[#2679ec]/20 hover:-translate-y-2">
+              <!-- Image -->
+              <div class="relative overflow-hidden cursor-pointer" onclick="openLightbox('{route.image}', '{route.name}')">
+                <img
+                  src={route.image}
+                  alt={`Peta Rute ${route.name}`}
+                  class="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700"
+                  loading="lazy"
+                />
+                <div class="absolute top-4 right-4">
+                  <span class={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-sm font-bold shadow-lg bg-gradient-to-r ${route.bgColor}`}>
+                    <i class={`${route.icon} text-sm`}></i>
+                    {route.distance}
+                  </span>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-6">
+                  <h3 class="text-2xl font-extrabold text-white">{route.name}</h3>
+                </div>
+                <!-- Zoom icon overlay -->
+                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <div class="bg-white/90 rounded-full p-4 shadow-lg transform scale-90 group-hover:scale-100 transition-all duration-300">
+                    <i class="bi bi-zoom-in text-3xl text-[#2679ec]"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Content -->
+              <div class="p-6 md:p-8">
+                <p class="text-gray-600 text-base leading-relaxed mb-6">{route.description}</p>
+                
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                  <div class="bg-[#F7F8FC] rounded-xl p-3 text-center border border-gray-100">
+                    <i class="bi bi-clock text-[#2679ec] text-lg block mb-1"></i>
+                    <p class="text-xs text-gray-500">Start</p>
+                    <p class="font-bold text-gray-900 text-sm">{route.startTime}</p>
+                  </div>
+                  <div class="bg-[#F7F8FC] rounded-xl p-3 text-center border border-gray-100">
+                    <i class="bi bi-activity text-[#2679ec] text-lg block mb-1"></i>
+                    <p class="text-xs text-gray-500">Difficulty</p>
+                    <p class="font-bold text-gray-900 text-sm">{route.difficulty}</p>
+                  </div>
+                  <div class="bg-[#F7F8FC] rounded-xl p-3 text-center border border-gray-100">
+                    <i class="bi bi-road text-[#2679ec] text-lg block mb-1"></i>
+                    <p class="text-xs text-gray-500">Terrain</p>
+                    <p class="font-bold text-gray-900 text-sm">{route.terrain}</p>
+                  </div>
+                  <div class="bg-[#F7F8FC] rounded-xl p-3 text-center border border-gray-100">
+                    <i class="bi bi-graph-up text-[#2679ec] text-lg block mb-1"></i>
+                    <p class="text-xs text-gray-500">Elevation</p>
+                    <p class="font-bold text-gray-900 text-sm">{route.elevation}</p>
+                  </div>
+                </div>
+
+                <!-- Route Details -->
+                <div class="bg-[#F7F8FC] rounded-xl p-4 border border-gray-100 mb-6">
+                  <p class="text-xs text-gray-500 mb-1"><i class="bi bi-signpost-2 text-[#2679ec] mr-1"></i> Rute</p>
+                  <p class="text-sm font-medium text-gray-800">{route.route}</p>
+                </div>
+
+                <a href="/p/ticket-sold.html" class={`inline-flex items-center justify-center w-full gap-2 bg-gradient-to-r ${route.bgColor} hover:opacity-90 text-white font-bold px-6 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1`}>
+                  <i class="bi bi-ticket-perforated"></i> Daftar {route.name}
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FACILITIES ===== -->
+  <section class="py-16 bg-[#F7F8FC]">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-10">
+          <span class="text-[#2679ec] font-semibold text-sm uppercase tracking-wider">Fasilitas</span>
+          <h2 class="text-3xl font-bold text-gray-900 mt-2 mb-3">Fasilitas Peserta</h2>
+          <p class="text-gray-500 text-base max-w-2xl mx-auto">Kami menyediakan berbagai fasilitas untuk kenyamanan peserta selama lomba.</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {facilities.map((item) => (
+            <div key={item.label} class="bg-white rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100/50 hover:border-[#2679ec]/20">
+              <div class="w-14 h-14 bg-[#2679ec]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <i class={`${item.icon} text-2xl text-[#2679ec]`}></i>
+              </div>
+              <h4 class="font-bold text-gray-900 text-sm">{item.label}</h4>
+              <p class="text-gray-500 text-xs mt-1">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TIPS SECTION ===== -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+          <span class="text-[#2679ec] font-semibold text-sm uppercase tracking-wider">Tips</span>
+          <h2 class="text-3xl font-bold text-gray-900 mt-2 mb-3">Tips Menjalani Rute</h2>
+          <p class="text-gray-500 text-base max-w-2xl mx-auto">Persiapan yang matang akan membuat pengalaman lomba lebih menyenangkan.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex gap-4 p-5 bg-[#F7F8FC] rounded-2xl border border-gray-100 hover:border-[#2679ec]/20 transition-all">
+            <div class="flex-shrink-0 w-12 h-12 bg-[#2679ec]/10 rounded-full flex items-center justify-center text-[#2679ec] text-xl font-bold">1</div>
+            <div>
+              <h4 class="font-bold text-gray-900 text-sm mb-1">Pemanasan yang Cukup</h4>
+              <p class="text-gray-500 text-sm">Lakukan pemanasan 15-20 menit sebelum start untuk menghindari cedera.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 p-5 bg-[#F7F8FC] rounded-2xl border border-gray-100 hover:border-[#2679ec]/20 transition-all">
+            <div class="flex-shrink-0 w-12 h-12 bg-[#2679ec]/10 rounded-full flex items-center justify-center text-[#2679ec] text-xl font-bold">2</div>
+            <div>
+              <h4 class="font-bold text-gray-900 text-sm mb-1">Atur Kecepatan</h4>
+              <p class="text-gray-500 text-sm">Jangan terlalu cepat di awal. Atur pacing sesuai kemampuan.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 p-5 bg-[#F7F8FC] rounded-2xl border border-gray-100 hover:border-[#2679ec]/20 transition-all">
+            <div class="flex-shrink-0 w-12 h-12 bg-[#2679ec]/10 rounded-full flex items-center justify-center text-[#2679ec] text-xl font-bold">3</div>
+            <div>
+              <h4 class="font-bold text-gray-900 text-sm mb-1">Cukup Hidrasi</h4>
+              <p class="text-gray-500 text-sm">Manfaatkan water station setiap 2 km untuk minum.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 p-5 bg-[#F7F8FC] rounded-2xl border border-gray-100 hover:border-[#2679ec]/20 transition-all">
+            <div class="flex-shrink-0 w-12 h-12 bg-[#2679ec]/10 rounded-full flex items-center justify-center text-[#2679ec] text-xl font-bold">4</div>
+            <div>
+              <h4 class="font-bold text-gray-900 text-sm mb-1">Nikmati Pemandangan</h4>
+              <p class="text-gray-500 text-sm">Jangan lupa menikmati keindahan Bendungan Waru Turi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="py-16 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">
+          Siap Menaklukkan <span class="text-[#FFD700]">Rute</span>?
+        </h2>
+        <p class="text-white/80 text-base mb-8 leading-relaxed">
+          Daftar sekarang dan rasakan sensasi berlari di rute eksklusif Waru Turi Fun Run 2026.
+        </p>
+        <a href="/p/ticket-sold.html" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
+          <i class="bi bi-ticket-perforated text-lg"></i> Daftar Sekarang
+        </a>
+        <p class="text-white/40 text-xs mt-4">
+          <i class="bi bi-clock-history mr-1"></i> Kuota terbatas, segera daftar!
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</BaseLayout>
+
+<!-- ===== LIGHTBOX MODAL ===== -->
+<div id="lightbox-modal" class="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-4" onclick="closeLightbox()">
+  <div class="relative max-w-5xl w-full max-h-[90vh]" onclick="event.stopPropagation()">
+    <button onclick="closeLightbox()" class="absolute -top-12 right-0 text-white hover:text-[#FFD700] transition-colors text-3xl">
+      <i class="bi bi-x-circle"></i>
+    </button>
+    <img id="lightbox-image" src="" alt="Peta Rute" class="w-full h-auto max-h-[85vh] object-contain rounded-2xl shadow-2xl border border-white/10" />
+    <p id="lightbox-caption" class="text-white text-center mt-4 text-lg font-semibold"></p>
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-sm px-6 py-2 rounded-full text-white/60 text-sm flex items-center gap-2">
+      <i class="bi bi-arrows-angle-expand"></i>
+      Klik di luar gambar untuk menutup
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ===== HERO ===== */
+  .route-hero {
+    position: relative;
+    width: 100%;
+    min-height: 420px;
+    background: linear-gradient(135deg, rgba(11, 124, 255, 0.85), rgba(0, 182, 219, 0.85)),
+      url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-XxTiJ/s1280/header.jpg') center/cover no-repeat fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+  }
+  .route-overlay {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    z-index: 1;
+  }
+  .route-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 20px;
+  }
+  .route-title {
+    font-size: 52px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+  }
+  .route-subtitle {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #e0f7fa;
+    margin-bottom: 28px;
+  }
+  .route-breadcrumb {
+    font-size: 14px;
+    color: #e0f7fa;
+  }
+  .route-breadcrumb a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .route-breadcrumb a:hover {
+    color: #FFD700;
+  }
+  .route-breadcrumb span {
+    margin: 0 6px;
+  }
+
+  @media (max-width: 768px) {
+    .route-hero {
+      min-height: 340px;
+      background-attachment: scroll;
+    }
+    .route-title {
+      font-size: 36px;
+    }
+    .route-subtitle {
+      font-size: 15px;
+    }
+  }
+
+  /* ===== ROUTE MAP CARDS ===== */
+  .route-map-card {
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+  .route-map-card:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  /* ===== LIGHTBOX ===== */
+  #lightbox-modal {
+    animation: fadeIn 0.3s ease-out;
+  }
+  #lightbox-modal img {
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 640px) {
+    .route-title {
+      font-size: 28px;
+    }
+    .route-map-card .relative {
+      min-height: 200px;
+    }
+  }
+</style>
+
+<!-- ===== LIGHTBOX SCRIPT ===== -->
+<script>
+  function openLightbox(imageSrc, routeName) {
+    const modal = document.getElementById('lightbox-modal');
+    const img = document.getElementById('lightbox-image');
+    const caption = document.getElementById('lightbox-caption');
+    
+    img.src = imageSrc;
+    caption.textContent = routeName;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    const modal = document.getElementById('lightbox-modal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+
+  // Close lightbox with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeLightbox();
+    }
+  });
+</script>

@@ -1,0 +1,667 @@
+---
+// src/pages/admin/articles/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Data dummy untuk sementara
+const articles = [
+  {
+    id: '1',
+    title: 'Persiapan Mental Sebelum Lomba Lari',
+    slug: 'persiapan-mental-sebelum-lomba-lari',
+    category: 'Tips & Trik',
+    excerpt: 'Persiapan mental sangat penting sebelum mengikuti lomba lari. Berikut tips yang bisa Anda terapkan untuk meningkatkan performa dan menjaga fokus selama perlombaan.',
+    content: `Persiapan mental adalah kunci sukses dalam setiap perlombaan lari. Banyak pelari yang fokus pada persiapan fisik namun melupakan aspek mental yang tidak kalah penting. Berikut adalah beberapa tips persiapan mental yang bisa Anda terapkan:
+
+1. Visualisasikan Kesuksesan
+Bayangkan diri Anda menyelesaikan perlombaan dengan baik. Visualisasi positif dapat meningkatkan kepercayaan diri dan mengurangi kecemasan.
+
+2. Tetapkan Target Realistis
+Jangan terlalu memaksakan diri. Tetapkan target yang sesuai dengan kemampuan Anda saat ini.
+
+3. Kelola Stres dengan Baik
+Gunakan teknik pernapasan dan meditasi untuk mengelola stres sebelum dan selama perlombaan.
+
+4. Fokus pada Proses, Bukan Hasil
+Nikmati setiap langkah dan pengalaman selama perlombaan. Hasil akan mengikuti proses yang baik.
+
+5. Persiapan Mental Sehari Sebelum Lomba
+Istirahat yang cukup, makan makanan bergizi, dan persiapkan perlengkapan dengan teliti.`,
+    image: 'https://picsum.photos/seed/mental/800/500',
+    author: 'Admin Waru Turi',
+    status: 'published',
+    views: 1247,
+    likes: 89,
+    tags: ['Mental', 'Persiapan', 'Motivasi'],
+    createdAt: '2026-07-10',
+    updatedAt: '2026-07-10',
+  },
+  {
+    id: '2',
+    title: 'Tips Memilih Sepatu Lari yang Tepat',
+    slug: 'tips-memilih-sepatu-lari-yang-tepat',
+    category: 'Peralatan',
+    excerpt: 'Memilih sepatu lari yang tepat sangat penting untuk kenyamanan dan mencegah cedera. Kenali jenis kaki dan kebutuhan Anda sebelum membeli.',
+    content: `Memilih sepatu lari yang tepat adalah investasi penting bagi setiap pelari. Sepatu yang salah dapat menyebabkan ketidaknyamanan dan bahkan cedera serius. Berikut panduan memilih sepatu lari:
+
+1. Kenali Jenis Kaki Anda
+- Kaki Datar (Flat Feet): Butuh sepatu dengan stabilitas ekstra
+- Kaki Normal: Bisa menggunakan berbagai jenis sepatu
+- Kaki Tinggi (High Arch): Butuh sepatu dengan bantalan yang baik
+
+2. Perhatikan Bentuk Lari Anda
+- Pronasi (kaki condong ke dalam): Butuh sepatu dengan support
+- Supinasi (kaki condong ke luar): Butuh sepatu dengan bantalan ekstra
+- Netral: Bisa menggunakan sepatu netral
+
+3. Ukuran yang Tepat
+- Beri ruang 0.5-1 cm di ujung jari
+- Pastikan tumit terasa nyaman
+- Coba kedua sepatu dengan kaus kaki tebal
+
+4. Jenis Permukaan Lari
+- Jalan Aspal: Butuh sepatu dengan bantalan yang baik
+- Trail/Off-road: Butuh sepatu dengan sol yang agresif
+- Treadmill: Bisa menggunakan sepatu ringan
+
+5. Merek dan Budget
+- Pilih merek terpercaya
+- Sesuaikan dengan budget
+- Jangan ragu untuk mencoba beberapa merek`,
+    image: 'https://picsum.photos/seed/sepatu/800/500',
+    author: 'Admin Waru Turi',
+    status: 'published',
+    views: 856,
+    likes: 67,
+    tags: ['Sepatu', 'Tips', 'Peralatan'],
+    createdAt: '2026-07-09',
+    updatedAt: '2026-07-09',
+  },
+  {
+    id: '3',
+    title: 'Panduan Nutrisi untuk Pelari',
+    slug: 'panduan-nutrisi-untuk-pelari',
+    category: 'Nutrisi',
+    excerpt: 'Nutrisi yang tepat sangat mempengaruhi performa lari Anda. Pelajari apa yang harus dimakan sebelum, selama, dan setelah berlari.',
+    content: `Nutrisi memainkan peran penting dalam performa lari. Asupan makanan yang tepat dapat meningkatkan energi, mempercepat pemulihan, dan mencegah cedera. Berikut panduan nutrisi untuk pelari:
+
+1. Sebelum Berlari (2-3 jam sebelumnya)
+- Karbohidrat kompleks: nasi, pasta, roti gandum
+- Protein ringan: telur, yogurt
+- Hidrasi yang cukup: minum 500-700 ml air
+
+2. Selama Berlari (untuk jarak > 10 km)
+- Energi gel atau sport drink
+- Air setiap 15-20 menit
+- Elektrolit untuk mengganti mineral yang hilang
+
+3. Setelah Berlari (30-60 menit setelah)
+- Protein untuk pemulihan otot
+- Karbohidrat untuk mengisi kembali energi
+- Air atau sport drink untuk rehidrasi
+
+4. Makanan yang Harus Dihindari
+- Makanan berlemak tinggi
+- Makanan pedas berlebihan
+- Alkohol dan kafein berlebih
+
+5. Suplemen yang Dianjurkan
+- Vitamin D
+- Zat Besi
+- Kalsium
+- Omega-3`,
+    image: 'https://picsum.photos/seed/nutrisi/800/500',
+    author: 'Admin Waru Turi',
+    status: 'published',
+    views: 634,
+    likes: 45,
+    tags: ['Nutrisi', 'Makanan', 'Kesehatan'],
+    createdAt: '2026-07-08',
+    updatedAt: '2026-07-08',
+  },
+  {
+    id: '4',
+    title: 'Program Latihan untuk Pemula',
+    slug: 'program-latihan-untuk-pemula',
+    category: 'Latihan',
+    excerpt: 'Program latihan yang terstruktur sangat penting bagi pemula. Mulai dari jalan cepat hingga lari jarak jauh secara bertahap.',
+    content: `Bagi pemula, memulai program latihan yang terstruktur adalah langkah penting untuk mencapai tujuan lari. Berikut program latihan 12 minggu untuk pemula:
+
+Minggu 1-4: Dasar
+- Senin: Jalan cepat 30 menit
+- Rabu: Jalan cepat 40 menit
+- Jumat: Jalan cepat 30 menit + lari 5 menit
+- Minggu: Istirahat atau jalan santai
+
+Minggu 5-8: Peningkatan
+- Senin: Lari 15 menit + jalan 15 menit
+- Rabu: Lari 20 menit + jalan 10 menit
+- Jumat: Lari 25 menit + jalan 5 menit
+- Minggu: Istirahat atau lari santai
+
+Minggu 9-12: Konsolidasi
+- Senin: Lari 30 menit
+- Rabu: Lari 35 menit
+- Jumat: Lari 40 menit
+- Minggu: Istirahat atau cross-training
+
+Tips Tambahan:
+- Selalu lakukan pemanasan dan pendinginan
+- Tingkatkan jarak secara bertahap (10% per minggu)
+- Istirahat yang cukup
+- Dengarkan tubuh Anda`,
+    image: 'https://picsum.photos/seed/latihan/800/500',
+    author: 'Admin Waru Turi',
+    status: 'draft',
+    views: 0,
+    likes: 0,
+    tags: ['Latihan', 'Pemula', 'Program'],
+    createdAt: '2026-07-07',
+    updatedAt: '2026-07-07',
+  },
+  {
+    id: '5',
+    title: 'Cara Mengatasi Cedera Lari',
+    slug: 'cara-mengatasi-cedera-lari',
+    category: 'Kesehatan',
+    excerpt: 'Cedera adalah risiko yang harus diwaspadai oleh setiap pelari. Kenali jenis cedera dan cara penanganannya.',
+    content: `Cedera adalah bagian yang tidak terpisahkan dari dunia lari. Mengetahui cara mencegah dan mengatasi cedera sangat penting. Berikut panduan mengatasi cedera lari:
+
+1. Jenis Cedera Umum
+- Shinsplints: Nyeri di tulang kering
+- Plantar Fasciitis: Nyeri di telapak kaki
+- IT Band Syndrome: Nyeri di sisi luar lutut
+- Achilles Tendonitis: Nyeri di tendon Achilles
+
+2. Cara Penanganan (Metode RICE)
+- Rest (Istirahat): Hentikan aktivitas
+- Ice (Es): Kompres dengan es 15-20 menit
+- Compression (Kompresi): Gunakan perban elastis
+- Elevation (Elevasi): Angkat area cedera
+
+3. Pencegahan
+- Pemanasan yang cukup
+- Pendinginan setelah lari
+- Peregangan rutin
+- Gunakan sepatu yang tepat
+- Tingkatkan intensitas secara bertahap
+
+4. Kapan Harus ke Dokter
+- Jika nyeri parah
+- Jika tidak membaik setelah 3-5 hari
+- Jika ada pembengkakan signifikan
+- Jika sulit berjalan`,
+    image: 'https://picsum.photos/seed/cedera/800/500',
+    author: 'Admin Waru Turi',
+    status: 'published',
+    views: 423,
+    likes: 34,
+    tags: ['Cedera', 'Kesehatan', 'Pertolongan'],
+    createdAt: '2026-07-06',
+    updatedAt: '2026-07-06',
+  },
+  {
+    id: '6',
+    title: 'Review: Waru Turi Run 2026',
+    slug: 'review-waru-turi-run-2026',
+    category: 'Event',
+    excerpt: 'Ulasan lengkap tentang pelaksanaan Waru Turi Run 2026. Simak keseruan dan pengalaman para peserta.',
+    content: `Waru Turi Run 2026 telah sukses diselenggarakan dengan partisipasi yang luar biasa. Berikut ulasan lengkapnya:
+
+1. Pelaksanaan Event
+- Tanggal: 10 Juli 2026
+- Lokasi: Bendung Gerak Waru Turi
+- Peserta: 4,500+ peserta
+- Kategori: 5K, 10K, Half Marathon, Marathon
+
+2. Suasana Event
+- Cuaca cerah dan mendukung
+- Antusiasme peserta sangat tinggi
+- Dukungan penuh dari masyarakat sekitar
+- Keamanan dan medis yang terjamin
+
+3. Fasilitas
+- Start dan finish yang terorganisir
+- Pos air minum setiap 2 km
+- Medis darurat di setiap pos
+- Parkir yang luas
+- Area pemanasan dan pendinginan
+
+4. Testimoni Peserta
+- "Luar biasa! Rutenya menantang dan pemandangannya indah."
+- "Organisasi sangat baik, semoga tahun depan lebih baik lagi."
+- "Saya berhasil mencapai target personal best!"
+
+5. Penutup
+Waru Turi Run 2026 adalah bukti bahwa event ini terus berkembang dan menjadi agenda tahunan yang dinantikan.`,
+    image: 'https://picsum.photos/seed/event2026/800/500',
+    author: 'Admin Waru Turi',
+    status: 'published',
+    views: 2134,
+    likes: 156,
+    tags: ['Event', 'Review', 'Waru Turi Run'],
+    createdAt: '2026-07-05',
+    updatedAt: '2026-07-05',
+  },
+];
+
+// Helper function untuk format tanggal
+function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+// Helper function untuk get status color
+function getStatusColor(status: string): string {
+  const colors: Record<string, string> = {
+    published: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    draft: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+    archived: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
+  };
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+}
+
+// Helper function untuk get category color
+function getCategoryColor(category: string): string {
+  const colors: Record<string, string> = {
+    'Tips & Trik': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    'Peralatan': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+    'Nutrisi': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    'Latihan': 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
+    'Kesehatan': 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+    'Event': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+  };
+  return colors[category] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
+}
+
+// Helper function untuk get status label
+function getStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    published: 'Dipublikasikan',
+    draft: 'Draft',
+    archived: 'Diarsipkan',
+  };
+  return labels[status] || status;
+}
+---
+
+<AdminLayout title="Artikel - Admin Panel">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <i class="bi bi-newspaper text-blue-600 dark:text-blue-400 mr-2"></i>
+            Manajemen Artikel
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Kelola artikel dan konten Waru Turi Run
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="bi bi-download"></i>
+            Export
+          </button>
+          <a 
+            href="/admin/articles/create" 
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            <i class="bi bi-plus-lg"></i>
+            Tambah Artikel
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1 relative">
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          <input 
+            type="text" 
+            placeholder="Cari artikel..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            id="searchInput"
+          />
+        </div>
+        <div class="flex gap-3">
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Semua Kategori</option>
+            <option value="Tips & Trik">Tips & Trik</option>
+            <option value="Peralatan">Peralatan</option>
+            <option value="Nutrisi">Nutrisi</option>
+            <option value="Latihan">Latihan</option>
+            <option value="Kesehatan">Kesehatan</option>
+            <option value="Event">Event</option>
+          </select>
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            <option value="">Semua Status</option>
+            <option value="published">Dipublikasikan</option>
+            <option value="draft">Draft</option>
+            <option value="archived">Diarsipkan</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Artikel</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">{articles.length}</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-newspaper text-2xl text-blue-600 dark:text-blue-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-green-600 dark:text-green-400">↑ 4 artikel terbit</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Dipublikasikan</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {articles.filter(a => a.status === 'published').length}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-check-circle text-2xl text-green-600 dark:text-green-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Artikel aktif</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Views</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {articles.reduce((acc, a) => acc + a.views, 0).toLocaleString()}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-eye text-2xl text-purple-600 dark:text-purple-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Total dibaca</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Likes</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              {articles.reduce((acc, a) => acc + a.likes, 0).toLocaleString()}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-heart-fill text-2xl text-red-600 dark:text-red-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Total suka</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Articles Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="articlesGrid">
+      {articles.map((article) => (
+        <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300" data-id={article.id}>
+          <!-- Image -->
+          <div class="relative h-48 overflow-hidden bg-gray-100 dark:bg-gray-700">
+            {article.image ? (
+              <img 
+                src={article.image} 
+                alt={article.title}
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+            ) : (
+              <div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                <i class="bi bi-image text-5xl"></i>
+              </div>
+            )}
+            
+            <!-- Status Badge -->
+            <div class="absolute top-3 left-3">
+              <span class={`
+                px-3 py-1 text-white text-xs font-medium rounded-full
+                ${article.status === 'published' ? 'bg-green-500' : ''}
+                ${article.status === 'draft' ? 'bg-yellow-500' : ''}
+                ${article.status === 'archived' ? 'bg-gray-500' : ''}
+              `}>
+                {getStatusLabel(article.status)}
+              </span>
+            </div>
+
+            <!-- Category Badge -->
+            <div class="absolute top-3 right-3">
+              <span class={`
+                px-3 py-1 text-xs font-medium rounded-full
+                ${getCategoryColor(article.category)}
+              `}>
+                {article.category}
+              </span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <a 
+                href={`/admin/articles/edit/${article.id}`}
+                class="p-2.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md"
+                title="Edit"
+              >
+                <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+              </a>
+              <button 
+                onclick="deleteArticle('{article.id}')" 
+                class="p-2.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md"
+                title="Hapus"
+              >
+                <i class="bi bi-trash text-sm text-red-500"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="p-5">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
+              {article.title}
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
+              {article.excerpt}
+            </p>
+
+            <!-- Tags -->
+            <div class="flex flex-wrap gap-1.5 mb-3">
+              {article.tags.slice(0, 3).map((tag) => (
+                <span key={tag} class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs rounded-full">
+                  #{tag}
+                </span>
+              ))}
+              {article.tags.length > 3 && (
+                <span class="text-xs text-gray-400 dark:text-gray-500">+{article.tags.length - 3}</span>
+              )}
+            </div>
+
+            <!-- Stats -->
+            <div class="flex items-center justify-between text-sm border-t border-gray-100 dark:border-gray-700 pt-3">
+              <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+                <span class="flex items-center gap-1">
+                  <i class="bi bi-eye"></i>
+                  {article.views}
+                </span>
+                <span class="flex items-center gap-1">
+                  <i class="bi bi-heart"></i>
+                  {article.likes}
+                </span>
+              </div>
+              <div class="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                <i class="bi bi-calendar3"></i>
+                {formatDate(article.createdAt)}
+              </div>
+            </div>
+
+            <!-- Author -->
+            <div class="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
+                {article.author.charAt(0)}
+              </div>
+              <span>{article.author}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <!-- Add New Article Card -->
+      <a 
+        href="/admin/articles/create"
+        class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 flex items-center justify-center min-h-[420px]"
+      >
+        <div class="text-center p-6">
+          <div class="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition">
+            <i class="bi bi-plus-lg text-4xl text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+            Tambah Artikel Baru
+          </h3>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Klik untuk menambahkan artikel</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-8 flex items-center justify-between flex-wrap gap-3">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Menampilkan <span class="font-medium">1</span> - <span class="font-medium">{Math.min(10, articles.length)}</span> dari <span class="font-medium">{articles.length}</span> data
+      </p>
+      <div class="flex items-center gap-2">
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50" disabled>
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="px-3 py-1.5 rounded-lg bg-blue-600 text-white">1</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">2</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">3</button>
+        <span class="text-gray-500 dark:text-gray-400">...</span>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">10</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+    <i class="bi bi-check-circle-fill text-green-400"></i>
+    <span id="toast-message">Artikel berhasil dihapus!</span>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <script>
+    // ============================================================
+    // DELETE ARTICLE
+    // ============================================================
+    function deleteArticle(id) {
+      if (!confirm('Yakin ingin menghapus artikel ini?')) return;
+      
+      const card = document.querySelector(`#articlesGrid .group[data-id="${id}"]`);
+      if (card) {
+        card.style.transform = 'scale(0.9)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          card.remove();
+          showToast('Artikel berhasil dihapus!');
+          updateStats();
+        }, 300);
+      }
+    }
+    window.deleteArticle = deleteArticle;
+
+    // ============================================================
+    // UPDATE STATISTICS
+    // ============================================================
+    function updateStats() {
+      const cards = document.querySelectorAll('#articlesGrid .group:not(:last-child)');
+      const total = cards.length;
+      const published = document.querySelectorAll('#articlesGrid .group .bg-green-500').length;
+      const views = Array.from(document.querySelectorAll('#articlesGrid .group .bi-eye'))
+        .reduce((acc, el) => acc + parseInt(el.parentElement?.textContent?.trim() || '0'), 0);
+      const likes = Array.from(document.querySelectorAll('#articlesGrid .group .bi-heart'))
+        .reduce((acc, el) => acc + parseInt(el.parentElement?.textContent?.trim() || '0'), 0);
+      
+      const statCards = document.querySelectorAll('.grid-cols-1.sm\\:grid-cols-2 .bg-white');
+      if (statCards.length >= 4) {
+        const totalCount = statCards[0].querySelector('.text-2xl');
+        if (totalCount) totalCount.textContent = total;
+        
+        const publishedCount = statCards[1].querySelector('.text-2xl');
+        if (publishedCount) publishedCount.textContent = published;
+        
+        const viewsCount = statCards[2].querySelector('.text-2xl');
+        if (viewsCount) viewsCount.textContent = views.toLocaleString();
+        
+        const likesCount = statCards[3].querySelector('.text-2xl');
+        if (likesCount) likesCount.textContent = likes.toLocaleString();
+      }
+    }
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+    const searchInput = document.getElementById('searchInput');
+    searchInput?.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const cards = document.querySelectorAll('#articlesGrid .group:not(:last-child)');
+      
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(query) ? '' : 'none';
+      });
+    });
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('translate-y-full', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        setTimeout(hideToast, 3000);
+      }
+    }
+    window.showToast = showToast;
+
+    function hideToast() {
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-full', 'opacity-0');
+      }
+    }
+    window.hideToast = hideToast;
+
+    console.log('✅ Artikel Admin Panel loaded');
+  </script>
+</AdminLayout>

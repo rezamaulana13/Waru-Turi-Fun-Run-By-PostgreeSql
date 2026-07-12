@@ -1,0 +1,548 @@
+---
+// src/pages/admin/jerseys/index.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+// Data dummy untuk sementara
+const dummyJerseys = [
+  {
+    id: '1',
+    name: 'Jersey Elite 2027',
+    description: 'Jersey premium untuk Waru Turi Run 2027 dengan bahan berkualitas tinggi',
+    price: 350000,
+    stock: 150,
+    soldCount: 45,
+    status: 'available',
+    category: 'Premium',
+    image: 'https://picsum.photos/seed/jersey1/400/400',
+    race: { id: '1', name: 'Waru Turi Run 2027' },
+    sizes: [
+      { id: '1', name: 'S' },
+      { id: '2', name: 'M' },
+      { id: '3', name: 'L' },
+      { id: '4', name: 'XL' },
+    ],
+    colors: [
+      { id: '1', name: 'Merah', hexCode: '#FF0000' },
+      { id: '2', name: 'Biru', hexCode: '#0000FF' },
+      { id: '3', name: 'Putih', hexCode: '#FFFFFF' },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Jersey Standard 2027',
+    description: 'Jersey standar untuk Waru Turi Run 2027',
+    price: 200000,
+    stock: 200,
+    soldCount: 120,
+    status: 'available',
+    category: 'Standar',
+    image: 'https://picsum.photos/seed/jersey2/400/400',
+    race: { id: '1', name: 'Waru Turi Run 2027' },
+    sizes: [
+      { id: '5', name: 'M' },
+      { id: '6', name: 'L' },
+      { id: '7', name: 'XL' },
+    ],
+    colors: [
+      { id: '4', name: 'Hijau', hexCode: '#00FF00' },
+      { id: '5', name: 'Kuning', hexCode: '#FFFF00' },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Jersey Limited Edition 2026',
+    description: 'Jersey edisi terbatas untuk Waru Turi Run 2026',
+    price: 450000,
+    stock: 50,
+    soldCount: 180,
+    status: 'sold_out',
+    category: 'Limited',
+    image: 'https://picsum.photos/seed/jersey3/400/400',
+    race: { id: '2', name: 'Waru Turi Run 2026' },
+    sizes: [
+      { id: '8', name: 'S' },
+      { id: '9', name: 'M' },
+      { id: '10', name: 'L' },
+      { id: '11', name: 'XL' },
+      { id: '12', name: 'XXL' },
+    ],
+    colors: [
+      { id: '6', name: 'Ungu', hexCode: '#800080' },
+      { id: '7', name: 'Hitam', hexCode: '#000000' },
+    ],
+  },
+  {
+    id: '4',
+    name: 'Jersey Pre-Order 2028',
+    description: 'Jersey untuk Waru Turi Run 2028 - Pre-order sekarang!',
+    price: 300000,
+    stock: 0,
+    soldCount: 75,
+    status: 'pre_order',
+    category: 'Premium',
+    image: 'https://picsum.photos/seed/jersey4/400/400',
+    race: { id: '3', name: 'Waru Turi Run 2028' },
+    sizes: [
+      { id: '13', name: 'S' },
+      { id: '14', name: 'M' },
+      { id: '15', name: 'L' },
+      { id: '16', name: 'XL' },
+      { id: '17', name: 'XXL' },
+    ],
+    colors: [
+      { id: '8', name: 'Oranye', hexCode: '#FFA500' },
+      { id: '9', name: 'Biru', hexCode: '#0000FF' },
+      { id: '10', name: 'Putih', hexCode: '#FFFFFF' },
+    ],
+  },
+];
+
+const dummyRaces = [
+  { id: '1', name: 'Waru Turi Run 2027' },
+  { id: '2', name: 'Waru Turi Run 2026' },
+  { id: '3', name: 'Waru Turi Run 2028' },
+  { id: '4', name: 'Waru Turi Run 2025' },
+];
+
+// Gunakan data dummy
+const jerseys = dummyJerseys;
+const races = dummyRaces;
+
+// Helper function to format currency
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+---
+
+<AdminLayout title="Jersey - Admin Panel">
+  <div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <i class="bi bi-tshirt text-blue-600 dark:text-blue-400 mr-2"></i>
+            Manajemen Jersey
+          </h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">
+            Kelola data jersey untuk semua race Waru Turi Run
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+            <i class="bi bi-download"></i>
+            Export
+          </button>
+          <a 
+            href="/admin/jerseys/create" 
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            <i class="bi bi-plus-lg"></i>
+            Tambah Jersey
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter & Search -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
+      <div class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1 relative">
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+          <input 
+            type="text" 
+            placeholder="Cari jersey..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            id="searchInput"
+          />
+        </div>
+        <div class="flex gap-3">
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" id="raceFilter">
+            <option value="">Semua Race</option>
+            {races.map((race) => (
+              <option key={race.id} value={race.id}>{race.name}</option>
+            ))}
+          </select>
+          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" id="statusFilter">
+            <option value="">Semua Status</option>
+            <option value="available">Tersedia</option>
+            <option value="sold_out">Habis</option>
+            <option value="pre_order">Pre-Order</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Jersey</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="totalJerseys">{jerseys.length}</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-tshirt text-2xl text-blue-600 dark:text-blue-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-green-600 dark:text-green-400">↑ 3 jersey baru</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Tersedia</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="availableJerseys">
+              {jerseys.filter(j => j.status === 'available').length}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-check-circle text-2xl text-green-600 dark:text-green-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Ready stock</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Pre-Order</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="preOrderJerseys">
+              {jerseys.filter(j => j.status === 'pre_order').length}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-clock text-2xl text-yellow-600 dark:text-yellow-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-gray-500 dark:text-gray-400">Menunggu produksi</span>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total Terjual</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="soldJerseys">
+              {jerseys.reduce((acc, j) => acc + j.soldCount, 0)}
+            </p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+            <i class="bi bi-cart-check text-2xl text-purple-600 dark:text-purple-400"></i>
+          </div>
+        </div>
+        <div class="mt-2">
+          <span class="text-xs text-green-600 dark:text-green-400">↑ 15% dari bulan lalu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jersey Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="jerseyGrid">
+      {jerseys.map((jersey) => (
+        <div class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300" data-id={jersey.id}>
+          <!-- Image -->
+          <div class="relative h-56 overflow-hidden bg-gray-100 dark:bg-gray-700">
+            {jersey.image ? (
+              <img 
+                src={jersey.image} 
+                alt={jersey.name}
+                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              />
+            ) : (
+              <div class="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                <i class="bi bi-image text-5xl"></i>
+              </div>
+            )}
+            
+            <!-- Status Badge -->
+            <div class="absolute top-3 left-3">
+              <span class={`
+                px-3 py-1 text-white text-xs font-medium rounded-full
+                ${jersey.status === 'available' ? 'bg-green-500' : ''}
+                ${jersey.status === 'sold_out' ? 'bg-red-500' : ''}
+                ${jersey.status === 'pre_order' ? 'bg-yellow-500' : ''}
+              `}>
+                {jersey.status === 'available' && 'Tersedia'}
+                {jersey.status === 'sold_out' && 'Habis'}
+                {jersey.status === 'pre_order' && 'Pre-Order'}
+              </span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <a 
+                href={`/admin/jerseys/edit/${jersey.id}`}
+                class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md"
+                title="Edit"
+              >
+                <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
+              </a>
+              <button 
+                onclick="deleteJersey('{jersey.id}')"
+                class="p-2 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md"
+                title="Hapus"
+              >
+                <i class="bi bi-trash text-sm text-red-500"></i>
+              </button>
+            </div>
+
+            <!-- Price -->
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+              <p class="text-white font-bold text-lg">{formatCurrency(jersey.price)}</p>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="p-4">
+            <h3 class="text-base font-bold text-gray-900 dark:text-white mb-1 truncate">
+              {jersey.name}
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              {jersey.race?.name || 'Tanpa Race'} • {jersey.category || 'Umum'}
+            </p>
+
+            <!-- Sizes & Colors -->
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+              <div class="flex items-center gap-1">
+                <span class="text-xs text-gray-500 dark:text-gray-400">Ukuran:</span>
+                <div class="flex gap-1">
+                  {jersey.sizes.slice(0, 3).map((size) => (
+                    <span key={size.id} class="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                      {size.name}
+                    </span>
+                  ))}
+                  {jersey.sizes.length > 3 && (
+                    <span class="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300">
+                      +{jersey.sizes.length - 3}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-xs text-gray-500 dark:text-gray-400">Warna:</span>
+                <div class="flex gap-1">
+                  {jersey.colors.slice(0, 3).map((color) => (
+                    <span 
+                      key={color.id}
+                      class="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
+                      style={{ backgroundColor: color.hexCode }}
+                      title={color.name}
+                    ></span>
+                  ))}
+                  {jersey.colors.length > 3 && (
+                    <span class="text-xs text-gray-500 dark:text-gray-400">
+                      +{jersey.colors.length - 3}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <!-- Stock & Sold -->
+            <div class="flex items-center justify-between text-sm border-t border-gray-100 dark:border-gray-700 pt-3">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-500 dark:text-gray-400">Stok:</span>
+                <span class={`font-medium ${jersey.stock > 10 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                  {jersey.stock}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-gray-500 dark:text-gray-400">Terjual:</span>
+                <span class="font-medium text-blue-600 dark:text-blue-400">{jersey.soldCount}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <!-- Add New Jersey Card -->
+      <a 
+        href="/admin/jerseys/create"
+        class="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border-2 border-dashed border-gray-300 dark:border-gray-600 overflow-hidden hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 flex items-center justify-center min-h-[300px]"
+      >
+        <div class="text-center p-6">
+          <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition">
+            <i class="bi bi-plus-lg text-3xl text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+            Tambah Jersey Baru
+          </h3>
+          <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Klik untuk menambahkan jersey</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-8 flex items-center justify-between flex-wrap gap-3">
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Menampilkan <span class="font-medium">1</span> - <span class="font-medium">{Math.min(10, jerseys.length)}</span> dari <span class="font-medium">{jerseys.length}</span> data
+      </p>
+      <div class="flex items-center gap-2">
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50" disabled>
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button class="px-3 py-1.5 rounded-lg bg-blue-600 text-white">1</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">2</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">3</button>
+        <span class="text-gray-500 dark:text-gray-400">...</span>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">10</button>
+        <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+    <i class="bi bi-check-circle-fill text-green-400"></i>
+    <span id="toast-message">Jersey berhasil dihapus!</span>
+    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <script>
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const raceFilter = document.getElementById('raceFilter');
+    const statusFilter = document.getElementById('statusFilter');
+
+    function filterJerseys() {
+      const query = searchInput?.value.toLowerCase() || '';
+      const race = raceFilter?.value || '';
+      const status = statusFilter?.value || '';
+      
+      const cards = document.querySelectorAll('#jerseyGrid .group:not(a)');
+      
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        const cardRace = card.querySelector('.text-xs.text-gray-500')?.textContent || '';
+        const cardStatus = card.querySelector('.absolute.top-3.left-3 span')?.textContent || '';
+        
+        let show = true;
+        
+        // Search filter
+        if (query && !text.includes(query)) show = false;
+        
+        // Race filter
+        if (race && !cardRace.includes(race)) show = false;
+        
+        // Status filter
+        if (status) {
+          const statusMap: Record<string, string> = {
+            'available': 'Tersedia',
+            'sold_out': 'Habis',
+            'pre_order': 'Pre-Order'
+          };
+          if (!cardStatus.includes(statusMap[status as keyof typeof statusMap] || '')) show = false;
+        }
+        
+        card.style.display = show ? '' : 'none';
+      });
+      
+      // Update statistics after filtering
+      updateStatsAfterFilter();
+    }
+
+    function updateStatsAfterFilter() {
+      const visibleCards = document.querySelectorAll('#jerseyGrid .group:not(a)[style*="display: none"]');
+      const totalVisible = document.querySelectorAll('#jerseyGrid .group:not(a)').length - visibleCards.length;
+      
+      // You can update the stats here if needed
+    }
+
+    searchInput?.addEventListener('input', filterJerseys);
+    raceFilter?.addEventListener('change', filterJerseys);
+    statusFilter?.addEventListener('change', filterJerseys);
+
+    // Delete jersey with API call
+    async function deleteJersey(id) {
+      if (!confirm('Yakin ingin menghapus jersey ini?')) return;
+
+      try {
+        const response = await fetch(`/api/admin/jerseys/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          // Remove card from DOM
+          const cards = document.querySelectorAll('#jerseyGrid .group');
+          for (const card of cards) {
+            const deleteBtn = card.querySelector(`[onclick*="${id}"]`);
+            if (deleteBtn) {
+              card.style.transform = 'scale(0.9)';
+              card.style.opacity = '0';
+              setTimeout(() => {
+                card.remove();
+                showToast('Jersey berhasil dihapus!');
+                // Update statistics
+                updateStats();
+              }, 300);
+              break;
+            }
+          }
+        } else {
+          const error = await response.json();
+          showToast(error.message || 'Gagal menghapus jersey');
+        }
+      } catch (error) {
+        console.error('Error deleting jersey:', error);
+        showToast('Terjadi kesalahan saat menghapus jersey');
+      }
+    }
+    window.deleteJersey = deleteJersey;
+
+    // Update statistics
+    function updateStats() {
+      const cards = document.querySelectorAll('#jerseyGrid .group:not(a)');
+      const total = cards.length;
+      const available = document.querySelectorAll('#jerseyGrid .group .bg-green-500').length;
+      const preOrder = document.querySelectorAll('#jerseyGrid .group .bg-yellow-500').length;
+      const soldCount = Array.from(document.querySelectorAll('#jerseyGrid .group:not(a) .text-blue-600'))
+        .reduce((acc, el) => acc + parseInt(el.textContent || '0'), 0);
+      
+      document.getElementById('totalJerseys')!.textContent = String(total);
+      document.getElementById('availableJerseys')!.textContent = String(available);
+      document.getElementById('preOrderJerseys')!.textContent = String(preOrder);
+      document.getElementById('soldJerseys')!.textContent = String(soldCount);
+    }
+
+    // Toast notification
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      
+      if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('translate-y-full', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        
+        setTimeout(hideToast, 3000);
+      }
+    }
+    window.showToast = showToast;
+
+    function hideToast() {
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-full', 'opacity-0');
+      }
+    }
+    window.hideToast = hideToast;
+
+    console.log('✅ Jersey Admin Panel loaded');
+  </script>
+</AdminLayout>

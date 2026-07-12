@@ -1,0 +1,386 @@
+---
+// src/pages/admin/participants/[id]/edit.astro
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+import { db, users, participants } from '../../../../db';
+import { eq } from 'drizzle-orm';
+import { verifyToken } from '../../../../lib/auth';
+import { getParticipantById } from '../../../../lib/participants';
+
+// ===== CEK AUTH =====
+const token = Astro.cookies.get('token')?.value;
+let isAdmin = false;
+let userData = null;
+
+if (token) {
+  const decoded = verifyToken(token);
+  if (decoded && typeof decoded !== 'string') {
+    const user = await db.select().from(users).where(eq(users.id, decoded.id));
+    if (user && user.length > 0 && (user[0].role === 'admin' || user[0].role === 'super_admin')) {
+      isAdmin = true;
+      userData = user[0];
+    }
+  }
+}
+
+// Redirect jika bukan admin
+if (!isAdmin) {
+  return Astro.redirect('/');
+}
+
+// ===== AMBIL DATA PESERTA =====
+const id = parseInt(Astro.params.id);
+let participant = null;
+
+try {
+  participant = await getParticipantById(id);
+} catch (error) {
+  console.error('Error fetching participant:', error);
+}
+
+// Jika data tidak ditemukan
+if (!participant) {
+  return Astro.redirect('/admin/participants');
+}
+
+// Format tanggal lahir untuk input date (YYYY-MM-DD)
+const formatDateForInput = (date: string | null) => {
+  if (!date) return '';
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+};
+
+// ===== PASTIKAN NILAI KATEGORI SESUAI DENGAN ENUM DI DATABASE =====
+const categories = [
+  { value: '5K', label: '5K Fun Run' },
+  { value: '10K', label: '10K Fun Run' },
+  { value: 'Pelajar', label: 'Pelajar 5K' }  // ← Ubah dari 'pelajar' ke 'Pelajar'
+];
+
+const jerseySizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL'];
+const statuses = [
+  { value: 'registered', label: 'Terdaftar' },
+  { value: 'confirmed', label: 'Dikonfirmasi' },
+  { value: 'checked_in', label: 'Check In' },
+  { value: 'finished', label: 'Selesai' },
+  { value: 'cancelled', label: 'Dibatalkan' },
+  { value: 'dnf', label: 'DNF' }
+];
+const paymentStatuses = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'paid', label: 'Lunas' },
+  { value: 'failed', label: 'Gagal' },
+  { value: 'refunded', label: 'Refund' },
+  { value: 'expired', label: 'Expired' }
+];
+const paymentMethods = [
+  { value: 'bank_transfer', label: 'Transfer Bank (BCA, BRI, Mandiri)' },
+  { value: 'qris', label: 'QRIS (Gopay, Ovo, DANA, ShopeePay)' },
+  { value: 'cash', label: 'Bayar di Tempat (Kantor Radar Kediri)' },
+  { value: 'e_wallet', label: 'E-Wallet (DANA, OVO, Gopay)' }
+];
+const genders = ['Pria', 'Wanita'];
+---
+
+<AdminLayout title={`Edit Peserta - ${participant.fullName}`}>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Edit Peserta</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          Edit data peserta Waru Turi Fun Run 2027
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/admin/participants" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2">
+          <i class="bi bi-arrow-left"></i>
+          Kembali
+        </a>
+        <a href={`/admin/participants/${id}`} class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md">
+          <i class="bi bi-eye"></i>
+          Lihat Detail
+        </a>
+      </div>
+    </div>
+
+    <!-- Form Edit -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
+      <form id="editForm" class="p-6 space-y-6">
+        <input type="hidden" id="participantId" value={participant.id} />
+
+        <!-- Informasi Pribadi -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Informasi Pribadi</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
+              <input 
+                type="text" 
+                id="fullName" 
+                value={participant.fullName}
+                class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email <span class="text-red-500">*</span></label>
+              <input 
+                type="email" 
+                id="email" 
+                value={participant.email}
+                class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm cursor-not-allowed opacity-70"
+                disabled
+              />
+              <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Email tidak dapat diubah</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nomor Telepon <span class="text-red-500">*</span></label>
+              <input 
+                type="tel" 
+                id="phone" 
+                value={participant.phone || ''}
+                class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jenis Kelamin</label>
+              <select id="gender" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                <option value="">Pilih</option>
+                {genders.map(g => (
+                  <option value={g} selected={participant.gender === g}>{g}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal Lahir</label>
+              <input 
+                type="date" 
+                id="birthDate" 
+                value={formatDateForInput(participant.birthDate)}
+                class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institusi / Komunitas</label>
+              <input 
+                type="text" 
+                id="institution" 
+                value={participant.institution || ''}
+                class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Detail Lomba -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Detail Lomba</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kategori <span class="text-red-500">*</span></label>
+              <select id="category" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" required>
+                {categories.map(c => (
+                  <option value={c.value} selected={participant.category === c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ukuran Jersey</label>
+              <select id="jerseySize" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                <option value="">Pilih</option>
+                {jerseySizes.map(s => (
+                  <option value={s} selected={participant.jerseySize === s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <select id="status" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                {statuses.map(s => (
+                  <option value={s.value} selected={participant.status === s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status Pembayaran</label>
+              <select id="paymentStatus" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                {paymentStatuses.map(s => (
+                  <option value={s.value} selected={participant.paymentStatus === s.value}>{s.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alamat & Kontak Darurat -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Alamat & Kontak Darurat</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alamat</label>
+              <textarea 
+                id="address" 
+                rows="2"
+                class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
+              >{participant.address || ''}</textarea>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kontak Darurat (Nama)</label>
+                <input 
+                  type="text" 
+                  id="emergencyContact" 
+                  value={participant.emergencyContact || ''}
+                  class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kontak Darurat (Nomor)</label>
+                <input 
+                  type="tel" 
+                  id="emergencyPhone" 
+                  value={participant.emergencyPhone || ''}
+                  class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metode Pembayaran -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Metode Pembayaran</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Metode Pembayaran</label>
+              <select id="paymentMethod" class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                <option value="">Pilih Metode</option>
+                {paymentMethods.map(m => (
+                  <option value={m.value} selected={participant.paymentMethod === m.value}>{m.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jumlah Pembayaran</label>
+              <input 
+                type="number" 
+                id="paymentAmount" 
+                value={participant.paymentAmount || ''}
+                class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                placeholder="Masukkan jumlah pembayaran"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Catatan -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Catatan</h3>
+          <div>
+            <textarea 
+              id="note" 
+              rows="2"
+              class="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
+            >{participant.note || ''}</textarea>
+          </div>
+        </div>
+
+        <!-- Tombol Submit -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <a href={`/admin/participants/${id}`} class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition">
+            Batal
+          </a>
+          <button type="submit" id="submitBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition flex items-center gap-2 shadow-sm hover:shadow-md">
+            <i class="bi bi-check-lg"></i>
+            Simpan Perubahan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  // ===== HANDLE EDIT FORM =====
+  document.getElementById('editForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const id = document.getElementById('participantId').value;
+    const btn = document.getElementById('submitBtn');
+    
+    // Disable button
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Menyimpan...';
+    
+    const data = {
+      fullName: document.getElementById('fullName').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      gender: document.getElementById('gender').value || null,
+      birthDate: document.getElementById('birthDate').value || null,
+      category: document.getElementById('category').value,
+      jerseySize: document.getElementById('jerseySize').value || null,
+      institution: document.getElementById('institution').value.trim() || null,
+      address: document.getElementById('address').value.trim() || null,
+      emergencyContact: document.getElementById('emergencyContact').value.trim() || null,
+      emergencyPhone: document.getElementById('emergencyPhone').value.trim() || null,
+      status: document.getElementById('status').value,
+      paymentStatus: document.getElementById('paymentStatus').value,
+      paymentMethod: document.getElementById('paymentMethod').value || null,
+      paymentAmount: document.getElementById('paymentAmount').value ? parseInt(document.getElementById('paymentAmount').value) : null,
+      note: document.getElementById('note').value.trim() || null,
+    };
+    
+    // Validasi
+    if (!data.fullName) {
+      alert('❌ Nama lengkap wajib diisi');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg"></i> Simpan Perubahan';
+      return;
+    }
+    
+    if (!document.getElementById('phone').value.trim()) {
+      alert('❌ Nomor telepon wajib diisi');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg"></i> Simpan Perubahan';
+      return;
+    }
+    
+    if (!data.category) {
+      alert('❌ Kategori wajib dipilih');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg"></i> Simpan Perubahan';
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/participants', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: parseInt(id), ...data })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('✅ Data peserta berhasil diperbarui!');
+        window.location.href = `/admin/participants/${id}`;
+      } else {
+        alert('❌ Gagal menyimpan: ' + (result.error || result.message));
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> Simpan Perubahan';
+      }
+    } catch (error) {
+      alert('❌ Terjadi kesalahan: ' + error.message);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg"></i> Simpan Perubahan';
+    }
+  });
+</script>
