@@ -127,7 +127,7 @@ const categories = [
 ];
 
 // Featured gallery
-const featuredGalleries = galleryItems.filter(g => g.featured);
+const featuredGalleries = galleryData.filter(g => g.featured);
 const featured = featuredGalleries.length > 0 ? featuredGalleries[0] : null;
 const galleryDataJSON = JSON.stringify(galleryData);
 ---
@@ -159,7 +159,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
         <!-- Statistik -->
         <div class="flex flex-wrap justify-center gap-4 mt-10 animate-fade-down animation-delay-600">
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/10 hover:bg-white/20 transition-all duration-300">
-            <p class="text-3xl font-bold text-[#FFD700]">{galleryItems.length}</p>
+            <p class="text-3xl font-bold text-[#FFD700]">{galleryData.length}</p>
             <p class="text-xs text-white/70 uppercase tracking-wider">Total Foto</p>
           </div>
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/10 hover:bg-white/20 transition-all duration-300">
@@ -197,7 +197,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
         </div>
         <div class="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
           <i class="bi bi-images me-1"></i>
-          <span id="visibleCount">{galleryItems.length}</span> foto
+          <span id="visibleCount">{galleryData.length}</span> foto
         </div>
       </div>
     </div>
@@ -400,7 +400,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
   // ============================================================
   // DATA GALLERY
   // ============================================================
- const galleryItems = galleryData.map((item, index) => ({
+ const galleryData = galleryData.map((item, index) => ({
     id: item.id,
     title: item.title,
     category: item.category,
@@ -408,10 +408,10 @@ const galleryDataJSON = JSON.stringify(galleryData);
     description: item.description,
     date: item.date,
     index: index
-  }));
+  }))};
 
   let currentIndex = 0;
-  let filteredData = [...galleryItems];
+  let filteredData = [...galleryData];
 
   // ============================================================
   // FILTER GALLERY
@@ -446,7 +446,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
     });
     
     // Update filtered data for lightbox
-    filteredData = galleryItems.filter(item => 
+    filteredData = galleryData.filter(item => 
       category === 'all' || item.category === category
     );
     
@@ -539,7 +539,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
   // INITIALIZE - Set default filter to 'all'
   // ============================================================
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('Gallery loaded with', galleryItems.length, 'photos');
+    console.log('Gallery loaded with', galleryData.length, 'photos');
     // Ensure 'all' filter is active
     window.filterGallery('all');
   });

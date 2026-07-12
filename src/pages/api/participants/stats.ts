@@ -1,10 +1,23 @@
 import type { APIRoute } from 'astro';
-import { getStats } from '../../../lib/participants';
+import { getParticipantStats } from '../../../lib/participants';
 
 export const GET: APIRoute = async () => {
-  const stats = await getStats();
-  return new Response(JSON.stringify(stats), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  try {
+    const stats = await getParticipantStats();
+    return new Response(JSON.stringify({
+      success: true,
+      data: stats
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 };
