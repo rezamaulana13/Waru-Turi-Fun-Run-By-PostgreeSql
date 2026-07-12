@@ -16,10 +16,9 @@
     "db:reset": "npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
-    "@astrojs/node": "^8.3.4",
     "@astrojs/react": "^3.6.0",
     "@astrojs/tailwind": "^5.1.5",
-    "@astrojs/vercel": "^5.0.0",
+    "@astrojs/vercel": "^7.8.2",
     "@googleapis/drive": "^20.2.0",
     "@libsql/client": "^0.14.0",
     "@types/pg": "^8.20.0",

@@ -1,12 +1,10 @@
-// astro.config.mjs
 import { defineConfig } from 'astro/config';
+import vercel from '@astrojs/vercel/serverless';
+import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
-import node from '@astrojs/node';  // ← Pakai node adapter
 
 export default defineConfig({
   output: 'server',
-  adapter: node({
-    mode: 'standalone',
-  }),
-  integrations: [tailwind()],
+  adapter: vercel(),
+  integrations: [react(), tailwind()],
 });
