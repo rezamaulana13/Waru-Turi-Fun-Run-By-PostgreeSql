@@ -215,15 +215,17 @@ export const certificates = pgTable('certificates', {
   participantId: integer('participant_id').references(() => participants.id, { onDelete: 'cascade' }),
   userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
   certificateNumber: text('certificate_number').notNull().unique(),
-  template: text('template'),
+  template: text('template').default('default'),
   data: jsonb('data'),
   fileUrl: text('file_url'),
-  issuedAt: timestamp('issued_at').default(sql`CURRENT_TIMESTAMP`),
+  status: text('status').default('draft'),  // ← HARUS ADA!
+  issuedAt: timestamp('issued_at'),
   createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
   participantIdIdx: index('certificates_participant_id_idx').on(table.participantId),
   certificateNumberIdx: index('certificates_certificate_number_idx').on(table.certificateNumber),
+  statusIdx: index('certificates_status_idx').on(table.status), // ← TAMBAHKAN
 }));
 
 export type Certificate = typeof certificates.$inferSelect;

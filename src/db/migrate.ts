@@ -300,6 +300,29 @@ async function migrate() {
       CREATE INDEX IF NOT EXISTS about_content_key_idx ON about_content(key);
     `);
 
+    // Create certificates table
+    console.log('📝 Creating certificates table...');
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS certificates (
+        id SERIAL PRIMARY KEY,
+        participant_id INTEGER REFERENCES participants(id) ON DELETE CASCADE,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        certificate_number TEXT NOT NULL UNIQUE,
+        template TEXT DEFAULT 'default',
+        data JSONB,
+        file_url TEXT,
+        status TEXT DEFAULT 'draft',
+        issued_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS certificates_participant_id_idx ON certificates(participant_id);
+      CREATE INDEX IF NOT EXISTS certificates_certificate_number_idx ON certificates(certificate_number);
+      CREATE INDEX IF NOT EXISTS certificates_status_idx ON certificates(status);
+    `);
+
     // Create password_resets table
     console.log('📝 Creating password_resets table...');
     await db.execute(sql`

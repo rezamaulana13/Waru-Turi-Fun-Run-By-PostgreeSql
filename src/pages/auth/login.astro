@@ -361,24 +361,17 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     }
 
     // ============================================================
-    // CEK SUDAH LOGIN
-    // ============================================================
-    const token = localStorage.getItem('token');
-    if (token) {
-      console.log('🔑 Token found, redirecting...');
-      try {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          const user = JSON.parse(userStr);
-          if (user.role === 'admin' || user.role === 'super_admin') {
-            window.location.replace('/admin');
-          } else {
-            window.location.replace('/profile');
-          }
-        }
-      } catch (e) {
-        console.error('Error:', e);
-      }
-    }
+// CEK SUDAH LOGIN - VERIFY DULU
+// ============================================================
+const token = localStorage.getItem('token');
+if (token) {
+  // Biarkan AdminLayout yang handle redirect
+  // Tapi cek dulu valid atau tidak
+  console.log('🔑 Token exists, but verifying...');
+  
+  // Hapus token kalau invalid (AdminLayout akan redirect ke login)
+  // Token yang expired bakal di-reject oleh AdminLayout
+  // Jadi biarkan saja, AdminLayout yang handle
+}
   </script>
 </BaseLayout>

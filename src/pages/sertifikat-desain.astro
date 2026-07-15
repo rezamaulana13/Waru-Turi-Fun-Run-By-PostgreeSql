@@ -1,10 +1,39 @@
 ---
-// src/pages/sertifikat.astro
+// src/pages/sertifikat-desain.astro
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navbar from '../components/common/Navbar.astro';
 import Footer from '../components/common/Footer.astro';
+import { db, participants, certificates } from '../db/index.js';
+import { eq, desc } from 'drizzle-orm';
 
-// Data Sertifikat
+let participantsData: any[] = [];
+let certificatesData: any = {};
+
+try {
+  const result = await db.select().from(participants).orderBy(desc(participants.createdAt));
+  participantsData = result;
+
+  const certResult = await db.select({
+    participantId: certificates.participantId,
+    certificateNumber: certificates.certificateNumber,
+    fileUrl: certificates.fileUrl,
+    status: certificates.status,
+  })
+  .from(certificates)
+  .where(eq(certificates.status, 'issued'));
+
+  certificatesData = certResult.reduce((acc: any, cert: any) => {
+    acc[cert.participantId] = {
+      number: cert.certificateNumber,
+      url: cert.fileUrl,
+    };
+    return acc;
+  }, {});
+
+} catch (error) {
+  console.error('Error fetching data:', error);
+}
+
 const certificateTypes = [
   {
     id: 'finisher',
@@ -103,32 +132,40 @@ const certificateTypes = [
     defaultBib: 'M-001',
   },
 ];
+
+let latestParticipant = participantsData.length > 0 ? participantsData[0] : null;
+let defaultName = latestParticipant?.fullName || 'BUDI SANTOSO';
+let defaultCategory = latestParticipant?.category || '5K Fun Run';
+let defaultBib = String(latestParticipant?.bibNumber || '001').padStart(3, '0');
+
+const updatedCertificateTypes = certificateTypes.map(cert => ({
+  ...cert,
+  defaultName: defaultName,
+  defaultCategory: defaultCategory,
+  defaultBib: defaultBib,
+}));
 ---
 
-<BaseLayout title="Desain Sertifikat - Waru Turi Fun Run 2026" description="Preview dan download sertifikat Waru Turi Fun Run 2026 dengan edit nama secara real-time.">
+<BaseLayout title="Desain Sertifikat - Waru Turi Fun Run 2026">
   <Navbar />
 
-  <!-- ===== HERO ===== -->
   <section class="sertifikat-hero">
     <div class="sertifikat-overlay"></div>
     <div class="sertifikat-hero-content">
       <h2 class="sertifikat-title">Desain Sertifikat</h2>
-      <p class="sertifikat-subtitle">
-        Koleksi sertifikat eksklusif Waru Turi Fun Run 2026. Edit nama dan data peserta secara real-time sebelum download.
-      </p>
+      <p class="sertifikat-subtitle">Edit nama dan data peserta secara real-time, lalu download sebagai PNG.</p>
       <div class="sertifikat-breadcrumb">
         <a href="/">Home</a>
         <span>›</span>
-        <span>Sertifikat</span>
+        <span>Desain Sertifikat</span>
       </div>
     </div>
   </section>
 
-  <!-- ===== CERTIFICATE NAVIGATION ===== -->
   <section class="py-4 bg-white border-b border-gray-100 sticky top-[72px] z-40 shadow-sm">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-6xl mx-auto flex flex-wrap gap-2 justify-center">
-        {certificateTypes.map((cert) => (
+        {updatedCertificateTypes.map((cert) => (
           <button 
             key={cert.id}
             class="cert-nav-btn px-4 py-2 rounded-full text-sm font-medium transition-all"
@@ -143,57 +180,47 @@ const certificateTypes = [
     </div>
   </section>
 
-  <!-- ===== CERTIFICATE DISPLAY ===== -->
   <section class="py-8 bg-[#F4F7FC]">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8">
         
-        <!-- Certificate Preview (3/5) -->
         <div class="lg:col-span-3">
           <div id="certificate-container" class="relative">
-            {certificateTypes.map((cert, index) => (
+            {updatedCertificateTypes.map((cert, index) => (
               <div 
                 key={cert.id}
                 class={`certificate-wrapper ${index === 0 ? 'active' : 'hidden'}`}
                 data-type={cert.id}
               >
-                <!-- Certificate Card -->
                 <div class="certificate-card bg-white rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-500 hover:shadow-3xl">
-                  <!-- Decorative Border -->
                   <div class={`certificate-border p-4 bg-gradient-to-br ${cert.borderColor}`}>
                     <div class="certificate-inner bg-white p-8 md:p-10 relative">
                       
-                      <!-- Decorative Corner Elements -->
                       <div class="absolute top-4 left-4 w-10 h-10 border-t-4 border-l-4 border-[#FFD700]/30 rounded-tl-2xl"></div>
                       <div class="absolute top-4 right-4 w-10 h-10 border-t-4 border-r-4 border-[#FFD700]/30 rounded-tr-2xl"></div>
                       <div class="absolute bottom-4 left-4 w-10 h-10 border-b-4 border-l-4 border-[#FFD700]/30 rounded-bl-2xl"></div>
                       <div class="absolute bottom-4 right-4 w-10 h-10 border-b-4 border-r-4 border-[#FFD700]/30 rounded-br-2xl"></div>
 
-                      <!-- Watermark -->
                       <div class="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none">
                         <i class={`${cert.watermark} text-[400px]`} style={{ color: cert.accentColor }}></i>
                       </div>
 
-                      <!-- Header -->
                       <div class="text-center relative z-10">
                         <div class="flex items-center justify-center gap-2 mb-2">
                           <div class={`w-12 h-1 bg-gradient-to-r ${cert.borderColor} rounded-full`}></div>
                         </div>
                         
-                        <!-- Logo -->
                         <img 
                           src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj_7yqZkol2_oh-DOsILVsPCd4wV11OjAalFSlWtVwgX-ryCIq6eL8swt_xsLkmxpEC4FQYEUFr38libsnOhSPimz7DcWGHpA09petmLf_YWdDVKDHSrZlHV2j3aoYNsmQwmLMJCd2-Qfk2IdjRUlk6beTlQbJVb362F3FjKjs2L2nqBke4V_NTeCDBc816/s704/logo%20fun%20run%202026.webp" 
                           alt="Waru Turi Fun Run" 
                           class="h-14 mx-auto mb-2 object-contain"
                         />
 
-                        <!-- Badge -->
                         <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2" style={{ background: `${cert.accentColor}15`, color: cert.accentColor, border: `1px solid ${cert.accentColor}30` }}>
                           <i class={`${cert.icon} text-sm`}></i>
                           {cert.badge}
                         </div>
 
-                        <!-- Title -->
                         <h2 class={`text-2xl md:text-3xl font-extrabold tracking-wider mb-1`} style={{ color: cert.textColor }}>
                           {cert.title}
                         </h2>
@@ -201,11 +228,9 @@ const certificateTypes = [
                         <p class="text-gray-500 text-xs mt-2 font-medium">{cert.subtitle}</p>
                       </div>
 
-                      <!-- Body -->
                       <div class="text-center py-6 relative z-10">
                         <p class="text-gray-400 text-xs uppercase tracking-widest font-semibold">Diberikan Kepada</p>
                         
-                        <!-- Editable Name -->
                         <div class="relative inline-block my-3 px-6">
                           <div class="absolute -inset-1 bg-gradient-to-r from-transparent via-[#FFD700]/20 to-transparent blur-xl"></div>
                           <h3 
@@ -252,7 +277,6 @@ const certificateTypes = [
                         </div>
                       </div>
 
-                      <!-- Footer -->
                       <div class="relative z-10">
                         <div class="flex flex-col md:flex-row justify-between items-center gap-3 pt-3 border-t-2" style={{ borderColor: `${cert.accentColor}30` }}>
                           <div class="text-center">
@@ -274,7 +298,6 @@ const certificateTypes = [
                           </div>
                         </div>
 
-                        <!-- Certificate Number -->
                         <div class="text-center mt-3 pt-2 border-t border-gray-100">
                           <p class="text-[8px] text-gray-400 font-mono tracking-wider">
                             Cert. No: WTF-2026-{cert.id.toUpperCase()}-<span id={`certno-${cert.id}`} class="editable-text" contenteditable="true" spellcheck="false">001</span>
@@ -282,7 +305,6 @@ const certificateTypes = [
                         </div>
                       </div>
 
-                      <!-- Decorative Stamp -->
                       <div class="absolute bottom-16 right-6 opacity-15 pointer-events-none">
                         <svg width="60" height="60" viewBox="0 0 100 100">
                           <circle cx="50" cy="50" r="45" fill="none" stroke={cert.accentColor} stroke-width="2"/>
@@ -297,31 +319,29 @@ const certificateTypes = [
             ))}
           </div>
 
-          <!-- Edit Tips -->
           <div class="mt-4 text-center">
             <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-100 text-xs text-gray-500">
               <i class="bi bi-pencil-square text-[#2679ec]"></i>
-              <span>Klik pada teks <span class="font-semibold text-gray-700">nama</span>, <span class="font-semibold text-gray-700">kategori</span>, atau <span class="font-semibold text-gray-700">nomor BIB</span> untuk mengedit</span>
+              <span>Klik pada teks untuk mengedit</span>
             </div>
           </div>
         </div>
 
-        <!-- Sidebar Controls (2/5) -->
         <div class="lg:col-span-2 space-y-4">
-          <!-- Download Section -->
           <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
             <h4 class="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
               <i class="bi bi-download text-[#2679ec]"></i>
               Download Sertifikat
             </h4>
             <div class="space-y-2.5">
-              {certificateTypes.map((cert) => (
+              {updatedCertificateTypes.map((cert) => (
                 <button 
                   key={cert.id}
-                  onclick={`downloadCertificate('${cert.id}', 'Sertifikat_${cert.title.replace(/ /g, '_')}_WaruTuri')`}
+                  id={`download-btn-${cert.id}`}
                   class="cert-download-btn w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-white font-semibold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-lg text-sm"
                   style={`background: ${cert.accentColor};`}
                   data-type={cert.id}
+                  onclick="handleDownload(this)"
                 >
                   <i class="bi bi-download"></i>
                   {cert.badge}
@@ -333,7 +353,6 @@ const certificateTypes = [
             </p>
           </div>
 
-          <!-- Quick Edit Form -->
           <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
             <h4 class="font-bold text-gray-900 text-sm mb-4 flex items-center gap-2">
               <i class="bi bi-pencil text-[#2679ec]"></i>
@@ -341,7 +360,7 @@ const certificateTypes = [
             </h4>
             
             <div class="space-y-3">
-              {certificateTypes.map((cert) => (
+              {updatedCertificateTypes.map((cert) => (
                 <div key={cert.id} class="edit-form-group hidden" data-type={cert.id}>
                   <div class="space-y-2.5">
                     <div>
@@ -409,7 +428,7 @@ const certificateTypes = [
                       />
                     </div>
                     <button 
-                      onclick={`resetCertificate('${cert.id}')`}
+                      onclick="resetCertificate('${cert.id}')"
                       class="w-full text-sm text-gray-500 hover:text-[#2679ec] transition-colors py-1.5 border border-dashed border-gray-200 rounded-lg hover:border-[#2679ec]/30"
                     >
                       <i class="bi bi-arrow-counterclockwise mr-1"></i> Reset ke default
@@ -420,19 +439,45 @@ const certificateTypes = [
             </div>
           </div>
 
-          <!-- Reset All -->
           <button 
             onclick="resetAllCertificates()"
             class="w-full py-2.5 text-sm text-gray-500 hover:text-red-500 transition-colors border border-dashed border-gray-200 rounded-xl hover:border-red-300"
           >
             <i class="bi bi-arrow-counterclockwise mr-1"></i> Reset Semua
           </button>
+
+          <div class="bg-[#F0F7FF] rounded-xl p-4 border border-[#0033A0]/10">
+            <h5 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <i class="bi bi-database text-[#0033A0]"></i>
+              Sertifikat Tersimpan
+            </h5>
+            <div class="space-y-1.5 max-h-40 overflow-y-auto">
+              {participantsData.length === 0 ? (
+                <p class="text-xs text-gray-400">Belum ada sertifikat tersimpan</p>
+              ) : (
+                participantsData.map(p => {
+                  const cert = certificatesData[p.id];
+                  return (
+                    <div key={p.id} class="flex items-center justify-between text-xs py-1.5 border-b border-gray-100 last:border-0">
+                      <span class="font-medium text-gray-700">{p.fullName}</span>
+                      {cert ? (
+                        <a href={cert.url || '#'} target="_blank" class="text-[#20B082] hover:underline font-semibold flex items-center gap-1">
+                          <i class="bi bi-check-circle-fill text-[10px]"></i> Lihat
+                        </a>
+                      ) : (
+                        <span class="text-gray-400 text-[10px]">Belum issued</span>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ===== FEATURES ===== -->
   <section class="py-12 bg-white">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-6xl mx-auto">
@@ -471,7 +516,6 @@ const certificateTypes = [
     </div>
   </section>
 
-  <!-- ===== CTA ===== -->
   <section class="py-12 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto text-center">
@@ -491,11 +535,9 @@ const certificateTypes = [
   <Footer />
 </BaseLayout>
 
-<!-- ===== SCRIPTS ===== -->
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <style>
-  /* ===== HERO ===== */
   .sertifikat-hero {
     position: relative;
     width: 100%;
@@ -562,7 +604,6 @@ const certificateTypes = [
     }
   }
 
-  /* ===== NAVIGATION ===== */
   .cert-nav-btn {
     background: #f3f4f6;
     color: #6b7280;
@@ -581,7 +622,6 @@ const certificateTypes = [
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
-  /* ===== CERTIFICATE ===== */
   .certificate-wrapper {
     transition: opacity 0.4s ease, transform 0.4s ease;
   }
@@ -606,7 +646,6 @@ const certificateTypes = [
     transform: translateY(-4px);
   }
 
-  /* ===== EDITABLE TEXT ===== */
   .editable-name {
     transition: all 0.2s ease;
     outline: none;
@@ -640,7 +679,6 @@ const certificateTypes = [
     box-shadow: 0 0 0 2px rgba(38, 121, 236, 0.15);
   }
 
-  /* ===== EDIT FORM ===== */
   .edit-form-group.hidden {
     display: none;
   }
@@ -653,7 +691,6 @@ const certificateTypes = [
     border-color: #2679ec;
   }
 
-  /* ===== DOWNLOAD BUTTONS ===== */
   .cert-download-btn {
     transition: all 0.3s ease;
     opacity: 0.85;
@@ -674,7 +711,6 @@ const certificateTypes = [
     }
   }
 
-  /* ===== STICKY NAV ===== */
   .sticky {
     position: sticky;
     top: 72px;
@@ -687,7 +723,6 @@ const certificateTypes = [
     }
   }
 
-  /* ===== PRINT STYLES ===== */
   @media print {
     .sertifikat-hero,
     .cert-nav-btn,
@@ -725,10 +760,97 @@ const certificateTypes = [
   }
 </style>
 
-<!-- ===== MAIN SCRIPT ===== -->
 <script>
+  // ============================================================
+  // DATA SERTIFIKAT UNTUK RESET
+  // ============================================================
+  const certificateTypes = [
+    { id: 'finisher', defaultName: 'BUDI SANTOSO', defaultCategory: '5K Fun Run', defaultTime: '00:25:30', defaultBib: '001' },
+    { id: 'participant', defaultName: 'SITI RAHAYU', defaultCategory: '10K Fun Run', defaultTime: '', defaultBib: '002' },
+    { id: 'winner', defaultName: 'ANDI WIJAYA', defaultCategory: '5K Fun Run', defaultTime: '00:27:45', defaultBib: '003' },
+    { id: 'volunteer', defaultName: 'TIM RELAWAN', defaultCategory: 'Volunteer', defaultTime: '', defaultBib: 'V-001' },
+    { id: 'sponsor', defaultName: 'PT. MAJU JAYA', defaultCategory: 'Sponsor Utama', defaultTime: '', defaultBib: 'S-001' },
+    { id: 'media', defaultName: 'RADAR KEDIRI', defaultCategory: 'Media Partner', defaultTime: '', defaultBib: 'M-001' },
+  ];
+
+  // ============================================================
+  // DOWNLOAD FUNCTION - GLOBAL
+  // ============================================================
+  function handleDownload(btn) {
+    const type = btn.dataset.type;
+    const title = btn.closest('.space-y-2.5').querySelector(`[data-type="${type}"]`)?.dataset.title || 'Sertifikat';
+    const fileName = 'Sertifikat_' + title.replace(/ /g, '_') + '_WaruTuri';
+    
+    console.log('🟢 Downloading:', type, fileName);
+    
+    const wrapper = document.querySelector(`.certificate-wrapper[data-type="${type}"]`);
+    if (!wrapper) {
+      console.error('❌ Wrapper not found');
+      alert('Sertifikat tidak ditemukan!');
+      return;
+    }
+
+    const element = wrapper.querySelector('.certificate-card');
+    if (!element) {
+      console.error('❌ Certificate card not found');
+      alert('Elemen sertifikat tidak ditemukan!');
+      return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"></span> Loading...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    const editables = element.querySelectorAll('[contenteditable="true"]');
+    editables.forEach(el => {
+      el.setAttribute('contenteditable', 'false');
+    });
+
+    html2canvas(element, {
+      scale: 2.5,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      allowTaint: true,
+      width: element.scrollWidth,
+      height: element.scrollHeight,
+    })
+    .then(canvas => {
+      const link = document.createElement('a');
+      link.download = `${fileName}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
+
+      editables.forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+      });
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      
+      console.log('✅ Download successful!');
+    })
+    .catch(err => {
+      console.error('❌ Error:', err);
+      
+      editables.forEach(el => {
+        el.setAttribute('contenteditable', 'true');
+      });
+
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.background = '#ef4444';
+      setTimeout(() => {
+        btn.style.background = '';
+      }, 3000);
+      alert('Terjadi kesalahan: ' + err.message);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
-    // ===== NAVIGATION =====
     const navButtons = document.querySelectorAll('.cert-nav-btn');
     const certificates = document.querySelectorAll('.certificate-wrapper');
     const downloadButtons = document.querySelectorAll('.cert-download-btn');
@@ -739,7 +861,6 @@ const certificateTypes = [
         const target = this.dataset.target;
         const color = this.dataset.color;
 
-        // Update nav buttons
         navButtons.forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         this.style.background = color;
@@ -752,7 +873,6 @@ const certificateTypes = [
           }
         });
 
-        // Show certificate
         certificates.forEach(cert => {
           cert.classList.remove('active');
           cert.classList.add('hidden');
@@ -762,7 +882,6 @@ const certificateTypes = [
           }
         });
 
-        // Show edit form
         editForms.forEach(form => {
           form.classList.remove('active');
           form.classList.add('hidden');
@@ -772,22 +891,18 @@ const certificateTypes = [
           }
         });
 
-        // Update download buttons
         downloadButtons.forEach(btn => {
           btn.style.display = btn.dataset.type === target ? 'inline-flex' : 'none';
         });
       });
     });
 
-    // Set default: show first
     if (navButtons.length > 0) {
       navButtons[0].click();
     }
 
-    // ===== REAL-TIME EDIT (Direct click on certificate) =====
     document.querySelectorAll('.editable-name, .editable-text').forEach(el => {
       el.addEventListener('input', function() {
-        // Update the corresponding form input if exists
         const id = this.id;
         const input = document.querySelector(`.edit-input[data-target="${id}"]`);
         if (input && input.value !== this.textContent) {
@@ -795,7 +910,6 @@ const certificateTypes = [
         }
       });
 
-      // Prevent Enter key from creating new lines
       el.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
           e.preventDefault();
@@ -804,14 +918,12 @@ const certificateTypes = [
       });
     });
 
-    // ===== REAL-TIME EDIT (From form) =====
     document.querySelectorAll('.edit-input').forEach(input => {
       input.addEventListener('input', function() {
         const targetId = this.dataset.target;
         const targetEl = document.getElementById(targetId);
         if (targetEl) {
           targetEl.textContent = this.value || this.placeholder || ' ';
-          // If empty, show placeholder
           if (!this.value && this.placeholder) {
             targetEl.textContent = this.placeholder;
           }
@@ -819,36 +931,28 @@ const certificateTypes = [
       });
     });
 
-    // ===== RESET FUNCTIONS =====
     window.resetCertificate = function(type) {
       const cert = certificateTypes.find(c => c.id === type);
       if (!cert) return;
 
-      // Reset name
       const nameEl = document.getElementById(`name-${type}`);
       if (nameEl) nameEl.textContent = cert.defaultName;
       
-      // Reset category
       const categoryEl = document.getElementById(`category-${type}`);
       if (categoryEl) categoryEl.textContent = cert.defaultCategory;
       
-      // Reset time
       const timeEl = document.getElementById(`time-${type}`);
       if (timeEl && cert.defaultTime) timeEl.textContent = cert.defaultTime;
       
-      // Reset position (winner)
       const positionEl = document.getElementById(`position-${type}`);
       if (positionEl) positionEl.textContent = 'Juara 1';
       
-      // Reset BIB
       const bibEl = document.getElementById(`bib-${type}`);
       if (bibEl) bibEl.textContent = cert.defaultBib;
       
-      // Reset cert no
       const certnoEl = document.getElementById(`certno-${type}`);
       if (certnoEl) certnoEl.textContent = '001';
 
-      // Reset form inputs
       const inputs = document.querySelectorAll(`.edit-input[data-target^="${type}"]`);
       inputs.forEach(input => {
         const targetId = input.dataset.target;
@@ -876,83 +980,4 @@ const certificateTypes = [
       });
     };
   });
-
-  // ===== DOWNLOAD FUNCTION =====
-  function downloadCertificate(type, fileName) {
-    const wrapper = document.querySelector(`.certificate-wrapper[data-type="${type}"]`);
-    if (!wrapper) return;
-
-    const element = wrapper.querySelector('.certificate-card');
-    if (!element) return;
-
-    // Show loading indicator
-    const btn = document.querySelector(`.cert-download-btn[data-type="${type}"]`);
-    if (btn) {
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '<span class="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"></span> Loading...';
-      btn.disabled = true;
-      btn.style.opacity = '0.7';
-    }
-
-    // Temporarily remove contenteditable for clean export
-    const editables = element.querySelectorAll('[contenteditable="true"]');
-    editables.forEach(el => {
-      el.setAttribute('contenteditable', 'false');
-    });
-
-    html2canvas(element, {
-      scale: 2.5,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      allowTaint: true,
-      width: element.scrollWidth,
-      height: element.scrollHeight,
-    }).then(canvas => {
-      const link = document.createElement('a');
-      link.download = `${fileName}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.click();
-
-      // Restore contenteditable
-      editables.forEach(el => {
-        el.setAttribute('contenteditable', 'true');
-      });
-
-      // Restore button
-      if (btn) {
-        btn.innerHTML = '<i class="bi bi-download"></i> ' + btn.textContent.replace('Download ', '').trim();
-        btn.disabled = false;
-        btn.style.opacity = '1';
-      }
-    }).catch(err => {
-      console.error('Error:', err);
-      
-      // Restore contenteditable
-      editables.forEach(el => {
-        el.setAttribute('contenteditable', 'true');
-      });
-
-      if (btn) {
-        btn.innerHTML = '<i class="bi bi-download"></i> ' + btn.textContent.replace('Download ', '').trim();
-        btn.disabled = false;
-        btn.style.opacity = '1';
-        btn.style.background = '#ef4444';
-        setTimeout(() => {
-          btn.style.background = '';
-        }, 3000);
-      }
-      alert('Terjadi kesalahan. Silakan coba lagi atau screenshot manual.');
-    });
-  }
-
-  // Expose certificateTypes for reset functions
-  const certificateTypes = [
-    { id: 'finisher', defaultName: 'BUDI SANTOSO', defaultCategory: '5K Fun Run', defaultTime: '00:25:30', defaultBib: '001' },
-    { id: 'participant', defaultName: 'SITI RAHAYU', defaultCategory: '10K Fun Run', defaultTime: '', defaultBib: '002' },
-    { id: 'winner', defaultName: 'ANDI WIJAYA', defaultCategory: '5K Fun Run', defaultTime: '00:27:45', defaultBib: '003' },
-    { id: 'volunteer', defaultName: 'TIM RELAWAN', defaultCategory: 'Volunteer', defaultTime: '', defaultBib: 'V-001' },
-    { id: 'sponsor', defaultName: 'PT. MAJU JAYA', defaultCategory: 'Sponsor Utama', defaultTime: '', defaultBib: 'S-001' },
-    { id: 'media', defaultName: 'RADAR KEDIRI', defaultCategory: 'Media Partner', defaultTime: '', defaultBib: 'M-001' },
-  ];
 </script>

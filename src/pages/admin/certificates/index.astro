@@ -32,48 +32,11 @@ let searchQuery = Astro.url.searchParams.get('search') || '';
 let statusFilter = Astro.url.searchParams.get('status') || '';
 
 try {
-  // Ambil sertifikat dengan data peserta
-  let query = db.select({
-    id: certificates.id,
-    participantId: certificates.participantId,
-    userId: certificates.userId,
-    certificateNumber: certificates.certificateNumber,
-    template: certificates.template,
-    data: certificates.data,
-    fileUrl: certificates.fileUrl,
-    status: certificates.status,
-    issuedAt: certificates.issuedAt,
-    createdAt: certificates.createdAt,
-    updatedAt: certificates.updatedAt,
-    fullName: participants.fullName,
-    email: participants.email,
-    category: participants.category,
-    bibNumber: participants.bibNumber,
-    participantStatus: participants.status,
-  })
-  .from(certificates)
-  .leftJoin(participants, eq(certificates.participantId, participants.id));
-
-  // Filter search
-  if (searchQuery) {
-    query = query.where(
-      or(
-        like(participants.fullName, `%${searchQuery}%`),
-        like(participants.email, `%${searchQuery}%`),
-        like(certificates.certificateNumber, `%${searchQuery}%`)
-      )
-    );
-  }
-
-  // Filter status
-  if (statusFilter) {
-    query = query.where(eq(certificates.status, statusFilter));
-  }
-
-  const certResult = await query.orderBy(desc(certificates.createdAt));
+  // Ambil sertifikat
+  const certResult = await db.select().from(certificates).orderBy(desc(certificates.createdAt));
   certificatesData = certResult;
 
-  // Ambil daftar peserta untuk dropdown
+  // Ambil peserta
   const participantsResult = await db.select({
     id: participants.id,
     fullName: participants.fullName,
@@ -83,8 +46,21 @@ try {
   })
   .from(participants)
   .orderBy(participants.fullName);
-
   participantsList = participantsResult;
+
+  // Gabungkan data peserta ke sertifikat
+  const participantMap: Record<number, any> = {};
+  participantsList.forEach(p => {
+    participantMap[p.id] = p;
+  });
+
+  certificatesData = certificatesData.map(cert => ({
+    ...cert,
+    fullName: participantMap[cert.participantId]?.fullName || 'Data peserta tidak ditemukan',
+    email: participantMap[cert.participantId]?.email || '-',
+    category: participantMap[cert.participantId]?.category || '-',
+    bibNumber: participantMap[cert.participantId]?.bibNumber || '-',
+  }));
 
 } catch (error) {
   console.error('Error fetching data:', error);
@@ -100,7 +76,6 @@ const statusMap: Record<string, { label: string; color: string; icon: string }> 
 
 const statusOptions = ['draft', 'issued', 'sent', 'cancelled'];
 
-// ===== FORMAT DATE =====
 const formatDate = (date: Date | string | null) => {
   if (!date) return '-';
   const d = new Date(date);
@@ -113,7 +88,6 @@ const formatDate = (date: Date | string | null) => {
   });
 };
 
-// ===== TOTAL STATS =====
 const totalCertificates = certificatesData.length;
 const totalIssued = certificatesData.filter((c: any) => c.status === 'issued' || c.status === 'sent').length;
 const totalDraft = certificatesData.filter((c: any) => c.status === 'draft').length;
@@ -134,11 +108,7 @@ const totalParticipants = participantsList.length;
         </p>
       </div>
       <div class="flex gap-3">
-        <a href="/admin/certificates/export" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
-          <i class="bi bi-download"></i>
-          Export
-        </a>
-        <button onclick="openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-sm hover:shadow-md">
+        <button onclick="window.openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-sm hover:shadow-md">
           <i class="bi bi-plus-lg"></i>
           Tambah Sertifikat
         </button>
@@ -157,11 +127,7 @@ const totalParticipants = participantsList.length;
             <i class="bi bi-file-earmark-text text-2xl text-blue-600 dark:text-blue-400"></i>
           </div>
         </div>
-        <div class="mt-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">Total sertifikat dibuat</span>
-        </div>
       </div>
-
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
         <div class="flex items-center justify-between">
           <div>
@@ -172,13 +138,7 @@ const totalParticipants = participantsList.length;
             <i class="bi bi-check-circle text-2xl text-green-600 dark:text-green-400"></i>
           </div>
         </div>
-        <div class="mt-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">
-            {totalCertificates > 0 ? Math.round((totalIssued / totalCertificates) * 100) : 0}% dari total
-          </span>
-        </div>
       </div>
-
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
         <div class="flex items-center justify-between">
           <div>
@@ -189,11 +149,7 @@ const totalParticipants = participantsList.length;
             <i class="bi bi-pencil text-2xl text-yellow-600 dark:text-yellow-400"></i>
           </div>
         </div>
-        <div class="mt-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">Menunggu diterbitkan</span>
-        </div>
       </div>
-
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
         <div class="flex items-center justify-between">
           <div>
@@ -203,11 +159,6 @@ const totalParticipants = participantsList.length;
           <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
             <i class="bi bi-people text-2xl text-purple-600 dark:text-purple-400"></i>
           </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">
-            {totalParticipants - totalCertificates} peserta belum punya sertifikat
-          </span>
         </div>
       </div>
     </div>
@@ -276,7 +227,15 @@ const totalParticipants = participantsList.length;
                 const hasFileUrl = cert.fileUrl && cert.fileUrl !== '';
                 
                 return (
-                  <tr key={cert.id} class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition" data-id={cert.id}>
+                  <tr 
+                    key={cert.id} 
+                    class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition" 
+                    data-id={cert.id}
+                    data-participantid={cert.participantId}
+                    data-template={cert.template}
+                    data-status={cert.status}
+                    data-fileurl={cert.fileUrl || ''}
+                  >
                     <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{index + 1}</td>
                     <td class="px-4 py-3">
                       <code class="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-800 dark:text-gray-200">
@@ -289,7 +248,7 @@ const totalParticipants = participantsList.length;
                           {initial}
                         </div>
                         <div>
-                          <p class="text-sm font-medium text-gray-900 dark:text-white">{cert.fullName || 'Tidak ada peserta'}</p>
+                          <p class="text-sm font-medium text-gray-900 dark:text-white">{cert.fullName || 'Data peserta tidak ditemukan'}</p>
                           <p class="text-xs text-gray-500 dark:text-gray-400">{cert.email || '-'}</p>
                         </div>
                       </div>
@@ -332,14 +291,21 @@ const totalParticipants = participantsList.length;
                           </a>
                         )}
                         <button 
-                          onclick="editCertificate({id: '${cert.id}', participantId: '${cert.participantId}', template: '${cert.template}', status: '${cert.status}', fileUrl: '${cert.fileUrl || ''}'})" 
+                          onclick="window.editCertificateFromRow(this.closest('tr'))"
                           class="p-1.5 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition"
                           title="Edit"
                         >
                           <i class="bi bi-pencil"></i>
                         </button>
+                        <a 
+                          href={`/sertifikat-desain?id=${cert.id}`}
+                          class="p-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition"
+                          title="Desain Sertifikat"
+                        >
+                          <i class="bi bi-palette"></i>
+                        </a>
                         <button 
-                          onclick="deleteCertificate('${cert.id}')" 
+                          onclick="window.deleteCertificate('${cert.id}')" 
                           class="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
                           title="Hapus"
                         >
@@ -355,12 +321,9 @@ const totalParticipants = participantsList.length;
         </table>
       </div>
 
-      <!-- Footer Info -->
       <div class="px-4 py-3 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between flex-wrap gap-3">
         <p class="text-sm text-gray-500 dark:text-gray-400">
           Menampilkan <span class="font-medium">{certificatesData.length}</span> data
-          {searchQuery && ` dari hasil pencarian "${searchQuery}"`}
-          {statusFilter && ` dengan status ${statusMap[statusFilter]?.label || statusFilter}`}
         </p>
         <div class="flex items-center gap-2">
           <span class="text-xs text-gray-500 dark:text-gray-400">
@@ -376,24 +339,22 @@ const totalParticipants = participantsList.length;
     </div>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- MODAL TAMBAH / EDIT -->
-  <!-- ============================================================ -->
+  <!-- ===== MODAL ===== -->
   <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
-    <div class="absolute inset-0 bg-black/50" onclick="closeModal()"></div>
+    <div class="absolute inset-0 bg-black/50" onclick="window.closeModal()"></div>
     <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
       <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="modalTitle">
           <i class="bi bi-plus-circle text-blue-600 dark:text-blue-400 mr-2"></i>
           Tambah Sertifikat
         </h3>
-        <button onclick="closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+        <button onclick="window.closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
       
       <div class="p-6 space-y-4">
-        <form id="certForm" onsubmit="saveCertificate(event)">
+        <form id="certForm">
           <input type="hidden" id="editId" value="" />
 
           <div>
@@ -440,10 +401,10 @@ const totalParticipants = participantsList.length;
           </div>
 
           <div class="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button type="button" onclick="closeModal()" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+            <button type="button" onclick="window.closeModal()" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
               Batal
             </button>
-            <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+            <button type="button" onclick="window.saveCertificate(event)" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
               <i class="bi bi-check-lg"></i>
               Simpan
             </button>
@@ -457,7 +418,7 @@ const totalParticipants = participantsList.length;
   <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
     <i class="bi bi-check-circle-fill text-green-400"></i>
     <span id="toast-message">Berhasil!</span>
-    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+    <button onclick="window.hideToast()" class="text-gray-400 hover:text-white transition">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>
@@ -466,10 +427,12 @@ const totalParticipants = participantsList.length;
     // ============================================================
     // TOAST
     // ============================================================
-    function showToast(message, type = 'success') {
+    window.showToast = function(message, type = 'success') {
       const toast = document.getElementById('toast');
       const toastMessage = document.getElementById('toast-message');
-      const icon = toast.querySelector('.bi');
+      const icon = toast?.querySelector('.bi');
+      
+      if (!toast) return;
       
       if (type === 'success') {
         icon.className = 'bi bi-check-circle-fill text-green-400';
@@ -481,21 +444,31 @@ const totalParticipants = participantsList.length;
       toast.classList.remove('translate-y-full', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
       
-      setTimeout(hideToast, 3000);
-    }
+      setTimeout(function() {
+        window.hideToast();
+      }, 3000);
+    };
 
-    function hideToast() {
+    window.hideToast = function() {
       const toast = document.getElementById('toast');
+      if (!toast) return;
       toast.classList.remove('translate-y-0', 'opacity-100');
       toast.classList.add('translate-y-full', 'opacity-0');
-    }
+    };
 
     // ============================================================
     // MODAL
     // ============================================================
-    function openModal(data = null) {
+    window.openModal = function(data = null) {
+      console.log('🟢 openModal called with:', data);
+      
       const modal = document.getElementById('modal');
       const title = document.getElementById('modalTitle');
+      
+      if (!modal) {
+        console.error('❌ Modal element not found!');
+        return;
+      }
       
       if (data) {
         title.innerHTML = '<i class="bi bi-pencil text-yellow-600 mr-2"></i> Edit Sertifikat';
@@ -515,25 +488,51 @@ const totalParticipants = participantsList.length;
       
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
-    }
+    };
 
-    function closeModal() {
-      document.getElementById('modal').classList.add('hidden');
+    window.closeModal = function() {
+      const modal = document.getElementById('modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
       document.body.style.overflow = '';
-    }
+    };
 
     // ============================================================
-    // EDIT CERTIFICATE
+    // EDIT FROM ROW (PALING AMAN)
     // ============================================================
-    function editCertificate(data) {
-      openModal(data);
-    }
+    window.editCertificateFromRow = function(row) {
+      if (!row) {
+        console.error('❌ Row not found!');
+        return;
+      }
+      
+      const data = {
+        id: row.dataset.id,
+        participantId: row.dataset.participantid,
+        template: row.dataset.template,
+        status: row.dataset.status,
+        fileUrl: row.dataset.fileurl || ''
+      };
+      
+      console.log('🟢 editCertificateFromRow data:', data);
+      window.openModal(data);
+    };
 
     // ============================================================
-    // SAVE CERTIFICATE
+    // EDIT - langsung panggil openModal
     // ============================================================
-    async function saveCertificate(e) {
+    window.editCertificate = function(data) {
+      console.log('🟢 editCertificate called with:', data);
+      window.openModal(data);
+    };
+
+    // ============================================================
+    // SAVE
+    // ============================================================
+    window.saveCertificate = async function(e) {
       e.preventDefault();
+      
+      console.log('🟢 saveCertificate called!');
       
       const id = document.getElementById('editId').value;
       const participantId = document.getElementById('participantId').value;
@@ -541,8 +540,10 @@ const totalParticipants = participantsList.length;
       const status = document.getElementById('certStatus').value;
       const fileUrl = document.getElementById('fileUrl').value;
 
+      console.log('📝 Data:', { id, participantId, template, status, fileUrl });
+
       if (!participantId) {
-        showToast('Pilih peserta terlebih dahulu!', 'error');
+        window.showToast('Pilih peserta terlebih dahulu!', 'error');
         return;
       }
 
@@ -556,30 +557,35 @@ const totalParticipants = participantsList.length;
       if (id) data.id = parseInt(id);
 
       try {
+        console.log('📤 Sending request...');
         const response = await fetch('/api/admin/certificates', {
-          method,
+          method: method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
 
         const result = await response.json();
+        console.log('📥 Response:', result);
 
         if (result.success) {
-          showToast(result.message || 'Berhasil!');
-          setTimeout(() => location.reload(), 800);
-          closeModal();
+          window.showToast(result.message || 'Berhasil!');
+          setTimeout(function() {
+            location.reload();
+          }, 800);
+          window.closeModal();
         } else {
-          showToast(result.error || 'Gagal menyimpan', 'error');
+          window.showToast(result.error || 'Gagal menyimpan', 'error');
         }
       } catch (error) {
-        showToast('Terjadi kesalahan', 'error');
+        console.error('❌ Error:', error);
+        window.showToast('Terjadi kesalahan: ' + error.message, 'error');
       }
-    }
+    };
 
     // ============================================================
-    // DELETE CERTIFICATE
+    // DELETE
     // ============================================================
-    async function deleteCertificate(id) {
+    window.deleteCertificate = async function(id) {
       if (!confirm('Yakin ingin menghapus sertifikat ini?')) return;
 
       try {
@@ -590,30 +596,45 @@ const totalParticipants = participantsList.length;
         const result = await response.json();
 
         if (result.success) {
-          showToast('Sertifikat berhasil dihapus!');
-          setTimeout(() => location.reload(), 800);
+          window.showToast('Sertifikat berhasil dihapus!');
+          setTimeout(function() {
+            location.reload();
+          }, 800);
         } else {
-          showToast(result.error || 'Gagal menghapus', 'error');
+          window.showToast(result.error || 'Gagal menghapus', 'error');
         }
       } catch (error) {
-        showToast('Terjadi kesalahan', 'error');
+        window.showToast('Terjadi kesalahan', 'error');
       }
-    }
+    };
 
     // ============================================================
-    // ESC KEY
+    // EVENT LISTENERS
     // ============================================================
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeModal();
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🟢 DOM loaded');
+      
+      const form = document.getElementById('certForm');
+      if (form) {
+        console.log('🟢 Form found, attaching submit listener');
+        form.addEventListener('submit', window.saveCertificate);
+      } else {
+        console.log('🔴 Form NOT found!');
+      }
+      
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          window.closeModal();
+        }
+      });
+
+      const overlay = document.querySelector('#modal .absolute');
+      if (overlay) {
+        overlay.addEventListener('click', window.closeModal);
       }
     });
 
-    // ============================================================
-    // CLICK OUTSIDE MODAL
-    // ============================================================
-    document.querySelector('#modal .absolute')?.addEventListener('click', closeModal);
-
     console.log('✅ Sertifikat Admin Panel loaded');
+    console.log('📌 Functions available: openModal, closeModal, editCertificateFromRow, editCertificate, saveCertificate, deleteCertificate');
   </script>
 </AdminLayout>

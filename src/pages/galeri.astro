@@ -127,7 +127,8 @@ const categories = [
 ];
 
 // Featured gallery
-const featuredGalleries = galleryItems.filter(g => g.featured);
+// Featured gallery - pakai galleryData langsung
+const featuredGalleries = galleryData.filter(g => g.featured);
 const featured = featuredGalleries.length > 0 ? featuredGalleries[0] : null;
 const galleryDataJSON = JSON.stringify(galleryData);
 ---
@@ -159,7 +160,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
         <!-- Statistik -->
         <div class="flex flex-wrap justify-center gap-4 mt-10 animate-fade-down animation-delay-600">
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/10 hover:bg-white/20 transition-all duration-300">
-            <p class="text-3xl font-bold text-[#FFD700]">{galleryItems.length}</p>
+            <p class="text-3xl font-bold text-[#FFD700]">{galleryData.length}</p>
             <p class="text-xs text-white/70 uppercase tracking-wider">Total Foto</p>
           </div>
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/10 hover:bg-white/20 transition-all duration-300">
@@ -197,7 +198,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
         </div>
         <div class="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
           <i class="bi bi-images me-1"></i>
-          <span id="visibleCount">{galleryItems.length}</span> foto
+          <span id="visibleCount">{galleryData.length}</span>
         </div>
       </div>
     </div>
@@ -214,7 +215,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
             <img 
               src={featured.image} 
-              alt={featured.title}
+              <span id="visibleCount">{galleryData.length}</span>
               class="w-full h-[300px] sm:h-[400px] lg:h-[500px] object-cover transition-transform duration-700 group-hover:scale-110"
             />
             <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-8 z-20">

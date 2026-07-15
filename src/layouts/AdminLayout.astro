@@ -4,9 +4,9 @@ import { db, users, participants } from '../db/index.js';
 import { eq, count } from 'drizzle-orm';
 import { verifyToken } from '../lib/auth';
 
-export interface Props {
+type Props = {
   title: string;
-}
+};
 
 const { title } = Astro.props;
 
@@ -39,9 +39,17 @@ try {
   console.error('Error fetching participant count:', error);
 }
 
-// ===== REDIRECT JIKA BUKAN ADMIN =====
-if (!isAdmin) {
+// ===== CEK PATH =====
+const pathname = Astro.url.pathname;
+const isLoginPage = pathname === '/auth/login';
+
+// ===== UNAUTHORIZED =====
+if (!isAdmin && !isLoginPage) {
   return Astro.redirect('/auth/login');
+}
+
+if (isAdmin && isLoginPage) {
+  return Astro.redirect('/admin');
 }
 ---
 
@@ -132,7 +140,6 @@ if (!isAdmin) {
       @apply text-blue-600 dark:text-blue-400;
     }
 
-    /* Mobile sidebar overlay */
     .sidebar-overlay {
       position: fixed;
       inset: 0;
@@ -148,7 +155,6 @@ if (!isAdmin) {
       visibility: visible;
     }
 
-    /* Mobile sidebar */
     .sidebar-mobile {
       position: fixed;
       top: 0;
@@ -170,7 +176,6 @@ if (!isAdmin) {
       left: 0;
     }
 
-    /* Submenu - Perbaikan */
     .submenu {
       max-height: 0;
       overflow: hidden;
@@ -206,7 +211,6 @@ if (!isAdmin) {
       @apply text-blue-600 dark:text-blue-400;
     }
 
-    /* Mobile hamburger button */
     .hamburger-btn {
       display: none;
     }
@@ -217,7 +221,6 @@ if (!isAdmin) {
       }
     }
 
-    /* Smooth transitions */
     .sidebar-link i {
       transition: transform 0.2s ease;
     }
@@ -226,15 +229,6 @@ if (!isAdmin) {
       transform: scale(1.1);
     }
 
-    /* Informasi menu item - active state */
-    .informasi-active .sidebar-link {
-      @apply text-blue-600 dark:text-blue-400;
-    }
-    .informasi-active .sidebar-link i {
-      @apply text-blue-600 dark:text-blue-400;
-    }
-
-    /* Dark mode fix for sidebar */
     .dark .sidebar-mobile {
       background: #1f2937;
     }
@@ -245,9 +239,7 @@ if (!isAdmin) {
   <nav class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50 shadow-sm">
     <div class="container-custom">
       <div class="flex items-center justify-between h-16">
-        <!-- Left - Brand & Hamburger -->
         <div class="flex items-center gap-3">
-          <!-- Hamburger Button for Mobile -->
           <button id="hamburger-btn" class="hamburger-btn p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" aria-label="Toggle sidebar">
             <i class="bi bi-list text-2xl"></i>
           </button>
@@ -263,7 +255,6 @@ if (!isAdmin) {
           </div>
         </div>
         
-        <!-- Right - Actions -->
         <div class="flex items-center gap-2">
           <button class="nav-link p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Cari">
             <i class="bi bi-search text-lg"></i>
@@ -276,7 +267,6 @@ if (!isAdmin) {
           
           <div class="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1"></div>
           
-          <!-- User Dropdown -->
           <div class="relative" id="user-dropdown-container">
             <button 
               id="user-dropdown-toggle"
@@ -297,7 +287,6 @@ if (!isAdmin) {
               <i class="bi bi-chevron-down text-xs text-gray-400 dark:text-gray-500 transition-transform duration-200" id="dropdown-arrow"></i>
             </button>
             
-            <!-- Dropdown Menu -->
             <div class="user-dropdown" id="user-dropdown">
               <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                 <p class="text-sm font-medium text-gray-900 dark:text-white" id="dropdown-name">{userData?.name || 'Admin'}</p>
@@ -325,43 +314,35 @@ if (!isAdmin) {
 
   <!-- ===== BODY ===== -->
   <div class="flex">
-    <!-- Overlay for Mobile -->
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-    <!-- Mobile Sidebar -->
     <div id="sidebar-mobile" class="sidebar-mobile">
       <div class="p-4">
-        <!-- Close button -->
         <button id="close-sidebar" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition ml-auto block">
           <i class="bi bi-x-lg text-xl"></i>
         </button>
       </div>
-      <!-- Sidebar content same as desktop -->
       <div class="px-4 pb-4">
         <div class="mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <p class="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Menu Utama</p>
         </div>
         <nav class="space-y-0.5" id="mobile-nav">
-          <!-- Beranda -->
           <a href="/admin" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin">
             <i class="bi bi-house text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Beranda</span>
           </a>
 
-          <!-- Pendaftaran Peserta -->
           <a href="/admin/participants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/participants">
             <i class="bi bi-person-plus text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Pendaftaran Peserta</span>
             <span class="ml-auto text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{totalParticipants}</span>
           </a>
 
-          <!-- About -->
           <a href="/admin/about" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/about">
             <i class="bi bi-info-circle text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">About</span>
           </a>
 
-          <!-- Informasi with submenu -->
           <div class="informasi-container">
             <button onclick="toggleSubmenu('informasi')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group w-full" id="informasi-toggle-mobile">
               <i class="bi bi-info-square text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
@@ -402,13 +383,11 @@ if (!isAdmin) {
 
           <div class="my-3 border-t border-gray-200/50 dark:border-gray-700/50"></div>
 
-          <!-- Artikel -->
           <a href="/admin/articles" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/articles">
             <i class="bi bi-newspaper text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Artikel</span>
           </a>
 
-          <!-- Kontak -->
           <a href="/admin/contacts" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/contacts">
             <i class="bi bi-envelope text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Kontak</span>
@@ -416,20 +395,17 @@ if (!isAdmin) {
 
           <div class="my-3 border-t border-gray-200/50 dark:border-gray-700/50"></div>
 
-          <!-- Logout -->
           <button onclick="handleLogout()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition group w-full">
             <i class="bi bi-box-arrow-right text-lg text-red-400 dark:text-red-500 group-hover:text-red-600 dark:group-hover:text-red-400 transition"></i>
             <span class="text-sm font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 transition">Logout</span>
           </button>
 
-          <!-- Pengaturan -->
           <a href="/admin/settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/settings">
             <i class="bi bi-gear text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
             <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Pengaturan</span>
           </a>
         </nav>
         
-        <!-- Sidebar Footer -->
         <div class="mt-6 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
           <div class="px-3 py-2">
             <p class="text-[10px] text-gray-400 dark:text-gray-500">
@@ -444,32 +420,27 @@ if (!isAdmin) {
       </div>
     </div>
 
-    <!-- Desktop Sidebar -->
     <aside class="hidden md:block w-64 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-r border-gray-200/50 dark:border-gray-700/50 min-h-screen p-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto flex-shrink-0">
       <div class="mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
         <p class="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Menu Utama</p>
       </div>
       <nav class="space-y-0.5">
-        <!-- Beranda -->
         <a href="/admin" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin">
           <i class="bi bi-house text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
           <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Beranda</span>
         </a>
 
-        <!-- Pendaftaran Peserta -->
         <a href="/admin/participants" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/participants">
           <i class="bi bi-person-plus text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
           <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Pendaftaran Peserta</span>
           <span class="ml-auto text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">{totalParticipants}</span>
         </a>
 
-        <!-- About -->
         <a href="/admin/about" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/about">
           <i class="bi bi-info-circle text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
           <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">About</span>
         </a>
 
-        <!-- Informasi with submenu -->
         <div class="informasi-container">
           <button onclick="toggleSubmenu('informasi')" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group w-full" id="informasi-toggle">
             <i class="bi bi-info-square text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
@@ -510,13 +481,11 @@ if (!isAdmin) {
 
         <div class="my-3 border-t border-gray-200/50 dark:border-gray-700/50"></div>
 
-        <!-- Artikel -->
         <a href="/admin/articles" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/articles">
           <i class="bi bi-newspaper text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
           <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Artikel</span>
         </a>
 
-        <!-- Kontak -->
         <a href="/admin/contacts" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/contacts">
           <i class="bi bi-envelope text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
           <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Kontak</span>
@@ -524,20 +493,17 @@ if (!isAdmin) {
 
         <div class="my-3 border-t border-gray-200/50 dark:border-gray-700/50"></div>
 
-        <!-- Logout -->
         <button onclick="handleLogout()" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition group w-full">
           <i class="bi bi-box-arrow-right text-lg text-red-400 dark:text-red-500 group-hover:text-red-600 dark:group-hover:text-red-400 transition"></i>
           <span class="text-sm font-medium text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300 transition">Logout</span>
         </button>
 
-        <!-- Pengaturan -->
         <a href="/admin/settings" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group" data-path="/admin/settings">
           <i class="bi bi-gear text-lg text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition"></i>
           <span class="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Pengaturan</span>
         </a>
       </nav>
       
-      <!-- Sidebar Footer -->
       <div class="mt-6 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
         <div class="px-3 py-2">
           <p class="text-[10px] text-gray-400 dark:text-gray-500">
@@ -551,19 +517,12 @@ if (!isAdmin) {
       </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="flex-1 p-4 md:p-6 min-h-[calc(100vh-4rem)]">
       <slot />
     </main>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- SCRIPT -->
-  <!-- ============================================================ -->
   <script>
-    // ============================================================
-    // LOGOUT FUNCTION - GLOBAL
-    // ============================================================
     window.handleLogout = async function() {
       if (confirm('Yakin ingin logout dari akun ini?')) {
         try {
@@ -589,16 +548,12 @@ if (!isAdmin) {
       }
     };
 
-    // ============================================================
-    // TOGGLE SUBMENU - GLOBAL dengan localStorage
-    // ============================================================
     window.toggleSubmenu = function(id) {
       const submenu = document.getElementById(id + '-submenu');
       const arrow = document.getElementById(id + '-arrow');
       const submenuMobile = document.getElementById(id + '-submenu-mobile');
       const arrowMobile = document.getElementById(id + '-arrow-mobile');
       
-      // Toggle desktop
       if (submenu) {
         submenu.classList.toggle('open');
         if (arrow) {
@@ -606,7 +561,6 @@ if (!isAdmin) {
         }
       }
       
-      // Toggle mobile
       if (submenuMobile) {
         submenuMobile.classList.toggle('open');
         if (arrowMobile) {
@@ -614,34 +568,25 @@ if (!isAdmin) {
         }
       }
       
-      // Save state to localStorage
       const isOpen = submenu ? submenu.classList.contains('open') : false;
       localStorage.setItem('submenu-' + id, isOpen ? 'open' : 'closed');
     };
 
-    // ============================================================
-    // RESTORE SUBMENU STATE
-    // ============================================================
     function restoreSubmenuState() {
       const submenus = ['informasi'];
       submenus.forEach(id => {
         const state = localStorage.getItem('submenu-' + id);
         
-        // Desktop
         const submenu = document.getElementById(id + '-submenu');
         const arrow = document.getElementById(id + '-arrow');
-        
-        // Mobile
         const submenuMobile = document.getElementById(id + '-submenu-mobile');
         const arrowMobile = document.getElementById(id + '-arrow-mobile');
         
         if (state === 'open') {
-          // Desktop
           if (submenu) {
             submenu.classList.add('open');
             if (arrow) arrow.classList.add('rotate-180');
           }
-          // Mobile
           if (submenuMobile) {
             submenuMobile.classList.add('open');
             if (arrowMobile) arrowMobile.classList.add('rotate-180');
@@ -650,9 +595,6 @@ if (!isAdmin) {
       });
     }
 
-    // ============================================================
-    // MOBILE SIDEBAR
-    // ============================================================
     const hamburgerBtn = document.getElementById('hamburger-btn');
     const closeSidebarBtn = document.getElementById('close-sidebar');
     const sidebarMobile = document.getElementById('sidebar-mobile');
@@ -674,7 +616,6 @@ if (!isAdmin) {
     closeSidebarBtn?.addEventListener('click', closeMobileSidebar);
     sidebarOverlay?.addEventListener('click', closeMobileSidebar);
 
-    // Close mobile sidebar when clicking a link
     document.querySelectorAll('#sidebar-mobile .sidebar-link, #sidebar-mobile .submenu-link').forEach(link => {
       link.addEventListener('click', () => {
         if (window.innerWidth <= 768) {
@@ -683,9 +624,6 @@ if (!isAdmin) {
       });
     });
 
-    // ============================================================
-    // USER DROPDOWN
-    // ============================================================
     const dropdownToggle = document.getElementById('user-dropdown-toggle');
     const dropdown = document.getElementById('user-dropdown');
     const arrow = document.getElementById('dropdown-arrow');
@@ -703,17 +641,11 @@ if (!isAdmin) {
       }
     });
 
-    // ============================================================
-    // CEK LOGIN
-    // ============================================================
     const token = localStorage.getItem('token');
     if (!token) {
       window.location.href = '/auth/login';
     }
 
-    // ============================================================
-    // TAMPILKAN USER
-    // ============================================================
     try {
       const userStr = localStorage.getItem('user');
       if (userStr) {
@@ -743,9 +675,6 @@ if (!isAdmin) {
       console.error('Error loading user:', e);
     }
 
-    // ============================================================
-    // ACTIVE MENU
-    // ============================================================
     function setActiveMenu() {
       const currentPath = window.location.pathname;
       const links = document.querySelectorAll('.sidebar-link, .submenu-link');
@@ -756,13 +685,11 @@ if (!isAdmin) {
         if (path && currentPath.includes(path)) {
           link.classList.add('active');
           
-          // If it's a submenu link, open parent submenu
           if (link.classList.contains('submenu-link')) {
             const parentSubmenu = link.closest('.submenu');
             if (parentSubmenu) {
               parentSubmenu.classList.add('open');
               const parentId = parentSubmenu.id.replace('-submenu', '');
-              // Also handle mobile version
               const parentIdMobile = parentSubmenu.id.replace('-submenu', '-submenu-mobile');
               const submenuMobile = document.getElementById(parentIdMobile);
               if (submenuMobile) {
@@ -785,17 +712,11 @@ if (!isAdmin) {
       });
     }
 
-    // ============================================================
-    // INIT
-    // ============================================================
     document.addEventListener('DOMContentLoaded', () => {
       restoreSubmenuState();
       setActiveMenu();
     });
 
-    // ============================================================
-    // KEYBOARD SHORTCUT - Ctrl+Shift+L = Logout
-    // ============================================================
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'L') {
         e.preventDefault();
