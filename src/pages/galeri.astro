@@ -3,133 +3,37 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navbar from '../components/common/Navbar.astro';
 import Footer from '../components/common/Footer.astro';
+import { db, galleries } from '../db/index.js';
+import { desc } from 'drizzle-orm';
 
-// Data Gallery - Waru Turi Fun Run 2026
-const galleryData = [
-  {
-    id: 1,
-    title: 'Pembukaan Acara Waru Turi Fun Run 2026',
-    category: 'Acara',
-    image: 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?w=800&h=600&fit=crop',
-    description: 'Momen pembukaan yang meriah dengan kehadiran ratusan peserta dan tamu undangan.',
-    date: '10 Juli 2026',
-    featured: true
-  },
-  {
-    id: 2,
-    title: 'Start Peserta 5K Fun Run',
-    category: 'Lomba',
-    image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&h=600&fit=crop',
-    description: 'Para peserta 5K memulai perlombaan dengan penuh semangat dan antusiasme.',
-    date: '10 Juli 2026',
-    featured: true
-  },
-  {
-    id: 3,
-    title: 'Peserta 10K Menaklukkan Rute',
-    category: 'Lomba',
-    image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&h=600&fit=crop',
-    description: 'Peserta 10K menunjukkan ketangguhan mereka sepanjang rute yang menantang.',
-    date: '10 Juli 2026',
-    featured: true
-  },
-  {
-    id: 4,
-    title: 'Momen Finisher',
-    category: 'Lomba',
-    image: 'https://images.unsplash.com/photo-1511882150382-421056c89033?w=800&h=600&fit=crop',
-    description: 'Kebahagiaan peserta saat mencapai garis finish setelah menyelesaikan perlombaan.',
-    date: '10 Juli 2026',
-    featured: false
-  },
-  {
-    id: 5,
-    title: 'Penyerahan Medali kepada Pemenang',
-    category: 'Penghargaan',
-    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&h=600&fit=crop',
-    description: 'Momen penyerahan medali dan penghargaan kepada para pemenang di setiap kategori.',
-    date: '10 Juli 2026',
-    featured: false
-  },
-  {
-    id: 6,
-    title: 'Keindahan Bendung Waru Turi',
-    category: 'Suasana',
-    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&h=600&fit=crop',
-    description: 'Suasana alam Bendung Waru Turi yang menjadi latar belakang acara yang indah.',
-    date: '10 Juli 2026',
-    featured: false
-  },
-  {
-    id: 7,
-    title: 'Semangat Peserta di Tengah Lintasan',
-    category: 'Lomba',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=600&fit=crop',
-    description: 'Ekspresi semangat dan kegembiraan para peserta saat berlari.',
-    date: '10 Juli 2026',
-    featured: false
-  },
-  {
-    id: 8,
-    title: 'Tim Medis Siaga',
-    category: 'Dokumentasi',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&h=600&fit=crop',
-    description: 'Tim medis dan paramedis yang selalu siaga selama acara berlangsung.',
-    date: '10 Juli 2026',
-    featured: false
-  },
-  {
-    id: 9,
-    title: 'Peserta Pelajar 5K',
-    category: 'Lomba',
-    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&h=600&fit=crop',
-    description: 'Peserta kategori Pelajar 5K menunjukkan semangat juang yang luar biasa.',
-    date: '10 Juli 2026',
-    featured: false
-  },
-  {
-    id: 10,
-    title: 'Dokumentasi Peserta',
-    category: 'Dokumentasi',
-    image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=800&h=600&fit=crop',
-    description: 'Dokumentasi peserta yang mengikuti Waru Turi Fun Run 2026.',
-    date: '10 Juli 2026',
-    featured: false
-  },
-  {
-    id: 11,
-    title: 'Suasana Panggung Utama',
-    category: 'Acara',
-    image: 'https://images.unsplash.com/photo-1478147427282-58a87a120781?w=800&h=600&fit=crop',
-    description: 'Suasana panggung utama dengan berbagai hiburan dan pengumuman pemenang.',
-    date: '10 Juli 2026',
-    featured: false
-  },
-  {
-    id: 12,
-    title: 'Peserta Berfoto Bersama',
-    category: 'Dokumentasi',
-    image: 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&h=600&fit=crop',
-    description: 'Peserta mengabadikan momen bersama setelah menyelesaikan perlombaan.',
-    date: '10 Juli 2026',
-    featured: false
-  }
-];
+// ===== AMBIL DATA GALLERY DARI DATABASE =====
+let galleryData: any[] = [];
 
-// Kategori filter dengan ikon
-const categories = [
-  { value: 'all', label: 'Semua', icon: 'bi-grid' },
-  { value: 'Lomba', label: '🏃 Lomba', icon: 'bi-flag' },
-  { value: 'Acara', label: '🎤 Acara', icon: 'bi-megaphone' },
-  { value: 'Penghargaan', label: '🏆 Penghargaan', icon: 'bi-trophy' },
-  { value: 'Suasana', label: '🌅 Suasana', icon: 'bi-tree' },
-  { value: 'Dokumentasi', label: '📸 Dokumentasi', icon: 'bi-camera' }
-];
+try {
+  const result = await db.select().from(galleries).orderBy(desc(galleries.createdAt));
+  galleryData = result;
+  console.log('📸 Gallery data loaded:', galleryData.length);
+} catch (error) {
+  console.error('Error fetching gallery data:', error);
+  galleryData = [];
+}
 
 // Featured gallery
-// Featured gallery - pakai galleryData langsung
-const featuredGalleries = galleryData.filter(g => g.featured);
+const featuredGalleries = galleryData.filter((g: any) => g.isFeatured === true);
 const featured = featuredGalleries.length > 0 ? featuredGalleries[0] : null;
+
+// Kategori filter - disesuaikan dengan data yang ada
+// Kita bisa ambil kategori unik dari database atau pakai static
+const categories = [
+  { value: 'all', label: 'Semua', icon: 'bi-grid' },
+  { value: 'featured', label: '⭐ Unggulan', icon: 'bi-star' },
+];
+
+const totalPhotos = galleryData.length;
+const totalCategories = categories.length - 1;
+const totalFeatured = featuredGalleries.length;
+
+// Konversi ke JSON untuk JavaScript
 const galleryDataJSON = JSON.stringify(galleryData);
 ---
 
@@ -160,15 +64,15 @@ const galleryDataJSON = JSON.stringify(galleryData);
         <!-- Statistik -->
         <div class="flex flex-wrap justify-center gap-4 mt-10 animate-fade-down animation-delay-600">
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/10 hover:bg-white/20 transition-all duration-300">
-            <p class="text-3xl font-bold text-[#FFD700]">{galleryData.length}</p>
+            <p class="text-3xl font-bold text-[#FFD700]">{totalPhotos}</p>
             <p class="text-xs text-white/70 uppercase tracking-wider">Total Foto</p>
           </div>
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/10 hover:bg-white/20 transition-all duration-300">
-            <p class="text-3xl font-bold text-[#20B082]">{categories.length - 1}</p>
+            <p class="text-3xl font-bold text-[#20B082]">{totalCategories}</p>
             <p class="text-xs text-white/70 uppercase tracking-wider">Kategori</p>
           </div>
           <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-8 py-4 border border-white/10 hover:bg-white/20 transition-all duration-300">
-            <p class="text-3xl font-bold text-[#FF6B00]">{featuredGalleries.length}</p>
+            <p class="text-3xl font-bold text-[#FF6B00]">{totalFeatured}</p>
             <p class="text-xs text-white/70 uppercase tracking-wider">Unggulan</p>
           </div>
         </div>
@@ -198,7 +102,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
         </div>
         <div class="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
           <i class="bi bi-images me-1"></i>
-          <span id="visibleCount">{galleryData.length}</span>
+          <span id="visibleCount">{totalPhotos}</span>
         </div>
       </div>
     </div>
@@ -214,9 +118,11 @@ const galleryDataJSON = JSON.stringify(galleryData);
           <div class="relative rounded-2xl overflow-hidden shadow-2xl group">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
             <img 
-              src={featured.image} 
-              <span id="visibleCount">{galleryData.length}</span>
+              src={featured.imageUrl} 
+              alt={featured.title || 'Featured'}
               class="w-full h-[300px] sm:h-[400px] lg:h-[500px] object-cover transition-transform duration-700 group-hover:scale-110"
+              loading="lazy"
+              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect width=%22800%22 height=%22500%22 fill=%22%233b82f6%22/%3E%3Ctext x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23ffffff%22 font-size=%2224%22%3EImage Not Found%3C/text%3E%3C/svg%3E'"
             />
             <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-8 z-20">
               <div class="flex items-center gap-3 mb-3">
@@ -224,16 +130,9 @@ const galleryDataJSON = JSON.stringify(galleryData);
                   <i class="bi bi-star-fill"></i>
                   Unggulan
                 </span>
-                <span class="bg-white/20 backdrop-blur-sm text-white text-xs px-4 py-1.5 rounded-full border border-white/20">
-                  {featured.category}
-                </span>
               </div>
-              <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{featured.title}</h2>
-              <p class="text-white/80 text-sm sm:text-base mt-2 max-w-2xl">{featured.description}</p>
-              <p class="text-white/60 text-xs mt-3 flex items-center gap-1">
-                <i class="bi bi-calendar3"></i>
-                {featured.date}
-              </p>
+              <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">{featured.title || 'Untitled'}</h2>
+              <p class="text-white/80 text-sm sm:text-base mt-2 max-w-2xl">{featured.description || ''}</p>
             </div>
             <div class="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-all duration-500">
               <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/40">
@@ -246,74 +145,97 @@ const galleryDataJSON = JSON.stringify(galleryData);
 
       <!-- Gallery Grid -->
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5" id="galleryGrid">
-        {galleryData.map((item, index) => (
-          <div 
-            class="gallery-item group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white"
-            data-category={item.category}
-            data-index={index}
-            onclick="window.openLightbox({index: {index}})"
-          >
-            <div class="relative overflow-hidden aspect-square">
-              <img 
-                src={item.image} 
-                alt={item.title}
-                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                loading="lazy"
-              />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
-              <!-- Category Badge -->
-              <div class="absolute top-3 left-3 z-10">
-                <span class="bg-white/95 backdrop-blur-sm text-gray-800 text-[10px] font-semibold px-3 py-1 rounded-full shadow-lg">
-                  {item.category}
-                </span>
-              </div>
-
-              <!-- Featured Badge -->
-              {item.featured && (
-                <div class="absolute top-3 right-3 z-10">
-                  <span class="bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1">
-                    <i class="bi bi-star-fill text-[8px]"></i>
-                    Featured
-                  </span>
-                </div>
-              )}
-              
-              <!-- Hover Info -->
-              <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-10">
-                <h3 class="font-semibold text-sm">{item.title}</h3>
-                <p class="text-xs text-white/80 truncate">{item.description}</p>
-                <p class="text-[10px] text-white/60 mt-1 flex items-center gap-1">
-                  <i class="bi bi-calendar3"></i>
-                  {item.date}
-                </p>
-              </div>
-              
-              <!-- Zoom Icon -->
-              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 z-10">
-                <div class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/40 group-hover:scale-110 transition-transform">
-                  <i class="bi bi-arrows-fullscreen text-white text-xl"></i>
-                </div>
-              </div>
+        {galleryData.length === 0 ? (
+          <div class="col-span-full text-center py-20">
+            <div class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center mx-auto mb-6 shadow-inner">
+              <i class="bi bi-images text-5xl text-blue-300"></i>
             </div>
-
-            {/* Mobile Info */}
-            <div class="p-3 bg-white block sm:hidden">
-              <h4 class="font-medium text-gray-800 text-xs truncate">{item.title}</h4>
-              <p class="text-[10px] text-gray-400">{item.date}</p>
+            <h3 class="text-2xl font-bold text-gray-700 mb-2">Belum Ada Foto</h3>
+            <p class="text-gray-400 max-w-md mx-auto">
+              Galeri foto Waru Turi Fun Run 2026 akan segera diisi dengan momen-momen terbaik. 
+              Pantau terus halaman ini untuk update terbaru!
+            </p>
+            <div class="mt-6 flex flex-wrap justify-center gap-3">
+              <span class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-full text-sm">
+                <i class="bi bi-camera"></i>
+                Segera Hadir
+              </span>
+              <span class="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-600 rounded-full text-sm">
+                <i class="bi bi-clock-history"></i>
+                Dalam Persiapan
+              </span>
             </div>
+            
+            <!-- Preview Placeholder -->
+            <div class="mt-10 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 max-w-4xl mx-auto opacity-50">
+              {[1,2,3,4,5,6,7,8].map((item) => (
+                <div key={item} class="aspect-square rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+                  <i class="bi bi-image text-4xl text-gray-300"></i>
+                </div>
+              ))}
+            </div>
+            <p class="text-xs text-gray-400 mt-4">
+              <i class="bi bi-arrow-up"></i> Preview placeholder - Foto akan segera ditambahkan
+            </p>
           </div>
-        ))}
+        ) : (
+          galleryData.map((item: any, index: number) => {
+            // Tentukan kategori untuk filter (featured atau all)
+            const category = item.isFeatured ? 'featured' : 'all';
+            
+            return (
+              <div 
+                class="gallery-item group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white"
+                data-category={category}
+                data-index={index}
+                onclick="window.openLightbox({index: {index}})"
+              >
+                <div class="relative overflow-hidden aspect-square">
+                  <img 
+                    src={item.imageUrl} 
+                    alt={item.title || 'Gallery'}
+                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    loading="lazy"
+                    onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect width=%22200%22 height=%22200%22 fill=%22%23f3f4f6%22/%3E%3Ctext x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%239ca3af%22 font-size=%2214%22%3ENo Image%3C/text%3E%3C/svg%3E'"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {item.isFeatured && (
+                    <div class="absolute top-3 right-3 z-10">
+                      <span class="bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1">
+                        <i class="bi bi-star-fill text-[8px]"></i>
+                        Featured
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div class="absolute bottom-0 left-0 right-0 p-4 text-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-10">
+                    <h3 class="font-semibold text-sm">{item.title || 'Untitled'}</h3>
+                    <p class="text-xs text-white/80 truncate">{item.description || ''}</p>
+                  </div>
+                  
+                  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 z-10">
+                    <div class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/40 group-hover:scale-110 transition-transform">
+                      <i class="bi bi-arrows-fullscreen text-white text-xl"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-3 bg-white block sm:hidden">
+                  <h4 class="font-medium text-gray-800 text-xs truncate">{item.title || 'Untitled'}</h4>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
 
-      <!-- Empty State -->
-      <div id="emptyState" class="hidden text-center py-20">
-        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-          <i class="bi bi-images text-4xl text-gray-300"></i>
+      <!-- Debug info (hanya untuk development) -->
+      {import.meta.env.DEV && galleryData.length > 0 && (
+        <div class="mt-8 text-center text-xs text-gray-400">
+          <i class="bi bi-database"></i> Total data: {galleryData.length} items
         </div>
-        <h3 class="text-xl font-semibold text-gray-600">Tidak Ada Foto</h3>
-        <p class="text-gray-400">Belum ada foto untuk kategori ini</p>
-      </div>
+      )}
     </div>
   </section>
 
@@ -382,14 +304,12 @@ const galleryDataJSON = JSON.stringify(galleryData);
           <h3 id="lightboxTitle" class="text-white font-bold text-xl sm:text-2xl"></h3>
           <p id="lightboxDescription" class="text-white/70 text-sm sm:text-base mt-1"></p>
           <div class="flex items-center gap-4 mt-2">
-            <span id="lightboxCategory" class="bg-white/20 text-white text-xs font-medium px-3 py-1 rounded-full"></span>
             <span id="lightboxDate" class="text-white/50 text-xs flex items-center gap-1">
               <i class="bi bi-calendar3"></i>
             </span>
           </div>
         </div>
       </div>
-      <!-- Image Counter -->
       <div class="absolute top-6 left-6 bg-black/50 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full z-20">
         <span id="lightboxCounter">1 / 1</span>
       </div>
@@ -399,17 +319,23 @@ const galleryDataJSON = JSON.stringify(galleryData);
 
 <script>
   // ============================================================
-  // DATA GALLERY
+  // DATA GALLERY dari database
   // ============================================================
- const galleryItems = galleryData.map((item, index) => ({
+  const galleryItems = JSON.parse('{galleryDataJSON}').map((item: any, index: number) => ({
     id: item.id,
-    title: item.title,
-    category: item.category,
-    image: item.image,
-    description: item.description,
-    date: item.date,
+    title: item.title || 'Untitled',
+    image: item.imageUrl,
+    description: item.description || '',
+    isFeatured: item.isFeatured || false,
+    date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }) : '',
     index: index
   }));
+
+  console.log('📸 Gallery items loaded:', galleryItems.length);
 
   let currentIndex = 0;
   let filteredData = [...galleryItems];
@@ -418,7 +344,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
   // FILTER GALLERY
   // ============================================================
   window.filterGallery = function(category) {
-    console.log('Filtering category:', category);
+    console.log('🔍 Filtering:', category);
     
     // Update active button
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -433,11 +359,11 @@ const galleryDataJSON = JSON.stringify(galleryData);
     }
     
     // Filter items
-    const items = document.querySelectorAll('.gallery-item');
+    const items = document.querySelectorAll('.gallery-item[data-category]');
     let visibleCount = 0;
     
     items.forEach(item => {
-      const itemCategory = item.dataset.category;
+      const itemCategory = item.dataset.category || 'all';
       if (category === 'all' || itemCategory === category) {
         item.style.display = 'block';
         visibleCount++;
@@ -448,7 +374,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
     
     // Update filtered data for lightbox
     filteredData = galleryItems.filter(item => 
-      category === 'all' || item.category === category
+      category === 'all' || (category === 'featured' && item.isFeatured)
     );
     
     // Update count
@@ -457,17 +383,7 @@ const galleryDataJSON = JSON.stringify(galleryData);
       visibleCountEl.textContent = visibleCount;
     }
     
-    // Show/hide empty state
-    const emptyState = document.getElementById('emptyState');
-    if (emptyState) {
-      if (visibleCount === 0) {
-        emptyState.classList.remove('hidden');
-      } else {
-        emptyState.classList.add('hidden');
-      }
-    }
-    
-    console.log('Visible count:', visibleCount);
+    console.log('👁️ Visible count:', visibleCount);
   };
 
   // ============================================================
@@ -475,12 +391,16 @@ const galleryDataJSON = JSON.stringify(galleryData);
   // ============================================================
   window.openLightbox = function(data) {
     const index = data.index;
-    if (index === undefined || index < 0 || index >= filteredData.length) return;
+    if (index === undefined || index < 0 || index >= filteredData.length) {
+      console.warn('Invalid index:', index);
+      return;
+    }
     
     currentIndex = index;
     updateLightbox(currentIndex);
     document.getElementById('lightbox').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    console.log('🖼️ Lightbox opened:', filteredData[currentIndex]?.title);
   };
 
   window.closeLightbox = function() {
@@ -492,12 +412,13 @@ const galleryDataJSON = JSON.stringify(galleryData);
     const item = filteredData[index];
     if (!item) return;
     
-    document.getElementById('lightboxImage').src = item.image;
-    document.getElementById('lightboxImage').alt = item.title;
+    const img = document.getElementById('lightboxImage');
+    img.src = item.image;
+    img.alt = item.title;
+    
     document.getElementById('lightboxTitle').textContent = item.title;
-    document.getElementById('lightboxDescription').textContent = item.description;
-    document.getElementById('lightboxCategory').textContent = item.category;
-    document.getElementById('lightboxDate').textContent = item.date;
+    document.getElementById('lightboxDescription').textContent = item.description || '';
+    document.getElementById('lightboxDate').textContent = item.date || '';
     document.getElementById('lightboxCounter').textContent = `${index + 1} / ${filteredData.length}`;
   }
 
@@ -537,11 +458,14 @@ const galleryDataJSON = JSON.stringify(galleryData);
   });
 
   // ============================================================
-  // INITIALIZE - Set default filter to 'all'
+  // INITIALIZE
   // ============================================================
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('Gallery loaded with', galleryItems.length, 'photos');
-    // Ensure 'all' filter is active
+    console.log('🚀 Gallery page initialized');
+    console.log('📊 Total items:', galleryItems.length);
+    console.log('⭐ Featured items:', galleryItems.filter(item => item.isFeatured).length);
+    
+    // Set default filter to 'all'
     window.filterGallery('all');
   });
 </script>
@@ -610,5 +534,28 @@ const galleryDataJSON = JSON.stringify(galleryData);
   @keyframes zoomIn {
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .filter-btn {
+      font-size: 0.75rem;
+      padding: 6px 12px;
+    }
+    
+    .filter-btn i {
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .filter-btn {
+      font-size: 0.7rem;
+      padding: 5px 10px;
+    }
+    
+    .filter-btn i {
+      font-size: 0.7rem;
+    }
   }
 </style>

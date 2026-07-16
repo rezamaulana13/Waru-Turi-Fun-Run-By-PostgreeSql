@@ -1,630 +1,1695 @@
 ---
 // src/pages/admin/gallery/index.astro
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, galleries, users } from '../../../db/index.js';
+import { eq, desc, or, like } from 'drizzle-orm';
+import { verifyToken } from '../../../lib/auth';
+
+// ============================================================
+// CEK AUTH ADMIN
+// ============================================================
+const token = Astro.cookies.get('token')?.value;
+let isAdmin = false;
+let userData = null;
+
+if (token) {
+  const decoded = verifyToken(token);
+  if (decoded && typeof decoded !== 'string') {
+    const user = await db.select().from(users).where(eq(users.id, decoded.id));
+    if (user && user.length > 0 && (user[0].role === 'admin' || user[0].role === 'super_admin')) {
+      isAdmin = true;
+      userData = user[0];
+    }
+  }
+}
+
+if (!isAdmin) {
+  return Astro.redirect('/auth/login');
+}
+
+// ============================================================
+// AMBIL DATA DARI QUERY PARAMS
+// ============================================================
+const searchQuery = Astro.url.searchParams.get('search') || '';
+const featuredFilter = Astro.url.searchParams.get('featured') || 'all';
+const sortBy = Astro.url.searchParams.get('sort') || 'newest';
+const page = parseInt(Astro.url.searchParams.get('page') || '1');
+const limit = 12;
+const offset = (page - 1) * limit;
+
+// ============================================================
+// AMBIL DATA GALLERY DENGAN FILTER
+// ============================================================
+let galleryData: any[] = [];
+let totalItems = 0;
+let totalPages = 1;
+
+try {
+  let query = db.select().from(galleries);
+  
+  // Filter search
+  if (searchQuery) {
+    const searchCondition = or(
+      like(galleries.title, `%${searchQuery}%`),
+      like(galleries.description, `%${searchQuery}%`)
+    );
+    query = query.where(searchCondition);
+  }
+  
+  // Filter featured
+  if (featuredFilter === 'featured') {
+    query = query.where(eq(galleries.isFeatured, true));
+  } else if (featuredFilter === 'non-featured') {
+    query = query.where(eq(galleries.isFeatured, false));
+  }
+  
+  // Dapatkan total data untuk pagination
+  const allData = await query;
+  totalItems = allData.length;
+  totalPages = Math.ceil(totalItems / limit);
+  
+  // Sort
+  if (sortBy === 'oldest') {
+    query = query.orderBy(galleries.createdAt);
+  } else if (sortBy === 'title') {
+    query = query.orderBy(galleries.title);
+  } else {
+    query = query.orderBy(desc(galleries.createdAt));
+  }
+  
+  // Pagination
+  query = query.limit(limit).offset(offset);
+  
+  const result = await query;
+  galleryData = result;
+
+  console.log('📸 Gallery data loaded:', galleryData.length, 'items');
+
+} catch (error) {
+  console.error('Error fetching gallery data:', error);
+  galleryData = [];
+}
+
+// ============================================================
+// STATISTIK
+// ============================================================
+const totalMedia = totalItems;
+const totalPhotos = galleryData.filter((g: any) => g.type === 'photo' || !g.type).length;
+const totalVideos = galleryData.filter((g: any) => g.type === 'video').length;
+const totalFeatured = galleryData.filter((g: any) => g.isFeatured === true).length;
+
+// ============================================================
+// HELPER FUNCTIONS
+// ============================================================
+const formatDate = (date: Date | string | null) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric'
+  });
+};
+
+const formatDateTime = (date: Date | string | null) => {
+  if (!date) return '-';
+  const d = new Date(date);
+  return d.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+const truncateText = (text: string, maxLength: number = 50) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
+// ============================================================
+// PAGINATION HELPER
+// ============================================================
+const getPageUrl = (pageNum: number) => {
+  const params = new URLSearchParams(Astro.url.searchParams);
+  params.set('page', pageNum.toString());
+  return `/admin/gallery?${params.toString()}`;
+};
+
+const getFilterUrl = (key: string, value: string) => {
+  const params = new URLSearchParams(Astro.url.searchParams);
+  if (value && value !== 'all') {
+    params.set(key, value);
+  } else {
+    params.delete(key);
+  }
+  params.delete('page');
+  return `/admin/gallery?${params.toString()}`;
+};
+
+// ============================================================
+// PAGINATION NUMBERS (dihitung di frontmatter, bukan di template,
+// supaya operator perbandingan tidak bikin Astro compiler bingung
+// dengan syntax fragment)
+// ============================================================
+function buildPageNumbers(currentPage: number, total: number) {
+  const maxPages = Math.min(5, total);
+  const nums: number[] = [];
+
+  for (let i = 0; i < maxPages; i++) {
+    let pageNum;
+    if (total <= 5) {
+      pageNum = i + 1;
+    } else if (currentPage <= 3) {
+      pageNum = i + 1;
+    } else if (currentPage >= total - 2) {
+      pageNum = total - 4 + i;
+    } else {
+      pageNum = currentPage - 2 + i;
+    }
+    nums.push(pageNum);
+  }
+
+  return nums;
+}
+
+const pageNumbers = buildPageNumbers(page, totalPages);
 ---
 
 <AdminLayout title="Galeri - Admin Panel">
-  <div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-            <i class="bi bi-images text-blue-600 dark:text-blue-400 mr-2"></i>
-            Manajemen Galeri
-          </h1>
-          <p class="text-gray-500 dark:text-gray-400 mt-1">
-            Kelola foto dan video dokumentasi event Waru Turi Run
-          </p>
+  <div class="admin-container">
+    <!-- ==========================================================
+    HEADER
+    ========================================================== -->
+    <div class="admin-header">
+      <div class="header-left">
+        <h1 class="admin-title">
+          <i class="bi bi-images"></i>
+          Manajemen Galeri
+        </h1>
+        <p class="admin-subtitle">Kelola foto dokumentasi event Waru Turi Run</p>
+      </div>
+      <div class="header-actions">
+        <button onclick="window.openModal()" class="btn-primary">
+          <i class="bi bi-plus-lg"></i>
+          <span>Tambah Media</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==========================================================
+    STATISTICS CARDS
+    ========================================================== -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <p class="stat-label">Total Media</p>
+          <p class="stat-value">{totalMedia}</p>
         </div>
-        <div class="flex gap-3">
-          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
-            <i class="bi bi-grid-3x3-gap"></i>
-            Grid
-          </button>
-          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
-            <i class="bi bi-list"></i>
-            List
-          </button>
-          <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2" onclick="openModal()">
-            <i class="bi bi-plus-lg"></i>
-            Tambah Media
-          </button>
+        <div class="stat-icon blue">
+          <i class="bi bi-images"></i>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <p class="stat-label">Foto</p>
+          <p class="stat-value green">{totalPhotos}</p>
+        </div>
+        <div class="stat-icon green">
+          <i class="bi bi-camera"></i>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <p class="stat-label">Video</p>
+          <p class="stat-value purple">{totalVideos}</p>
+        </div>
+        <div class="stat-icon purple">
+          <i class="bi bi-play-circle"></i>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <p class="stat-label">Featured</p>
+          <p class="stat-value yellow">{totalFeatured}</p>
+        </div>
+        <div class="stat-icon yellow">
+          <i class="bi bi-star"></i>
         </div>
       </div>
     </div>
 
-    <!-- Filter & Search -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
-      <div class="flex flex-col md:flex-row gap-4">
-        <div class="flex-1 relative">
-          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+    <!-- ==========================================================
+    FILTER & SEARCH
+    ========================================================== -->
+    <div class="filter-section">
+      <form method="GET" class="filter-form" id="filterForm">
+        <div class="search-wrapper">
+          <i class="bi bi-search search-icon"></i>
           <input 
             type="text" 
-            placeholder="Cari foto atau video..." 
-            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            name="search" 
+            value={searchQuery}
+            placeholder="Cari judul atau deskripsi..." 
+            class="search-input"
             id="searchInput"
           />
         </div>
-        <div class="flex gap-3">
-          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-            <option value="">Semua Kategori</option>
-            <option value="race">Race</option>
-            <option value="ceremony">Upacara</option>
-            <option value="participants">Peserta</option>
-            <option value="sponsors">Sponsor</option>
-            <option value="fun">Fun Moment</option>
+        
+        <div class="filter-actions">
+          <select name="featured" class="filter-select" onchange="this.form.submit()">
+            <option value="all" selected={featuredFilter === 'all'}>Semua</option>
+            <option value="featured" selected={featuredFilter === 'featured'}>⭐ Featured</option>
+            <option value="non-featured" selected={featuredFilter === 'non-featured'}>Non-Featured</option>
           </select>
-          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-            <option value="all">Semua Media</option>
-            <option value="photo">Foto</option>
-            <option value="video">Video</option>
+          
+          <select name="sort" class="filter-select" onchange="this.form.submit()">
+            <option value="newest" selected={sortBy === 'newest'}>Terbaru</option>
+            <option value="oldest" selected={sortBy === 'oldest'}>Terlama</option>
+            <option value="title" selected={sortBy === 'title'}>A-Z</option>
           </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Total Media</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">1,847</p>
-          </div>
-          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-images text-2xl text-blue-600 dark:text-blue-400"></i>
-          </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-green-600 dark:text-green-400">↑ 8% dari bulan lalu</span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Foto</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">1,523</p>
-          </div>
-          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-camera text-2xl text-green-600 dark:text-green-400"></i>
-          </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">82% dari total</span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Video</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">324</p>
-          </div>
-          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-play-circle text-2xl text-purple-600 dark:text-purple-400"></i>
-          </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">18% dari total</span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Album</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">12</p>
-          </div>
-          <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-folder text-2xl text-yellow-600 dark:text-yellow-400"></i>
-          </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">2 album baru</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gallery Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="galleryGrid">
-      <!-- Gallery Item 1 -->
-      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div class="aspect-square overflow-hidden">
-          <img 
-            src="https://picsum.photos/seed/race1/400/400" 
-            alt="Race photo 1" 
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
-              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
-            </button>
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
-              <i class="bi bi-trash text-sm text-red-500"></i>
-            </button>
-          </div>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <div class="flex items-center justify-between text-white">
-              <div>
-                <p class="text-sm font-medium">Start Race 2027</p>
-                <p class="text-xs text-gray-300">Race • 10 Jul 2026</p>
-              </div>
-              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
-            </div>
-          </div>
-        </div>
-        <div class="absolute top-2 left-2">
-          <span class="px-2 py-0.5 bg-black/60 text-white text-[10px] font-medium rounded-full">Featured</span>
-        </div>
-      </div>
-
-      <!-- Gallery Item 2 (Video) -->
-      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div class="aspect-square overflow-hidden">
-          <img 
-            src="https://picsum.photos/seed/race2/400/400" 
-            alt="Race video 1" 
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition shadow-lg">
-              <i class="bi bi-play-fill text-3xl text-blue-600 ml-1"></i>
-            </div>
-          </div>
-          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
-              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
-            </button>
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
-              <i class="bi bi-trash text-sm text-red-500"></i>
-            </button>
-          </div>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <div class="flex items-center justify-between text-white">
-              <div>
-                <p class="text-sm font-medium">Opening Ceremony</p>
-                <p class="text-xs text-gray-300">Ceremony • 10 Jul 2026</p>
-              </div>
-              <span class="px-2 py-0.5 bg-purple-500/80 text-xs rounded-full">Video</span>
-            </div>
-          </div>
-        </div>
-        <div class="absolute top-2 left-2">
-          <span class="px-2 py-0.5 bg-red-500/80 text-white text-[10px] font-medium rounded-full">HD</span>
-        </div>
-      </div>
-
-      <!-- Gallery Item 3 -->
-      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div class="aspect-square overflow-hidden">
-          <img 
-            src="https://picsum.photos/seed/race3/400/400" 
-            alt="Race photo 2" 
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
-              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
-            </button>
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
-              <i class="bi bi-trash text-sm text-red-500"></i>
-            </button>
-          </div>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <div class="flex items-center justify-between text-white">
-              <div>
-                <p class="text-sm font-medium">Participants Running</p>
-                <p class="text-xs text-gray-300">Participants • 10 Jul 2026</p>
-              </div>
-              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Gallery Item 4 -->
-      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div class="aspect-square overflow-hidden">
-          <img 
-            src="https://picsum.photos/seed/race4/400/400" 
-            alt="Race photo 3" 
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
-              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
-            </button>
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
-              <i class="bi bi-trash text-sm text-red-500"></i>
-            </button>
-          </div>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <div class="flex items-center justify-between text-white">
-              <div>
-                <p class="text-sm font-medium">Sponsor Booth</p>
-                <p class="text-xs text-gray-300">Sponsors • 10 Jul 2026</p>
-              </div>
-              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Gallery Item 5 -->
-      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div class="aspect-square overflow-hidden">
-          <img 
-            src="https://picsum.photos/seed/race5/400/400" 
-            alt="Race photo 4" 
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
-              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
-            </button>
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
-              <i class="bi bi-trash text-sm text-red-500"></i>
-            </button>
-          </div>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <div class="flex items-center justify-between text-white">
-              <div>
-                <p class="text-sm font-medium">Finish Line</p>
-                <p class="text-xs text-gray-300">Race • 10 Jul 2026</p>
-              </div>
-              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Gallery Item 6 (Video) -->
-      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div class="aspect-square overflow-hidden">
-          <img 
-            src="https://picsum.photos/seed/race6/400/400" 
-            alt="Race video 2" 
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition shadow-lg">
-              <i class="bi bi-play-fill text-3xl text-blue-600 ml-1"></i>
-            </div>
-          </div>
-          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
-              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
-            </button>
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
-              <i class="bi bi-trash text-sm text-red-500"></i>
-            </button>
-          </div>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <div class="flex items-center justify-between text-white">
-              <div>
-                <p class="text-sm font-medium">Medal Ceremony</p>
-                <p class="text-xs text-gray-300">Ceremony • 10 Jul 2026</p>
-              </div>
-              <span class="px-2 py-0.5 bg-purple-500/80 text-xs rounded-full">Video</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Gallery Item 7 -->
-      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div class="aspect-square overflow-hidden">
-          <img 
-            src="https://picsum.photos/seed/race7/400/400" 
-            alt="Race photo 5" 
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Edit">
-              <i class="bi bi-pencil text-sm text-gray-700 dark:text-gray-300"></i>
-            </button>
-            <button class="p-1.5 bg-white/90 dark:bg-gray-800/90 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shadow-md" title="Hapus" onclick="deleteMedia(this)">
-              <i class="bi bi-trash text-sm text-red-500"></i>
-            </button>
-          </div>
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <div class="flex items-center justify-between text-white">
-              <div>
-                <p class="text-sm font-medium">Fun Moment</p>
-                <p class="text-xs text-gray-300">Fun • 10 Jul 2026</p>
-              </div>
-              <span class="px-2 py-0.5 bg-blue-500/80 text-xs rounded-full">Foto</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Gallery Item 8 -->
-      <div class="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-        <div class="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-          <button onclick="openModal()" class="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition">
-            <i class="bi bi-plus-circle text-4xl"></i>
-            <span class="text-sm font-medium">Tambah Media</span>
+          
+          <button type="submit" class="btn-filter">
+            <i class="bi bi-funnel"></i> Filter
           </button>
+          
+          <a href="/admin/gallery" class="btn-reset">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+          </a>
         </div>
+      </form>
+      
+      <div class="filter-info">
+        <span>Menampilkan <strong>{galleryData.length}</strong> dari <strong>{totalItems}</strong> media</span>
+        {searchQuery && <span class="filter-tag">🔍 {searchQuery}</span>}
+        {featuredFilter !== 'all' && <span class="filter-tag">⭐ {featuredFilter}</span>}
       </div>
     </div>
 
-    <!-- Load More -->
-    <div class="mt-8 text-center">
-      <button class="px-8 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition font-medium">
-        Load More
-        <i class="bi bi-arrow-down ml-2"></i>
-      </button>
+    <!-- ==========================================================
+    GALLERY GRID
+    ========================================================== -->
+    <div class="gallery-container">
+      <div class="gallery-grid" id="galleryGrid">
+        {galleryData.length === 0 ? (
+          <div class="empty-state">
+            <i class="bi bi-images empty-icon"></i>
+            <h3 class="empty-title">Belum Ada Media</h3>
+            <p class="empty-desc">Klik "Tambah Media" untuk mulai mengunggah foto.</p>
+            <button onclick="window.openModal()" class="btn-primary mt-4">
+              <i class="bi bi-plus-lg"></i> Tambah Media
+            </button>
+          </div>
+        ) : (
+          galleryData.map((item: any) => {
+            // Escape string untuk menghindari error
+            const safeTitle = (item.title || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            const safeDescription = (item.description || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            
+            return (
+              <div key={item.id} class="gallery-item group" data-id={item.id}>
+                <div class="gallery-item-inner">
+                  <div class="gallery-thumb">
+                    {item.imageUrl ? (
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.title || 'Gallery item'}
+                        class="gallery-image"
+                        loading="lazy"
+                        onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect width=%22300%22 height=%22300%22 fill=%22%23f3f4f6%22/%3E%3Ctext x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%239ca3af%22 font-size=%2220%22%3ENo Image%3C/text%3E%3C/svg%3E'"
+                      />
+                    ) : (
+                      <div class="gallery-placeholder">
+                        <i class="bi bi-image"></i>
+                      </div>
+                    )}
+                    
+                    {item.isFeatured && (
+                      <span class="badge-featured">
+                        <i class="bi bi-star-fill"></i>
+                        Featured
+                      </span>
+                    )}
+                    
+                    <div class="gallery-actions">
+                      <button 
+                        onclick={`window.editMedia(${JSON.stringify({
+                          id: item.id,
+                          imageUrl: item.imageUrl || '',
+                          title: safeTitle,
+                          description: safeDescription,
+                          isFeatured: item.isFeatured || false,
+                          createdAt: item.createdAt || ''
+                        })})`}
+                        class="action-btn edit" 
+                        title="Edit"
+                      >
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button 
+                        onclick={`window.toggleFeatured('${item.id}', ${item.isFeatured || false})`}
+                        class="action-btn featured" 
+                        title={item.isFeatured ? 'Unfeatured' : 'Featured'}
+                      >
+                        <i class="bi bi-star${item.isFeatured ? '-fill' : ''}"></i>
+                      </button>
+                      <button 
+                        onclick={`window.deleteMedia('${item.id}')`} 
+                        class="action-btn delete" 
+                        title="Hapus"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                    
+                    <div class="gallery-overlay">
+                      <div class="overlay-content">
+                        <h4 class="overlay-title">{item.title || 'Untitled'}</h4>
+                        <p class="overlay-desc">{item.description ? truncateText(item.description, 60) : ''}</p>
+                        <div class="overlay-meta">
+                          <span class="overlay-date">
+                            <i class="bi bi-calendar3"></i>
+                            {formatDate(item.createdAt)}
+                          </span>
+                          {item.isFeatured && (
+                            <span class="featured-badge">
+                              <i class="bi bi-star-fill"></i>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+        
+        <!-- Add More Button -->
+        <div class="gallery-item add-item" onclick="window.openModal()">
+          <div class="add-content">
+            <i class="bi bi-plus-circle"></i>
+            <span>Tambah Media</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ==========================================================
+      PAGINATION
+      ========================================================== -->
+      {totalPages > 1 && (
+        <div class="pagination">
+          <div class="pagination-info">
+            Halaman {page} dari {totalPages}
+          </div>
+          <div class="pagination-buttons">
+            {page > 1 && (
+              <a href={getPageUrl(page - 1)} class="pagination-btn">
+                <i class="bi bi-chevron-left"></i> Sebelumnya
+              </a>
+            )}
+            
+            <div class="pagination-numbers">
+              {pageNumbers.map((pageNum) => (
+                <a
+                  href={getPageUrl(pageNum)}
+                  class={`pagination-number ${pageNum === page ? 'active' : ''}`}
+                >
+                  {pageNum}
+                </a>
+              ))}
+            </div>
+            
+            {page < totalPages && (
+              <a href={getPageUrl(page + 1)} class="pagination-btn">
+                Selanjutnya <i class="bi bi-chevron-right"></i>
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   </div>
 
-  <!-- Modal Tambah Media -->
-  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0 invisible transition-all duration-300">
-    <div class="absolute inset-0 bg-black/50" onclick="closeModal()"></div>
-    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform scale-95 transition-all duration-300">
-      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          <i class="bi bi-cloud-upload text-blue-600 dark:text-blue-400 mr-2"></i>
+  <!-- ==========================================================
+  MODAL TAMBAH/EDIT
+  ========================================================== -->
+  <div id="modal" class="modal-overlay hidden">
+    <div class="modal-backdrop" onclick="window.closeModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">
+          <i class="bi bi-cloud-upload text-blue-600"></i>
           Tambah Media Baru
         </h3>
-        <button onclick="closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+        <button onclick="window.closeModal()" class="modal-close">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
       
-      <div class="p-6 space-y-4">
-        <!-- Upload Area -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Upload Media <span class="text-red-500">*</span>
-          </label>
-          <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-blue-500 dark:hover:border-blue-400 transition cursor-pointer" id="uploadArea">
-            <input type="file" accept="image/*,video/*" multiple class="hidden" id="fileInput" />
-            <i class="bi bi-cloud-upload text-4xl text-gray-400 dark:text-gray-500 mb-3 block"></i>
-            <p class="text-gray-600 dark:text-gray-300 font-medium">Klik atau drag & drop untuk upload</p>
-            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, GIF, MP4 (Max 10MB)</p>
+      <div class="modal-body">
+        <form id="galleryForm">
+          <input type="hidden" id="editId" value="" />
+
+          <div class="form-group">
+            <label class="form-label">URL Gambar <span class="required">*</span></label>
+            <input 
+              type="url" 
+              id="imageUrl" 
+              required
+              placeholder="https://example.com/image.jpg" 
+              class="form-input"
+            />
+            <p class="form-hint">Masukkan URL gambar (JPG, PNG, atau format lainnya)</p>
           </div>
-        </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Judul Media <span class="text-red-500">*</span>
-          </label>
-          <input 
-            type="text" 
-            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            placeholder="Masukkan judul media"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Deskripsi
-          </label>
-          <textarea 
-            rows="3" 
-            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
-            placeholder="Masukkan deskripsi media..."
-          ></textarea>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Kategori <span class="text-red-500">*</span>
-            </label>
-            <select class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-              <option value="">Pilih Kategori</option>
-              <option value="race">Race</option>
-              <option value="ceremony">Upacara</option>
-              <option value="participants">Peserta</option>
-              <option value="sponsors">Sponsor</option>
-              <option value="fun">Fun Moment</option>
-            </select>
+          <div class="form-group">
+            <label class="form-label">Judul <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="title" 
+              required
+              placeholder="Masukkan judul media" 
+              class="form-input"
+            />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Tipe Media <span class="text-red-500">*</span>
-            </label>
-            <select class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-              <option value="photo">Foto</option>
-              <option value="video">Video</option>
-            </select>
+
+          <div class="form-group">
+            <label class="form-label">Deskripsi</label>
+            <textarea 
+              id="description" 
+              rows="3" 
+              placeholder="Masukkan deskripsi media..."
+              class="form-input form-textarea"
+            ></textarea>
           </div>
-        </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Event <span class="text-red-500">*</span>
-          </label>
-          <select class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-            <option value="">Pilih Event</option>
-            <option value="waru-turi-2027">Waru Turi Run 2027</option>
-            <option value="waru-turi-2026">Waru Turi Run 2026</option>
-            <option value="waru-turi-2025">Waru Turi Run 2025</option>
-          </select>
-        </div>
+          <div class="form-check">
+            <input type="checkbox" id="isFeatured" />
+            <label for="isFeatured">Jadikan sebagai media featured (unggulan)</label>
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Tanggal Upload
-          </label>
-          <input 
-            type="date" 
-            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            value="2026-07-10"
-          />
-        </div>
-
-        <div>
-          <label class="flex items-center gap-3">
-            <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" />
-            <span class="text-sm text-gray-700 dark:text-gray-300">Jadikan sebagai media featured</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="sticky bottom-0 bg-white dark:bg-gray-800 px-6 py-4 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end gap-3">
-        <button onclick="closeModal()" class="px-6 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-          Batal
-        </button>
-        <button onclick="saveMedia()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-          <i class="bi bi-check-lg"></i>
-          Upload
-        </button>
+          <div class="modal-actions">
+            <button type="button" onclick="window.closeModal()" class="btn-cancel">
+              Batal
+            </button>
+            <button type="submit" class="btn-save">
+              <i class="bi bi-check-lg"></i>
+              Simpan
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
-    <i class="bi bi-check-circle-fill text-green-400"></i>
-    <span id="toast-message">Media berhasil diupload!</span>
-    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
+  <!-- ==========================================================
+  TOAST NOTIFICATION
+  ========================================================== -->
+  <div id="toast" class="toast hidden">
+    <div class="toast-content">
+      <i class="bi bi-check-circle-fill text-green-400"></i>
+      <span id="toast-message">Berhasil!</span>
+    </div>
+    <button onclick="window.hideToast()" class="toast-close">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>
 
+  <!-- ==========================================================
+  STYLES
+  ========================================================== -->
+  <style>
+    /* ===== CONTAINER ===== */
+    .admin-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ===== HEADER ===== */
+    .admin-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .header-left {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .admin-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .admin-title i {
+      color: #2563eb;
+      font-size: 1.4rem;
+    }
+
+    .admin-subtitle {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin: 2px 0 0 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      padding: 10px 18px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    /* ===== STATS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 14px 18px;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      border-color: #93b4f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      transform: translateY(-2px);
+    }
+
+    .stat-info {
+      flex: 1;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #6b7280;
+      margin: 0 0 2px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .stat-value.green { color: #16a34a; }
+    .stat-value.purple { color: #9333ea; }
+    .stat-value.yellow { color: #ca8a04; }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.green { background: #dcfce7; color: #16a34a; }
+    .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+    .stat-icon.yellow { background: #fef9c3; color: #ca8a04; }
+
+    /* ===== FILTER ===== */
+    .filter-section {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 14px 18px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 20px;
+    }
+
+    .filter-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      min-width: 180px;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: 0.9rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 36px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #f9fafb;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-select {
+      padding: 8px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #f9fafb;
+      font-size: 0.85rem;
+      min-width: 130px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    .btn-filter {
+      padding: 8px 14px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-filter:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-reset {
+      padding: 8px 14px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reset:hover {
+      background: #e5e7eb;
+    }
+
+    .filter-info {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #f3f4f6;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .filter-tag {
+      background: #f3f4f6;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+    }
+
+    /* ===== GALLERY GRID ===== */
+    .gallery-container {
+      background: #ffffff;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      padding: 18px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .gallery-item {
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      position: relative;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      border-color: #93b4f0;
+    }
+
+    .gallery-item-inner {
+      position: relative;
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+
+    .gallery-thumb {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #f3f4f6;
+    }
+
+    .gallery-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .gallery-item:hover .gallery-image {
+      transform: scale(1.05);
+    }
+
+    .gallery-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e5e7eb;
+      color: #9ca3af;
+      font-size: 3rem;
+    }
+
+    .badge-featured {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 2;
+    }
+
+    .badge-featured i {
+      font-size: 0.5rem;
+    }
+
+    .gallery-actions {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 2;
+    }
+
+    .gallery-item:hover .gallery-actions,
+    .gallery-item:focus-within .gallery-actions {
+      opacity: 1;
+    }
+
+    .action-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      font-size: 0.8rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn.edit { color: #ca8a04; }
+    .action-btn.delete { color: #dc2626; }
+    .action-btn.featured { color: #f59e0b; }
+
+    .action-btn.edit:hover { background: #fef9c3; }
+    .action-btn.delete:hover { background: #fee2e2; }
+    .action-btn.featured:hover { background: #fef3c7; }
+
+    .gallery-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 14px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+      transform: translateY(100%);
+      transition: transform 0.4s ease;
+      z-index: 1;
+    }
+
+    .gallery-item:hover .gallery-overlay {
+      transform: translateY(0);
+    }
+
+    .overlay-content {
+      color: #fff;
+    }
+
+    .overlay-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 0 0 2px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .overlay-desc {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0 0 6px 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .overlay-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .overlay-date {
+      font-size: 0.6rem;
+      color: rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .featured-badge {
+      color: #f59e0b;
+      font-size: 0.6rem;
+    }
+
+    .add-item {
+      border: 2px dashed #d1d5db;
+      background: #f9fafb;
+      cursor: pointer;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .add-item:hover {
+      border-color: #2563eb;
+      background: #eff6ff;
+      transform: translateY(-4px);
+    }
+
+    .add-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: #9ca3af;
+    }
+
+    .add-content i {
+      font-size: 2.5rem;
+    }
+
+    .add-content span {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .add-item:hover .add-content {
+      color: #2563eb;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: #6b7280;
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 12px;
+      color: #d1d5db;
+    }
+
+    .empty-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 4px 0;
+    }
+
+    .empty-desc {
+      font-size: 0.85rem;
+      margin: 0 0 16px 0;
+    }
+
+    .mt-4 {
+      margin-top: 16px;
+    }
+
+    /* ===== PAGINATION ===== */
+    .pagination {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .pagination-info {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .pagination-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pagination-btn {
+      padding: 6px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #374151;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+      background: #fff;
+    }
+
+    .pagination-btn:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+
+    .pagination-numbers {
+      display: flex;
+      gap: 4px;
+    }
+
+    .pagination-number {
+      padding: 6px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #374151;
+      font-size: 0.8rem;
+      transition: all 0.2s ease;
+      background: #fff;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    .pagination-number:hover {
+      background: #f3f4f6;
+    }
+
+    .pagination-number.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.hidden {
+      display: none !important;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: -1;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .modal-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      z-index: 10;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .modal-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .modal-close {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+      color: #6b7280;
+    }
+
+    .modal-close:hover {
+      background: #e5e7eb;
+    }
+
+    .modal-body {
+      padding: 22px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group:last-of-type {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 5px;
+    }
+
+    .required {
+      color: #dc2626;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      background: #f9fafb;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .form-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .form-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+
+    .form-check label {
+      font-size: 0.85rem;
+      color: #374151;
+      cursor: pointer;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      padding-top: 14px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 9px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #ffffff;
+      color: #374151;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+      background: #f9fafb;
+    }
+
+    .btn-save {
+      flex: 1;
+      padding: 9px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-save:hover {
+      background: #1d4ed8;
+    }
+
+    .w-full {
+      width: 100%;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1f2937;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      max-width: 380px;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .toast.hidden {
+      display: none !important;
+    }
+
+    .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      flex: 1;
+    }
+
+    .toast-close {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+
+    .toast-close:hover {
+      color: #ffffff;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* ==========================================================
+    RESPONSIVE
+    ========================================================== */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .admin-container { padding: 0 12px; }
+      .admin-header { flex-direction: column; align-items: stretch; gap: 10px; }
+      .admin-title { font-size: 1.2rem; }
+      .btn-primary { justify-content: center; width: 100%; }
+      .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stat-card { padding: 10px 14px; }
+      .stat-value { font-size: 1.3rem; }
+      .stat-icon { width: 34px; height: 34px; font-size: 1rem; }
+      .filter-section { padding: 12px 14px; }
+      .filter-form { flex-direction: column; align-items: stretch; gap: 8px; }
+      .search-wrapper { min-width: unset; }
+      .filter-actions { flex-wrap: wrap; }
+      .filter-select { flex: 1; min-width: 80px; font-size: 0.8rem; }
+      .btn-filter, .btn-reset { flex: 1; justify-content: center; font-size: 0.75rem; }
+      .gallery-container { padding: 12px; }
+      .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+      .modal-content { margin: 12px; max-width: 100%; }
+      .modal-header { padding: 14px 16px; }
+      .modal-body { padding: 16px; }
+      .modal-actions { flex-direction: column; gap: 8px; }
+      .toast { bottom: 12px; right: 12px; left: 12px; max-width: unset; }
+      .pagination { flex-direction: column; align-items: stretch; }
+      .pagination-buttons { justify-content: center; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; gap: 8px; }
+      .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+      .gallery-actions { opacity: 1; }
+      .action-btn { width: 26px; height: 26px; font-size: 0.7rem; }
+      .badge-featured { font-size: 0.5rem; padding: 2px 8px; }
+      .overlay-meta { display: none; }
+    }
+
+    /* ==========================================================
+    DARK MODE
+    ========================================================== */
+    @media (prefers-color-scheme: dark) {
+      .admin-title { color: #f9fafb; }
+      .admin-subtitle { color: #9ca3af; }
+      .stat-card, .filter-section, .gallery-container { background: #1f2937; border-color: #374151; }
+      .stat-label { color: #9ca3af; }
+      .stat-value { color: #f9fafb; }
+      .search-input, .filter-select, .form-input { background: #111827; border-color: #374151; color: #f3f4f6; }
+      .search-input:focus, .filter-select:focus { border-color: #60a5fa; }
+      .btn-reset { background: #374151; color: #d1d5db; border-color: #4b5563; }
+      .btn-reset:hover { background: #4b5563; }
+      .gallery-item { background: #1f2937; border-color: #374151; }
+      .gallery-item:hover { border-color: #60a5fa; }
+      .gallery-placeholder { background: #374151; color: #6b7280; }
+      .add-item { border-color: #4b5563; background: #1f2937; }
+      .add-item:hover { border-color: #60a5fa; background: #1e3a5f; }
+      .add-content { color: #6b7280; }
+      .add-item:hover .add-content { color: #60a5fa; }
+      .modal-content { background: #1f2937; }
+      .modal-header { background: #1f2937; border-color: #374151; }
+      .modal-title { color: #f9fafb; }
+      .modal-close { background: #111827; color: #9ca3af; }
+      .modal-close:hover { background: #374151; }
+      .form-label { color: #e5e7eb; }
+      .form-check label { color: #e5e7eb; }
+      .btn-cancel { background: #374151; color: #e5e7eb; border-color: #4b5563; }
+      .btn-cancel:hover { background: #4b5563; }
+      .modal-actions { border-color: #374151; }
+      .empty-icon { color: #4b5563; }
+      .empty-title { color: #e5e7eb; }
+      .empty-desc { color: #9ca3af; }
+      .toast { background: #111827; }
+      .toast-close { color: #6b7280; }
+      .toast-close:hover { color: #d1d5db; }
+      .filter-info { border-color: #374151; color: #9ca3af; }
+      .filter-tag { background: #374151; }
+      .pagination { border-color: #374151; }
+      .pagination-btn { background: #1f2937; border-color: #374151; color: #d1d5db; }
+      .pagination-btn:hover { background: #374151; }
+      .pagination-number { background: #1f2937; border-color: #374151; color: #d1d5db; }
+      .pagination-number:hover { background: #374151; }
+      .pagination-number.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+    }
+  </style>
+
+  <!-- ==========================================================
+  SCRIPTS
+  ========================================================== -->
   <script>
-    // Modal functions
-    const modal = document.getElementById('modal');
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toast-message');
-
-    function openModal() {
-      modal.classList.remove('opacity-0', 'invisible');
-      modal.querySelector('.relative').classList.remove('scale-95');
-      modal.querySelector('.relative').classList.add('scale-100');
-      document.body.style.overflow = 'hidden';
-    }
-
-    window.openModal = openModal;
-
-    function closeModal() {
-      modal.classList.add('opacity-0', 'invisible');
-      modal.querySelector('.relative').classList.remove('scale-100');
-      modal.querySelector('.relative').classList.add('scale-95');
-      document.body.style.overflow = '';
-    }
-
-    window.closeModal = closeModal;
-
-    // Close modal with Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
-    });
-
-    // Upload area
-    const uploadArea = document.getElementById('uploadArea');
-    const fileInput = document.getElementById('fileInput');
-
-    uploadArea?.addEventListener('click', () => {
-      fileInput?.click();
-    });
-
-    uploadArea?.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.classList.add('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
-    });
-
-    uploadArea?.addEventListener('dragleave', () => {
-      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
-    });
-
-    uploadArea?.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('border-blue-500', 'dark:border-blue-400', 'bg-blue-50', 'dark:bg-blue-900/10');
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        showToast(`${files.length} file berhasil diupload!`);
+    // ============================================================
+    // TOAST
+    // ============================================================
+    window.showToast = function(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      const icon = toast?.querySelector('.bi');
+      
+      if (!toast) return;
+      
+      if (type === 'success') {
+        icon.className = 'bi bi-check-circle-fill text-green-400';
+      } else {
+        icon.className = 'bi bi-exclamation-circle-fill text-red-400';
       }
-    });
-
-    fileInput?.addEventListener('change', (e) => {
-      const files = e.target.files;
-      if (files.length > 0) {
-        showToast(`${files.length} file berhasil diupload!`);
-      }
-    });
-
-    // Save media
-    function saveMedia() {
-      closeModal();
-      showToast('Media berhasil diupload!');
-    }
-
-    window.saveMedia = saveMedia;
-
-    // Delete media
-    function deleteMedia(btn) {
-      if (confirm('Yakin ingin menghapus media ini?')) {
-        const galleryItem = btn.closest('.group');
-        if (galleryItem) {
-          galleryItem.style.transform = 'scale(0.8)';
-          galleryItem.style.opacity = '0';
-          setTimeout(() => {
-            galleryItem.remove();
-            showToast('Media berhasil dihapus!');
-          }, 300);
-        }
-      }
-    }
-
-    window.deleteMedia = deleteMedia;
-
-    // Toast notification
-    function showToast(message) {
+      
       toastMessage.textContent = message;
-      toast.classList.remove('translate-y-full', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
+      toast.classList.remove('hidden');
       
-      setTimeout(hideToast, 3000);
-    }
+      setTimeout(() => window.hideToast(), 3000);
+    };
 
-    window.showToast = showToast;
+    window.hideToast = function() {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.classList.add('hidden');
+    };
 
-    function hideToast() {
-      toast.classList.remove('translate-y-0', 'opacity-100');
-      toast.classList.add('translate-y-full', 'opacity-0');
-    }
-
-    window.hideToast = hideToast;
-
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    searchInput?.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const items = document.querySelectorAll('#galleryGrid .group');
+    // ============================================================
+    // MODAL TAMBAH/EDIT
+    // ============================================================
+    window.openModal = function(data = null) {
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modalTitle');
+      const form = document.getElementById('galleryForm');
       
-      items.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        if (text.includes(query) && !item.querySelector('.bg-gray-100')) {
-          item.style.display = '';
-        } else if (!item.querySelector('.bg-gray-100')) {
-          item.style.display = 'none';
-        }
-      });
-    });
+      if (!modal) return;
+      
+      if (data) {
+        title.innerHTML = '<i class="bi bi-pencil text-yellow-600"></i> Edit Media';
+        document.getElementById('editId').value = data.id || '';
+        document.getElementById('imageUrl').value = data.imageUrl || '';
+        document.getElementById('title').value = data.title || '';
+        document.getElementById('description').value = data.description || '';
+        document.getElementById('isFeatured').checked = data.isFeatured || false;
+      } else {
+        title.innerHTML = '<i class="bi bi-cloud-upload text-blue-600"></i> Tambah Media Baru';
+        form.reset();
+        document.getElementById('editId').value = '';
+        document.getElementById('isFeatured').checked = false;
+      }
+      
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    };
 
-    // Grid/List toggle
-    document.querySelectorAll('.bg-gray-100:not(.dark\\:bg-gray-700) button').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const grid = document.getElementById('galleryGrid');
-        const icon = this.querySelector('i');
-        
-        if (icon.classList.contains('bi-grid-3x3-gap')) {
-          grid.classList.remove('grid-cols-1', 'md:grid-cols-2');
-          grid.classList.add('grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4');
+    window.closeModal = function() {
+      const modal = document.getElementById('modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    };
+
+    // ============================================================
+    // SAVE MEDIA
+    // ============================================================
+    document.getElementById('galleryForm')?.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('editId').value;
+      const imageUrl = document.getElementById('imageUrl').value;
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+      const isFeatured = document.getElementById('isFeatured').checked;
+
+      if (!imageUrl || !title) {
+        window.showToast('Mohon isi URL gambar dan judul', 'error');
+        return;
+      }
+
+      const data = { 
+        imageUrl, 
+        title, 
+        description, 
+        featured: isFeatured // API pake 'featured' bukan 'isFeatured'
+      };
+      
+      const method = id ? 'PUT' : 'POST';
+      if (id) data.id = parseInt(id);
+
+      try {
+        const response = await fetch('/api/admin/gallery', {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        console.log('📥 Response:', result);
+
+        if (result.success) {
+          window.showToast(result.message || 'Berhasil!');
+          setTimeout(() => location.reload(), 800);
+          window.closeModal();
         } else {
-          grid.classList.remove('grid-cols-2', 'md:grid-cols-3', 'lg:grid-cols-4');
-          grid.classList.add('grid-cols-1', 'md:grid-cols-2');
+          window.showToast(result.error || 'Gagal menyimpan', 'error');
         }
-      });
+      } catch (error) {
+        console.error('❌ Error:', error);
+        window.showToast('Terjadi kesalahan: ' + error.message, 'error');
+      }
     });
 
-    console.log('✅ Galeri Admin Panel loaded');
+    // ============================================================
+    // EDIT MEDIA
+    // ============================================================
+    window.editMedia = function(data) {
+      console.log('📝 Edit data:', data);
+      window.openModal(data);
+    };
+
+    // ============================================================
+    // DELETE MEDIA
+    // ============================================================
+    window.deleteMedia = async function(id) {
+      if (!confirm('Yakin ingin menghapus media ini?')) return;
+
+      try {
+        const response = await fetch(`/api/admin/gallery?id=${id}`, {
+          method: 'DELETE'
+        });
+
+        const result = await response.json();
+        console.log('🗑️ Delete response:', result);
+
+        if (result.success) {
+          window.showToast('Media berhasil dihapus!');
+          // Animasi hapus item
+          const item = document.querySelector(`.gallery-item[data-id="${id}"]`);
+          if (item) {
+            item.style.transition = 'all 0.3s ease';
+            item.style.transform = 'scale(0)';
+            item.style.opacity = '0';
+            setTimeout(() => {
+              item.remove();
+              // Update stats
+              updateStats();
+            }, 300);
+          } else {
+            setTimeout(() => location.reload(), 800);
+          }
+        } else {
+          window.showToast(result.error || 'Gagal menghapus', 'error');
+        }
+      } catch (error) {
+        console.error('❌ Error:', error);
+        window.showToast('Terjadi kesalahan: ' + error.message, 'error');
+      }
+    };
+
+    // ============================================================
+    // TOGGLE FEATURED
+    // ============================================================
+    window.toggleFeatured = async function(id, currentStatus) {
+      if (!confirm(`Yakin ingin ${currentStatus ? 'unfeatured' : 'featured'} media ini?`)) return;
+
+      try {
+        const response = await fetch('/api/admin/gallery', {
+          method: 'PUT', // API pake PUT untuk update
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            id: parseInt(id), 
+            featured: !currentStatus // API pake 'featured'
+          })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          window.showToast(`Media ${!currentStatus ? 'di-featured' : 'unfeatured'}!`);
+          setTimeout(() => location.reload(), 800);
+        } else {
+          window.showToast(result.error || 'Gagal mengubah status', 'error');
+        }
+      } catch (error) {
+        console.error('❌ Error:', error);
+        window.showToast('Terjadi kesalahan', 'error');
+      }
+    };
+
+    // ============================================================
+    // UPDATE STATS
+    // ============================================================
+    function updateStats() {
+      const items = document.querySelectorAll('.gallery-item:not(.add-item)');
+      const total = items.length;
+      const stats = document.querySelectorAll('.stat-value');
+      if (stats.length > 0) {
+        stats[0].textContent = total;
+      }
+    }
+
+    // ============================================================
+    // KEYBOARD SHORTCUTS
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('📸 Admin Gallery loaded');
+      
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          window.closeModal();
+        }
+      });
+
+      // Close modal when clicking backdrop
+      document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.addEventListener('click', function() {
+          window.closeModal();
+        });
+      });
+
+      // Search with Enter key
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            document.getElementById('filterForm')?.submit();
+          }
+        });
+      }
+    });
   </script>
 </AdminLayout>

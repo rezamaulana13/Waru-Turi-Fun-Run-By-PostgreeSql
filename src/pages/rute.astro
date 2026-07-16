@@ -20,6 +20,7 @@ const routeData = [
     difficulty: 'Mudah',
     terrain: 'Aspal & Jalan Kampung',
     image: '/images/Rute Fun Run Waru Turi - 5K.jpg',
+    price: 'Rp 99.000',
   },
   {
     id: '10k',
@@ -35,6 +36,7 @@ const routeData = [
     difficulty: 'Sedang',
     terrain: 'Aspal & Jalan Kampung',
     image: '/images/Rute Fun Run Waru Turi - 10K.jpg',
+    price: 'Rp 150.000',
   },
 ];
 
@@ -127,9 +129,9 @@ const facilities = [
                     <p class="font-bold text-gray-900 text-sm">{route.terrain}</p>
                   </div>
                   <div class="bg-[#F7F8FC] rounded-xl p-3 text-center border border-gray-100">
-                    <i class="bi bi-graph-up text-[#2679ec] text-lg block mb-1"></i>
-                    <p class="text-xs text-gray-500">Elevation</p>
-                    <p class="font-bold text-gray-900 text-sm">{route.elevation}</p>
+                    <i class="bi bi-tag text-[#2679ec] text-lg block mb-1"></i>
+                    <p class="text-xs text-gray-500">Harga</p>
+                    <p class="font-bold text-gray-900 text-sm">{route.price}</p>
                   </div>
                 </div>
 
@@ -139,8 +141,9 @@ const facilities = [
                   <p class="text-sm font-medium text-gray-800">{route.route}</p>
                 </div>
 
-                <a href="/p/ticket-sold.html" class={`inline-flex items-center justify-center w-full gap-2 bg-gradient-to-r ${route.bgColor} hover:opacity-90 text-white font-bold px-6 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1`}>
-                  <i class="bi bi-ticket-perforated"></i> Daftar {route.name}
+                <!-- Tombol Daftar dengan Redirect ke daftar.astro + parameter -->
+                <a href={`/daftar?kategori=${route.id}`} class={`inline-flex items-center justify-center w-full gap-2 bg-gradient-to-r ${route.bgColor} hover:opacity-90 text-white font-bold px-6 py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1`}>
+                  <i class="bi bi-ticket-perforated"></i> Daftar {route.name} - {route.price}
                 </a>
               </div>
             </div>
@@ -227,7 +230,7 @@ const facilities = [
         <p class="text-white/80 text-base mb-8 leading-relaxed">
           Daftar sekarang dan rasakan sensasi berlari di rute eksklusif Waru Turi Fun Run 2026.
         </p>
-        <a href="/p/ticket-sold.html" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
+        <a href="/daftar" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
           <i class="bi bi-ticket-perforated text-lg"></i> Daftar Sekarang
         </a>
         <p class="text-white/40 text-xs mt-4">
@@ -262,7 +265,7 @@ const facilities = [
     width: 100%;
     min-height: 420px;
     background: linear-gradient(135deg, rgba(11, 124, 255, 0.85), rgba(0, 182, 219, 0.85)),
-      url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-XxTiJ/s1280/header.jpg') center/cover no-repeat fixed;
+      url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-xXTiJ/s1280/header.jpg') center/cover no-repeat fixed;
     display: flex;
     align-items: center;
     justify-content: center;

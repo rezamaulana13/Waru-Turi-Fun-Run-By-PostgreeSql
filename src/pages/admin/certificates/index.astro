@@ -95,98 +95,86 @@ const totalParticipants = participantsList.length;
 ---
 
 <AdminLayout title="Manajemen Sertifikat - Admin Panel">
-  <div class="max-w-7xl mx-auto">
+  <div class="admin-container">
     <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+    <div class="admin-header">
       <div>
-        <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-          <i class="bi bi-file-earmark-text text-blue-600 dark:text-blue-400 mr-2"></i>
+        <h1 class="admin-title">
+          <i class="bi bi-file-earmark-text text-blue-600 dark:text-blue-400"></i>
           Manajemen Sertifikat
         </h1>
-        <p class="text-gray-500 dark:text-gray-400 mt-1">
-          Kelola sertifikat peserta Waru Turi Fun Run
-        </p>
+        <p class="admin-subtitle">Kelola sertifikat peserta Waru Turi Fun Run</p>
       </div>
-      <div class="flex gap-3">
-        <button onclick="window.openModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 shadow-sm hover:shadow-md">
-          <i class="bi bi-plus-lg"></i>
-          Tambah Sertifikat
-        </button>
-      </div>
+      <button onclick="window.openModal()" class="btn-primary">
+        <i class="bi bi-plus-lg"></i>
+        Tambah Sertifikat
+      </button>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Total Sertifikat</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">{totalCertificates}</p>
-          </div>
-          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-file-earmark-text text-2xl text-blue-600 dark:text-blue-400"></i>
-          </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-info">
+          <p class="stat-label">Total Sertifikat</p>
+          <p class="stat-value">{totalCertificates}</p>
+        </div>
+        <div class="stat-icon blue">
+          <i class="bi bi-file-earmark-text"></i>
         </div>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Diterbitkan</p>
-            <p class="text-2xl font-bold text-green-600 dark:text-green-400">{totalIssued}</p>
-          </div>
-          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-check-circle text-2xl text-green-600 dark:text-green-400"></i>
-          </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <p class="stat-label">Diterbitkan</p>
+          <p class="stat-value green">{totalIssued}</p>
+        </div>
+        <div class="stat-icon green">
+          <i class="bi bi-check-circle"></i>
         </div>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Draft</p>
-            <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{totalDraft}</p>
-          </div>
-          <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-pencil text-2xl text-yellow-600 dark:text-yellow-400"></i>
-          </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <p class="stat-label">Draft</p>
+          <p class="stat-value yellow">{totalDraft}</p>
+        </div>
+        <div class="stat-icon yellow">
+          <i class="bi bi-pencil"></i>
         </div>
       </div>
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Total Peserta</p>
-            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalParticipants}</p>
-          </div>
-          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-people text-2xl text-purple-600 dark:text-purple-400"></i>
-          </div>
+      <div class="stat-card">
+        <div class="stat-info">
+          <p class="stat-label">Total Peserta</p>
+          <p class="stat-value purple">{totalParticipants}</p>
+        </div>
+        <div class="stat-icon purple">
+          <i class="bi bi-people"></i>
         </div>
       </div>
     </div>
 
     <!-- Filter & Search -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
-      <form method="GET" class="flex flex-col sm:flex-row gap-4">
-        <div class="flex-1 relative">
-          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+    <div class="filter-section">
+      <form method="GET" class="filter-form">
+        <div class="search-wrapper">
+          <i class="bi bi-search search-icon"></i>
           <input 
             type="text" 
             name="search" 
             value={searchQuery}
             placeholder="Cari nama, email, atau nomor sertifikat..." 
-            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            class="search-input"
           />
         </div>
-        <div class="flex gap-3 flex-wrap">
-          <select name="status" class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+        <div class="filter-actions">
+          <select name="status" class="filter-select">
             <option value="">Semua Status</option>
             {statusOptions.map(s => (
               <option value={s} selected={statusFilter === s}>{statusMap[s]?.label || s}</option>
             ))}
           </select>
-          <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+          <button type="submit" class="btn-filter">
             <i class="bi bi-funnel"></i> Filter
           </button>
-          <a href="/admin/certificates" class="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
+          <a href="/admin/certificates" class="btn-reset">
             <i class="bi bi-arrow-counterclockwise"></i> Reset
           </a>
         </div>
@@ -194,28 +182,28 @@ const totalParticipants = participantsList.length;
     </div>
 
     <!-- Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full">
+    <div class="table-container">
+      <div class="table-scroll">
+        <table class="admin-table">
           <thead>
-            <tr class="border-b border-gray-200/50 dark:border-gray-700/50">
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">#</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nomor Sertifikat</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Peserta</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Template</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal</th>
-              <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Aksi</th>
+            <tr>
+              <th class="col-id">#</th>
+              <th class="col-cert">Nomor</th>
+              <th class="col-participant">Peserta</th>
+              <th class="col-category">Kategori</th>
+              <th class="col-template hidden-sm">Template</th>
+              <th class="col-status">Status</th>
+              <th class="col-date hidden-md">Tanggal</th>
+              <th class="col-actions">Aksi</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200/50 dark:divide-gray-700/50" id="tableBody">
+          <tbody>
             {certificatesData.length === 0 ? (
               <tr>
-                <td colspan="8" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
-                  <i class="bi bi-inbox text-4xl block mb-3"></i>
-                  <p class="text-lg font-medium">Belum ada sertifikat</p>
-                  <p class="text-sm">Klik "Tambah Sertifikat" untuk membuat sertifikat baru.</p>
+                <td colspan="8" class="empty-state">
+                  <i class="bi bi-inbox empty-icon"></i>
+                  <p class="empty-title">Belum ada sertifikat</p>
+                  <p class="empty-desc">Klik "Tambah Sertifikat" untuk membuat sertifikat baru.</p>
                 </td>
               </tr>
             ) : (
@@ -229,86 +217,59 @@ const totalParticipants = participantsList.length;
                 return (
                   <tr 
                     key={cert.id} 
-                    class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition" 
+                    class="table-row"
                     data-id={cert.id}
                     data-participantid={cert.participantId}
                     data-template={cert.template}
                     data-status={cert.status}
                     data-fileurl={cert.fileUrl || ''}
                   >
-                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{index + 1}</td>
-                    <td class="px-4 py-3">
-                      <code class="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-800 dark:text-gray-200">
-                        {cert.certificateNumber || '-'}
-                      </code>
+                    <td class="col-id">{index + 1}</td>
+                    <td class="col-cert">
+                      <code class="cert-code">{cert.certificateNumber || '-'}</code>
                     </td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center gap-3">
-                        <div class={`w-8 h-8 rounded-full ${colors[colorIndex]} text-white flex items-center justify-center text-xs font-semibold flex-shrink-0`}>
+                    <td class="col-participant">
+                      <div class="participant-cell">
+                        <div class={`avatar ${colors[colorIndex]}`}>
                           {initial}
                         </div>
                         <div>
-                          <p class="text-sm font-medium text-gray-900 dark:text-white">{cert.fullName || 'Data peserta tidak ditemukan'}</p>
-                          <p class="text-xs text-gray-500 dark:text-gray-400">{cert.email || '-'}</p>
+                          <p class="participant-name">{cert.fullName || 'Data tidak ditemukan'}</p>
+                          <p class="participant-email">{cert.email || '-'}</p>
                         </div>
                       </div>
                     </td>
-                    <td class="px-4 py-3">
-                      <span class={`px-2 py-1 text-xs font-medium rounded-full ${
-                        cert.category === '5K' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                        cert.category === '10K' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                        cert.category === 'Pelajar' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                        'bg-gray-100 text-gray-700 dark:bg-gray-700/30 dark:text-gray-400'
-                      }`}>
+                    <td class="col-category">
+                      <span class={`category-badge ${cert.category === '5K' ? 'category-5k' : cert.category === '10K' ? 'category-10k' : cert.category === 'Pelajar' ? 'category-pelajar' : 'category-default'}`}>
                         {cert.category || '-'}
                       </span>
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                      <span class="capitalize bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">
-                        {cert.template || 'default'}
-                      </span>
+                    <td class="col-template hidden-sm">
+                      <span class="template-badge">{cert.template || 'default'}</span>
                     </td>
-                    <td class="px-4 py-3">
-                      <span class={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full ${status.color}`}>
-                        <i class={`bi ${status.icon} text-[10px]`}></i>
+                    <td class="col-status">
+                      <span class={`status-badge ${status.color}`}>
+                        <i class={`bi ${status.icon}`}></i>
                         {status.label}
                       </span>
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                    <td class="col-date hidden-md">
                       {formatDate(cert.createdAt)}
                     </td>
-                    <td class="px-4 py-3 text-center">
-                      <div class="flex items-center justify-center gap-1">
+                    <td class="col-actions">
+                      <div class="action-buttons">
                         {hasFileUrl && (
-                          <a 
-                            href={cert.fileUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            class="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                            title="Lihat Sertifikat"
-                          >
+                          <a href={cert.fileUrl} target="_blank" rel="noopener noreferrer" class="action-btn view" title="Lihat Sertifikat">
                             <i class="bi bi-eye"></i>
                           </a>
                         )}
-                        <button 
-                          onclick="window.editCertificateFromRow(this.closest('tr'))"
-                          class="p-1.5 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 rounded-lg transition"
-                          title="Edit"
-                        >
+                        <button onclick="window.editCertificateFromRow(this.closest('tr'))" class="action-btn edit" title="Edit">
                           <i class="bi bi-pencil"></i>
                         </button>
-                        <a 
-                          href={`/sertifikat-desain?id=${cert.id}`}
-                          class="p-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition"
-                          title="Desain Sertifikat"
-                        >
+                        <a href={`/sertifikat-desain?id=${cert.id}`} class="action-btn design" title="Desain Sertifikat">
                           <i class="bi bi-palette"></i>
                         </a>
-                        <button 
-                          onclick="window.deleteCertificate('${cert.id}')" 
-                          class="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
-                          title="Hapus"
-                        >
+                        <button onclick="window.deleteCertificate('${cert.id}')" class="action-btn delete" title="Hapus">
                           <i class="bi bi-trash"></i>
                         </button>
                       </div>
@@ -321,16 +282,14 @@ const totalParticipants = participantsList.length;
         </table>
       </div>
 
-      <div class="px-4 py-3 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between flex-wrap gap-3">
-        <p class="text-sm text-gray-500 dark:text-gray-400">
+      <div class="table-footer">
+        <p class="footer-info">
           Menampilkan <span class="font-medium">{certificatesData.length}</span> data
         </p>
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">
-            Total {totalCertificates} sertifikat
-          </span>
+        <div class="footer-stats">
+          <span>Total {totalCertificates} sertifikat</span>
           {totalParticipants > totalCertificates && (
-            <span class="text-xs text-orange-500">
+            <span class="warning-text">
               <i class="bi bi-exclamation-triangle"></i> {totalParticipants - totalCertificates} peserta belum punya sertifikat
             </span>
           )}
@@ -340,28 +299,28 @@ const totalParticipants = participantsList.length;
   </div>
 
   <!-- ===== MODAL ===== -->
-  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center px-4 hidden">
-    <div class="absolute inset-0 bg-black/50" onclick="window.closeModal()"></div>
-    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white" id="modalTitle">
-          <i class="bi bi-plus-circle text-blue-600 dark:text-blue-400 mr-2"></i>
+  <div id="modal" class="modal-overlay hidden">
+    <div class="modal-backdrop" onclick="window.closeModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">
+          <i class="bi bi-plus-circle text-blue-600 dark:text-blue-400"></i>
           Tambah Sertifikat
         </h3>
-        <button onclick="window.closeModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
+        <button onclick="window.closeModal()" class="modal-close">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
       
-      <div class="p-6 space-y-4">
+      <div class="modal-body">
         <form id="certForm">
           <input type="hidden" id="editId" value="" />
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Peserta <span class="text-red-500">*</span>
+          <div class="form-group">
+            <label class="form-label">
+              Peserta <span class="required">*</span>
             </label>
-            <select id="participantId" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" required>
+            <select id="participantId" class="form-select" required>
               <option value="">Pilih Peserta</option>
               {participantsList.map((p: any) => (
                 <option key={p.id} value={p.id}>{p.fullName} - {p.category} (BIB: #{p.bibNumber})</option>
@@ -369,11 +328,9 @@ const totalParticipants = participantsList.length;
             </select>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Template
-            </label>
-            <select id="template" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+          <div class="form-group">
+            <label class="form-label">Template</label>
+            <select id="template" class="form-select">
               <option value="default">Default</option>
               <option value="premium">Premium</option>
               <option value="simple">Simple</option>
@@ -381,30 +338,26 @@ const totalParticipants = participantsList.length;
             </select>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Status
-            </label>
-            <select id="certStatus" class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="certStatus" class="form-select">
               {statusOptions.map(s => (
                 <option key={s} value={s}>{statusMap[s]?.label || s}</option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              File URL (link sertifikat)
-            </label>
-            <input type="url" id="fileUrl" placeholder="https://drive.google.com/file/..." class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
-            <p class="text-xs text-gray-400 mt-1">Masukkan link Google Drive atau URL sertifikat</p>
+          <div class="form-group">
+            <label class="form-label">File URL (link sertifikat)</label>
+            <input type="url" id="fileUrl" placeholder="https://drive.google.com/file/..." class="form-input" />
+            <p class="form-hint">Masukkan link Google Drive atau URL sertifikat</p>
           </div>
 
-          <div class="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button type="button" onclick="window.closeModal()" class="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+          <div class="modal-actions">
+            <button type="button" onclick="window.closeModal()" class="btn-cancel">
               Batal
             </button>
-            <button type="button" onclick="window.saveCertificate(event)" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+            <button type="button" onclick="window.saveCertificate(event)" class="btn-save">
               <i class="bi bi-check-lg"></i>
               Simpan
             </button>
@@ -415,13 +368,1064 @@ const totalParticipants = participantsList.length;
   </div>
 
   <!-- Toast -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
-    <i class="bi bi-check-circle-fill text-green-400"></i>
-    <span id="toast-message">Berhasil!</span>
-    <button onclick="window.hideToast()" class="text-gray-400 hover:text-white transition">
+  <div id="toast" class="toast hidden">
+    <div class="toast-content">
+      <i class="bi bi-check-circle-fill text-green-400"></i>
+      <span id="toast-message">Berhasil!</span>
+    </div>
+    <button onclick="window.hideToast()" class="toast-close">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>
+
+  <style>
+    /* ===== CONTAINER ===== */
+    .admin-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* ===== HEADER ===== */
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .admin-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .admin-title i {
+      font-size: 1.6rem;
+    }
+
+    .admin-subtitle {
+      color: #6b7280;
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+
+    .btn-primary {
+      padding: 10px 20px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    /* ===== STATS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px 20px;
+      border: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      border-color: #93b4f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .stat-info {
+      flex: 1;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .stat-value.green { color: #16a34a; }
+    .stat-value.yellow { color: #ca8a04; }
+    .stat-value.purple { color: #9333ea; }
+
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+    .stat-icon.green { background: #dcfce7; color: #16a34a; }
+    .stat-icon.yellow { background: #fef9c3; color: #ca8a04; }
+    .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+
+    /* ===== FILTER ===== */
+    .filter-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px 20px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 24px;
+    }
+
+    .filter-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 12px 9px 38px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #f9fafb;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .filter-select {
+      padding: 9px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #f9fafb;
+      font-size: 0.9rem;
+      min-width: 140px;
+      cursor: pointer;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    .btn-filter {
+      padding: 9px 16px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-filter:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-reset {
+      padding: 9px 16px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reset:hover {
+      background: #e5e7eb;
+    }
+
+    /* ===== TABLE ===== */
+    .table-container {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+    }
+
+    .admin-table thead {
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .admin-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+
+    .admin-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.85rem;
+      vertical-align: middle;
+    }
+
+    .table-row:hover {
+      background: #f9fafb;
+    }
+
+    .col-id { width: 40px; }
+    .col-cert { min-width: 100px; }
+    .col-participant { min-width: 180px; }
+    .col-category { min-width: 80px; }
+    .col-template { min-width: 80px; }
+    .col-status { min-width: 90px; }
+    .col-date { min-width: 130px; }
+    .col-actions { min-width: 130px; text-align: center; }
+
+    /* Table cells */
+    .cert-code {
+      font-size: 0.7rem;
+      font-family: monospace;
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: #1f2937;
+      white-space: nowrap;
+    }
+
+    .participant-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .participant-name {
+      font-weight: 500;
+      color: #111827;
+      font-size: 0.85rem;
+    }
+
+    .participant-email {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .category-badge {
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .category-5k { background: #dbeafe; color: #1d4ed8; }
+    .category-10k { background: #dcfce7; color: #15803d; }
+    .category-pelajar { background: #fef9c3; color: #a16207; }
+    .category-default { background: #f3f4f6; color: #374151; }
+
+    .template-badge {
+      background: #f3f4f6;
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      text-transform: capitalize;
+      color: #374151;
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-badge i {
+      font-size: 0.6rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .action-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: transparent;
+      font-size: 0.9rem;
+    }
+
+    .action-btn.view { color: #2563eb; }
+    .action-btn.edit { color: #ca8a04; }
+    .action-btn.design { color: #9333ea; }
+    .action-btn.delete { color: #dc2626; }
+
+    .action-btn.view:hover { background: #dbeafe; }
+    .action-btn.edit:hover { background: #fef9c3; }
+    .action-btn.design:hover { background: #f3e8ff; }
+    .action-btn.delete:hover { background: #fee2e2; }
+
+    /* Empty state */
+    .empty-state {
+      padding: 48px 16px !important;
+      text-align: center !important;
+      color: #6b7280;
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 12px;
+      color: #d1d5db;
+    }
+
+    .empty-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+
+    .empty-desc {
+      font-size: 0.85rem;
+    }
+
+    /* Table footer */
+    .table-footer {
+      padding: 12px 20px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .footer-info {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .footer-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .warning-text {
+      color: #ea580c;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.hidden {
+      display: none !important;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: -1;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 20px;
+      max-width: 560px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1.1rem;
+      color: #6b7280;
+    }
+
+    .modal-close:hover {
+      background: #e5e7eb;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group:last-of-type {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .required {
+      color: #dc2626;
+    }
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      background: #f9fafb;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: #2563eb;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-select {
+      appearance: auto;
+      cursor: pointer;
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+      color: #374151;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-cancel:hover {
+      background: #f9fafb;
+    }
+
+    .btn-save {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-save:hover {
+      background: #1d4ed8;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1f2937;
+      color: #fff;
+      padding: 14px 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      max-width: 400px;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    .toast.hidden {
+      display: none !important;
+    }
+
+    .toast-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .toast-close {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 2px;
+    }
+
+    .toast-close:hover {
+      color: #fff;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .admin-container {
+        padding: 0 12px;
+      }
+
+      .admin-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .admin-title {
+        font-size: 1.2rem;
+      }
+
+      .btn-primary {
+        justify-content: center;
+        padding: 10px 16px;
+        font-size: 0.85rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 12px 14px;
+      }
+
+      .stat-value {
+        font-size: 1.3rem;
+      }
+
+      .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+
+      .filter-section {
+        padding: 12px 14px;
+      }
+
+      .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-wrapper {
+        min-width: unset;
+      }
+
+      .filter-actions {
+        flex-wrap: wrap;
+      }
+
+      .filter-select {
+        flex: 1;
+        min-width: 100px;
+      }
+
+      .btn-filter,
+      .btn-reset {
+        flex: 1;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+      }
+
+      /* Hide columns on mobile */
+      .hidden-sm { display: none; }
+      .hidden-md { display: none; }
+
+      .admin-table {
+        min-width: 500px;
+        font-size: 0.8rem;
+      }
+
+      .admin-table th,
+      .admin-table td {
+        padding: 8px 12px;
+        font-size: 0.8rem;
+      }
+
+      .col-id { width: 30px; }
+      .col-cert { min-width: 80px; }
+      .col-participant { min-width: 150px; }
+      .col-category { min-width: 60px; }
+      .col-status { min-width: 70px; }
+      .col-actions { min-width: 100px; }
+
+      .participant-email {
+        display: none;
+      }
+
+      .action-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.8rem;
+      }
+
+      .table-footer {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 10px 14px;
+        font-size: 0.8rem;
+      }
+
+      .footer-stats {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .modal-content {
+        margin: 16px;
+        max-width: 100%;
+      }
+
+      .modal-header {
+        padding: 16px 18px;
+      }
+
+      .modal-body {
+        padding: 18px;
+      }
+
+      .modal-actions {
+        flex-direction: column;
+      }
+
+      .toast {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        max-width: unset;
+        padding: 12px 16px;
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .stat-card {
+        padding: 10px 14px;
+      }
+
+      .admin-table {
+        min-width: 400px;
+        font-size: 0.75rem;
+      }
+
+      .admin-table th,
+      .admin-table td {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+      }
+
+      .col-participant { min-width: 120px; }
+      .col-actions { min-width: 80px; }
+
+      .avatar {
+        width: 26px;
+        height: 26px;
+        font-size: 0.65rem;
+      }
+
+      .participant-name {
+        font-size: 0.75rem;
+      }
+
+      .cert-code {
+        font-size: 0.6rem;
+        padding: 2px 6px;
+      }
+
+      .action-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+      }
+
+      .modal-title {
+        font-size: 0.95rem;
+      }
+
+      .form-input,
+      .form-select {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .stat-card,
+      .filter-section,
+      .table-container {
+        background: #1f2937;
+        border-color: #374151;
+      }
+
+      .admin-title {
+        color: #f9fafb;
+      }
+
+      .admin-title i {
+        color: #60a5fa;
+      }
+
+      .admin-subtitle {
+        color: #9ca3af;
+      }
+
+      .stat-label {
+        color: #9ca3af;
+      }
+
+      .stat-value {
+        color: #f9fafb;
+      }
+
+      .search-input,
+      .filter-select,
+      .form-input,
+      .form-select {
+        background: #111827;
+        border-color: #374151;
+        color: #f3f4f6;
+      }
+
+      .search-input:focus,
+      .filter-select:focus {
+        border-color: #60a5fa;
+      }
+
+      .btn-reset {
+        background: #374151;
+        color: #d1d5db;
+        border-color: #4b5563;
+      }
+
+      .btn-reset:hover {
+        background: #4b5563;
+      }
+
+      .admin-table thead {
+        background: #111827;
+      }
+
+      .admin-table th {
+        color: #9ca3af;
+      }
+
+      .admin-table td {
+        color: #d1d5db;
+        border-color: #374151;
+      }
+
+      .table-row:hover {
+        background: #111827;
+      }
+
+      .cert-code {
+        background: #111827;
+        color: #e5e7eb;
+      }
+
+      .participant-name {
+        color: #f9fafb;
+      }
+
+      .participant-email {
+        color: #9ca3af;
+      }
+
+      .template-badge {
+        background: #111827;
+        color: #d1d5db;
+      }
+
+      .modal-content {
+        background: #1f2937;
+      }
+
+      .modal-header {
+        background: #1f2937;
+        border-color: #374151;
+      }
+
+      .modal-title {
+        color: #f9fafb;
+      }
+
+      .modal-title i {
+        color: #60a5fa;
+      }
+
+      .modal-close {
+        background: #111827;
+        color: #9ca3af;
+      }
+
+      .modal-close:hover {
+        background: #374151;
+      }
+
+      .form-label {
+        color: #e5e7eb;
+      }
+
+      .form-hint {
+        color: #9ca3af;
+      }
+
+      .btn-cancel {
+        background: #374151;
+        color: #e5e7eb;
+        border-color: #4b5563;
+      }
+
+      .btn-cancel:hover {
+        background: #4b5563;
+      }
+
+      .modal-actions {
+        border-color: #374151;
+      }
+
+      .table-footer {
+        border-color: #374151;
+      }
+
+      .footer-info {
+        color: #9ca3af;
+      }
+
+      .footer-stats {
+        color: #9ca3af;
+      }
+
+      .empty-icon {
+        color: #4b5563;
+      }
+
+      .empty-title {
+        color: #e5e7eb;
+      }
+
+      .empty-desc {
+        color: #9ca3af;
+      }
+
+      .toast {
+        background: #111827;
+      }
+
+      .toast-close {
+        color: #6b7280;
+      }
+
+      .toast-close:hover {
+        color: #d1d5db;
+      }
+    }
+  </style>
 
   <script>
     // ============================================================
@@ -441,8 +1445,7 @@ const totalParticipants = participantsList.length;
       }
       
       toastMessage.textContent = message;
-      toast.classList.remove('translate-y-full', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
+      toast.classList.remove('hidden');
       
       setTimeout(function() {
         window.hideToast();
@@ -452,23 +1455,17 @@ const totalParticipants = participantsList.length;
     window.hideToast = function() {
       const toast = document.getElementById('toast');
       if (!toast) return;
-      toast.classList.remove('translate-y-0', 'opacity-100');
-      toast.classList.add('translate-y-full', 'opacity-0');
+      toast.classList.add('hidden');
     };
 
     // ============================================================
     // MODAL
     // ============================================================
     window.openModal = function(data = null) {
-      console.log('🟢 openModal called with:', data);
-      
       const modal = document.getElementById('modal');
       const title = document.getElementById('modalTitle');
       
-      if (!modal) {
-        console.error('❌ Modal element not found!');
-        return;
-      }
+      if (!modal) return;
       
       if (data) {
         title.innerHTML = '<i class="bi bi-pencil text-yellow-600 mr-2"></i> Edit Sertifikat';
@@ -498,13 +1495,10 @@ const totalParticipants = participantsList.length;
     };
 
     // ============================================================
-    // EDIT FROM ROW (PALING AMAN)
+    // EDIT FROM ROW
     // ============================================================
     window.editCertificateFromRow = function(row) {
-      if (!row) {
-        console.error('❌ Row not found!');
-        return;
-      }
+      if (!row) return;
       
       const data = {
         id: row.dataset.id,
@@ -514,15 +1508,13 @@ const totalParticipants = participantsList.length;
         fileUrl: row.dataset.fileurl || ''
       };
       
-      console.log('🟢 editCertificateFromRow data:', data);
       window.openModal(data);
     };
 
     // ============================================================
-    // EDIT - langsung panggil openModal
+    // EDIT
     // ============================================================
     window.editCertificate = function(data) {
-      console.log('🟢 editCertificate called with:', data);
       window.openModal(data);
     };
 
@@ -532,15 +1524,11 @@ const totalParticipants = participantsList.length;
     window.saveCertificate = async function(e) {
       e.preventDefault();
       
-      console.log('🟢 saveCertificate called!');
-      
       const id = document.getElementById('editId').value;
       const participantId = document.getElementById('participantId').value;
       const template = document.getElementById('template').value;
       const status = document.getElementById('certStatus').value;
       const fileUrl = document.getElementById('fileUrl').value;
-
-      console.log('📝 Data:', { id, participantId, template, status, fileUrl });
 
       if (!participantId) {
         window.showToast('Pilih peserta terlebih dahulu!', 'error');
@@ -557,7 +1545,6 @@ const totalParticipants = participantsList.length;
       if (id) data.id = parseInt(id);
 
       try {
-        console.log('📤 Sending request...');
         const response = await fetch('/api/admin/certificates', {
           method: method,
           headers: { 'Content-Type': 'application/json' },
@@ -565,7 +1552,6 @@ const totalParticipants = participantsList.length;
         });
 
         const result = await response.json();
-        console.log('📥 Response:', result);
 
         if (result.success) {
           window.showToast(result.message || 'Berhasil!');
@@ -577,8 +1563,7 @@ const totalParticipants = participantsList.length;
           window.showToast(result.error || 'Gagal menyimpan', 'error');
         }
       } catch (error) {
-        console.error('❌ Error:', error);
-        window.showToast('Terjadi kesalahan: ' + error.message, 'error');
+        window.showToast('Terjadi kesalahan', 'error');
       }
     };
 
@@ -612,29 +1597,16 @@ const totalParticipants = participantsList.length;
     // EVENT LISTENERS
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('🟢 DOM loaded');
-      
-      const form = document.getElementById('certForm');
-      if (form) {
-        console.log('🟢 Form found, attaching submit listener');
-        form.addEventListener('submit', window.saveCertificate);
-      } else {
-        console.log('🔴 Form NOT found!');
-      }
-      
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
           window.closeModal();
         }
       });
 
-      const overlay = document.querySelector('#modal .absolute');
-      if (overlay) {
-        overlay.addEventListener('click', window.closeModal);
+      const backdrop = document.querySelector('#modal .modal-backdrop');
+      if (backdrop) {
+        backdrop.addEventListener('click', window.closeModal);
       }
     });
-
-    console.log('✅ Sertifikat Admin Panel loaded');
-    console.log('📌 Functions available: openModal, closeModal, editCertificateFromRow, editCertificate, saveCertificate, deleteCertificate');
   </script>
 </AdminLayout>

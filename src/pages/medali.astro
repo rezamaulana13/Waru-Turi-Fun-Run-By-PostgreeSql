@@ -75,7 +75,7 @@ const conclusionText =
   <section class="race-hero">
     <div class="race-overlay"></div>
     <div class="race-hero-content">
-      <h2 class="race-title">Medali Finisher Eksklusif</h2>
+      <h1 class="race-title">Medali Finisher Eksklusif</h1>
       <p class="race-subtitle">
         Dapatkan medali eksklusif bagi peserta yang menyelesaikan rute, dengan desain unik dan kualitas premium sebagai tanda prestasi.
       </p>
@@ -89,38 +89,32 @@ const conclusionText =
 
   <!-- ===== MEDAL SECTION ===== -->
   <section class="medal-section">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <div class="max-w-4xl mx-auto space-y-12">
+    <div class="container">
+      <div class="medal-grid">
         {medalData.map((medal) => (
-          <div key={medal.id} class="medal-card group">
-            <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100/50 hover:border-[#2679ec]/20 hover:-translate-y-2">
-              <div class="p-6 md:p-8">
-                <div class="flex flex-col lg:flex-row gap-8 items-center">
-                  <div class="w-full lg:w-[45%] flex-shrink-0">
-                    <div class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#f0f4ff] to-[#e8edf5] p-4">
-                      <img
-                        src={medal.imageUrl}
-                        alt={medal.title}
-                        class="w-full h-auto object-contain transform group-hover:scale-105 transition-transform duration-700"
-                        loading="lazy"
-                      />
-                      <div class="absolute -top-2 -right-2 bg-[#FFD700] text-gray-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                        <i class="bi bi-star-fill mr-1"></i> Exclusive
-                      </div>
-                    </div>
-                  </div>
-                  <div class="w-full lg:w-[55%]">
-                    <h3 class="text-3xl md:text-4xl font-extrabold text-[#2679ec] mb-4">{medal.title}</h3>
-                    <div class="text-gray-600 text-base md:text-lg leading-relaxed" set:html={medal.description}></div>
-                    <div class="mt-6 flex flex-wrap items-center gap-4">
-                      <span class="inline-flex items-center gap-2 px-4 py-2 bg-[#2679ec]/10 text-[#2679ec] rounded-full text-sm font-semibold">
-                        <i class="bi bi-trophy"></i> Finisher
-                      </span>
-                      <span class="inline-flex items-center gap-2 px-4 py-2 bg-[#FFD700]/10 text-[#996600] rounded-full text-sm font-semibold">
-                        <i class="bi bi-award"></i> Edisi Terbatas
-                      </span>
-                    </div>
-                  </div>
+          <div key={medal.id} class="medal-card">
+            <div class="medal-card-inner">
+              <div class="medal-image-wrapper">
+                <img
+                  src={medal.imageUrl}
+                  alt={medal.title}
+                  class="medal-image"
+                  loading="lazy"
+                />
+                <span class="medal-badge">
+                  <i class="bi bi-star-fill"></i> Exclusive
+                </span>
+              </div>
+              <div class="medal-content">
+                <h3 class="medal-title">{medal.title}</h3>
+                <div class="medal-description" set:html={medal.description}></div>
+                <div class="medal-tags">
+                  <span class="medal-tag">
+                    <i class="bi bi-trophy"></i> Finisher
+                  </span>
+                  <span class="medal-tag gold-tag">
+                    <i class="bi bi-award"></i> Edisi Terbatas
+                  </span>
                 </div>
               </div>
             </div>
@@ -131,55 +125,52 @@ const conclusionText =
   </section>
 
   <!-- ===== FILOSOFI ===== -->
-  <section class="section-filosofi">
-    <div class="judul-utama">
-      <h2>Filosofi Medali 2026</h2>
-      <div class="garis"></div>
-    </div>
+  <section class="filosofi-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Filosofi Medali 2026</h2>
+        <div class="section-line"></div>
+      </div>
 
-    <div class="kontainer-filosofi">
-      {philosophyItems.map((item, index) => (
-        <div key={item.id} class={`baris-filosofi ${index % 2 === 0 ? '' : 'reverse'}`}>
-          <div class="foto-filosofi">
-            <img src={item.imageUrl} alt={item.title} loading="lazy" />
+      <div class="filosofi-grid">
+        {philosophyItems.map((item, index) => (
+          <div key={item.id} class={`filosofi-item ${index % 2 === 0 ? '' : 'reverse'}`}>
+            <div class="filosofi-image">
+              <img src={item.imageUrl} alt={item.title} loading="lazy" />
+            </div>
+            <div class="filosofi-content">
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+              {item.tags && item.tags.length > 0 && (
+                <div class="filosofi-tags">
+                  {item.tags.map((tag) => (
+                    <span key={tag} class="filosofi-tag">{tag}</span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div class="teks-filosofi">
-            <h3>{item.title}</h3>
-            <p>{item.description}</p>
-            {item.tags && item.tags.length > 0 && (
-              <div class="tag-warna-grup">
-                {item.tags.map((tag) => (
-                  <span key={tag} class="tag-warna">{tag}</span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
 
-    <div class="kesimpulan-box">
-      <h3>Makna Filosofis Medali</h3>
-      <p>{conclusionText}</p>
+      <div class="filosofi-conclusion">
+        <h3>Makna Filosofis Medali</h3>
+        <p>{conclusionText}</p>
+      </div>
     </div>
   </section>
 
   <!-- ===== CTA ===== -->
-  <section class="py-16 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-3xl mx-auto text-center">
-        <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">
-          Raih Medali <span class="text-[#FFD700]">Eksklusif</span> Anda!
-        </h2>
-        <p class="text-white/80 text-base mb-8 leading-relaxed">
-          Daftar sekarang dan jadilah bagian dari sejarah Waru Turi Fun Run 2026. 
-          Medali terbatas hanya untuk peserta tercepat!
-        </p>
-        <a href="/p/ticket-sold.html" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
-          <i class="bi bi-trophy text-lg"></i> Daftar Sekarang
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Raih Medali <span>Eksklusif</span> Anda!</h2>
+        <p>Daftar sekarang dan jadilah bagian dari sejarah Waru Turi Fun Run 2026. Medali terbatas hanya untuk peserta tercepat!</p>
+        <a href="/p/ticket-sold.html" class="cta-button">
+          <i class="bi bi-trophy"></i> Daftar Sekarang
         </a>
-        <p class="text-white/40 text-xs mt-4">
-          <i class="bi bi-clock-history mr-1"></i> Kuota terbatas, segera daftar!
+        <p class="cta-note">
+          <i class="bi bi-clock-history"></i> Kuota terbatas, segera daftar!
         </p>
       </div>
     </div>
@@ -189,285 +180,628 @@ const conclusionText =
 </BaseLayout>
 
 <style>
+  /* ===== CONTAINER ===== */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
   /* ===== HERO ===== */
   .race-hero {
     position: relative;
     width: 100%;
-    min-height: 420px;
+    min-height: 320px;
     background: linear-gradient(135deg, rgba(11, 124, 255, 0.85), rgba(0, 182, 219, 0.85)),
-      url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-XxTiJ/s1280/header.jpg') center/cover no-repeat fixed;
+      url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-xXTiJ/s1280/header.jpg') center/cover no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     color: #fff;
   }
+  
   .race-overlay {
     position: absolute;
     inset: 0;
-    background: transparent;
     z-index: 1;
   }
+  
   .race-hero-content {
     position: relative;
     z-index: 2;
-    max-width: 800px;
+    max-width: 700px;
     padding: 0 20px;
   }
+  
   .race-title {
-    font-size: 52px;
+    font-size: 2.5rem;
     font-weight: 800;
     color: #fff;
-    margin-bottom: 18px;
-    letter-spacing: 1px;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
   }
+  
   .race-subtitle {
-    font-size: 17px;
-    line-height: 1.7;
+    font-size: 1rem;
+    line-height: 1.6;
     color: #e0f7fa;
-    margin-bottom: 28px;
+    margin-bottom: 20px;
+    max-width: 550px;
+    margin-left: auto;
+    margin-right: auto;
   }
+  
   .race-breadcrumb {
-    font-size: 14px;
+    font-size: 0.85rem;
     color: #e0f7fa;
   }
+  
   .race-breadcrumb a {
     color: #fff;
-    font-weight: 700;
+    font-weight: 600;
     text-decoration: none;
   }
+  
   .race-breadcrumb a:hover {
     color: #FFD700;
   }
+  
   .race-breadcrumb span {
     margin: 0 6px;
   }
 
-  @media (max-width: 768px) {
-    .race-hero {
-      min-height: 340px;
-      background-attachment: scroll;
-    }
-    .race-title {
-      font-size: 36px;
-    }
-    .race-subtitle {
-      font-size: 15px;
-    }
-  }
-
   /* ===== MEDAL SECTION ===== */
   .medal-section {
+    padding: 60px 0;
     background: #f8f9fa;
   }
-  .medal-card .bg-white {
+  
+  .medal-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .medal-card {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+  
+  .medal-card:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  
+  .medal-card-inner {
     background: #ffffff;
-  }
-
-  /* ===== FILOSOFI ===== */
-  .section-filosofi {
-    padding: 120px 20px;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background: #f8f9fa;
-    color: #111;
-    overflow: hidden;
-  }
-  .judul-utama {
-    text-align: center;
-    margin-bottom: 100px;
-  }
-  .judul-utama h2 {
-    color: #0d6efd;
-    font-size: 4.5rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    margin-bottom: 25px;
-    letter-spacing: 3px;
-  }
-  .judul-utama .garis {
-    width: 150px;
-    height: 12px;
-    background: #d4af37;
-    margin: 0 auto;
-    border-radius: 20px;
-  }
-
-  .kontainer-filosofi {
-    max-width: 1300px;
-    margin: 0 auto;
-  }
-  .baris-filosofi {
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    padding: 24px;
     display: flex;
     align-items: center;
-    margin-bottom: 150px;
-    gap: 40px;
+    gap: 30px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
   }
-  .baris-filosofi.reverse {
-    flex-direction: row-reverse;
+  
+  .medal-card-inner:hover {
+    box-shadow: 0 8px 30px rgba(38, 121, 236, 0.12);
+    transform: translateY(-2px);
+    border-color: rgba(38, 121, 236, 0.15);
   }
-
-  .foto-filosofi {
-    flex: 1;
-    text-align: center;
+  
+  .medal-image-wrapper {
+    flex: 0 0 200px;
+    position: relative;
+    background: linear-gradient(135deg, #f0f4ff, #e8edf5);
+    border-radius: 12px;
+    padding: 16px;
     display: flex;
+    align-items: center;
     justify-content: center;
   }
-  .foto-filosofi img {
+  
+  .medal-image {
     width: 100%;
-    max-width: 380px;
     height: auto;
-    border-radius: 40px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-    transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    max-height: 180px;
+    object-fit: contain;
+    transition: transform 0.4s ease;
   }
-  .baris-filosofi:hover .foto-filosofi img {
+  
+  .medal-card-inner:hover .medal-image {
     transform: scale(1.05);
-    box-shadow: 0 30px 60px rgba(13, 110, 253, 0.2);
   }
-
-  .teks-filosofi {
-    flex: 1.5;
+  
+  .medal-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #FFD700;
+    color: #1a1a1a;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
-  .teks-filosofi h3 {
-    color: #0d6efd;
-    font-size: 3.2rem;
-    font-weight: 900;
-    margin-bottom: 30px;
-    line-height: 1.1;
+  
+  .medal-badge i {
+    font-size: 0.6rem;
   }
-  .teks-filosofi p {
-    font-size: 1.8rem;
-    line-height: 1.7;
-    color: #222;
-    font-weight: 500;
+  
+  .medal-content {
+    flex: 1;
   }
-
-  .tag-warna-grup {
-    margin-top: 40px;
+  
+  .medal-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #2679ec;
+    margin-bottom: 8px;
+  }
+  
+  .medal-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #4a4a4a;
+  }
+  
+  .medal-description b {
+    color: #1a1a1a;
+  }
+  
+  .medal-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 8px;
+    margin-top: 12px;
   }
-  .tag-warna {
-    padding: 15px 30px;
-    border-radius: 15px;
-    font-size: 1.4rem;
-    font-weight: 800;
-    background: white;
-    border: 3px solid #eee;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  
+  .medal-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    background: rgba(38, 121, 236, 0.08);
+    color: #2679ec;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  
+  .medal-tag i {
+    font-size: 0.75rem;
+  }
+  
+  .gold-tag {
+    background: rgba(255, 215, 0, 0.12);
+    color: #996600;
   }
 
-  .kesimpulan-box {
-    max-width: 1200px;
-    margin: 80px auto 0;
-    background: linear-gradient(135deg, #0d6efd 0%, #043d8d 100%);
-    color: white;
-    padding: 100px 60px;
-    border-radius: 60px;
+  /* ===== FILOSOFI SECTION ===== */
+  .filosofi-section {
+    padding: 60px 0;
+    background: #ffffff;
+  }
+  
+  .section-header {
     text-align: center;
-    box-shadow: 0 40px 80px rgba(13, 110, 253, 0.4);
+    margin-bottom: 50px;
   }
-  .kesimpulan-box h3 {
-    font-size: 3.5rem;
-    margin-bottom: 40px;
-    color: #d4af37;
-    text-transform: uppercase;
-    font-weight: 900;
-    letter-spacing: 4px;
-  }
-  .kesimpulan-box p {
+  
+  .section-header h2 {
     font-size: 2.2rem;
-    line-height: 1.6;
-    font-style: italic;
-    font-weight: 500;
+    font-weight: 800;
+    color: #2679ec;
+    margin-bottom: 12px;
+  }
+  
+  .section-line {
+    width: 80px;
+    height: 4px;
+    background: #d4af37;
+    margin: 0 auto;
+    border-radius: 4px;
+  }
+  
+  .filosofi-grid {
     max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  
+  .filosofi-item {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+  }
+  
+  .filosofi-item:hover {
+    background: #f0f4ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  }
+  
+  .filosofi-item.reverse {
+    flex-direction: row-reverse;
+  }
+  
+  .filosofi-image {
+    flex: 0 0 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .filosofi-image img {
+    width: 100%;
+    max-width: 160px;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+  }
+  
+  .filosofi-item:hover .filosofi-image img {
+    transform: scale(1.04);
+  }
+  
+  .filosofi-content {
+    flex: 1;
+  }
+  
+  .filosofi-content h3 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #2679ec;
+    margin-bottom: 8px;
+  }
+  
+  .filosofi-content p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #4a4a4a;
+    margin-bottom: 12px;
+  }
+  
+  .filosofi-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .filosofi-tag {
+    padding: 4px 14px;
+    background: #ffffff;
+    border: 2px solid #e8edf5;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #333;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+  
+  .filosofi-conclusion {
+    max-width: 900px;
+    margin: 50px auto 0;
+    background: linear-gradient(135deg, #2679ec, #1a5bb5);
+    color: #ffffff;
+    padding: 40px 48px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(38, 121, 236, 0.25);
+  }
+  
+  .filosofi-conclusion h3 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #FFD700;
+    margin-bottom: 16px;
+  }
+  
+  .filosofi-conclusion p {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    font-style: italic;
+    font-weight: 400;
+    max-width: 800px;
     margin: 0 auto;
   }
 
-  /* ===== RESPONSIVE FILOSOFI ===== */
-  @media (max-width: 992px) {
-    .baris-filosofi {
-      gap: 30px;
-    }
-    .judul-utama h2 {
-      font-size: 3.5rem;
-    }
-    .teks-filosofi h3 {
-      font-size: 2.8rem;
-    }
-    .foto-filosofi img {
-      max-width: 300px;
-    }
+  /* ===== CTA SECTION ===== */
+  .cta-section {
+    padding: 50px 0;
+    background: linear-gradient(135deg, #001a4d, #0033A0);
   }
-  @media (max-width: 768px) {
-    .section-filosofi {
-      padding: 80px 15px;
-    }
-    .judul-utama h2 {
-      font-size: 3rem;
-    }
-    .teks-filosofi h3 {
-      font-size: 2.5rem;
-    }
-    .teks-filosofi p {
-      font-size: 1.5rem;
-    }
-    .kesimpulan-box h3 {
-      font-size: 2.5rem;
-    }
-    .kesimpulan-box p {
-      font-size: 1.6rem;
-    }
-
-    .baris-filosofi,
-    .baris-filosofi.reverse {
-      flex-direction: column !important;
-      margin-bottom: 100px;
-      gap: 20px;
-    }
-
-    .foto-filosofi img {
-      max-width: 250px;
-    }
-    .kesimpulan-box {
-      padding: 60px 30px;
-      border-radius: 40px;
-    }
+  
+  .cta-content {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+    color: #ffffff;
+  }
+  
+  .cta-content h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+  
+  .cta-content h2 span {
+    color: #FFD700;
+  }
+  
+  .cta-content p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #FFD700;
+    color: #1a1a1a;
+    font-weight: 700;
+    padding: 14px 36px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+  }
+  
+  .cta-button:hover {
+    background: #FFC107;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 28px rgba(255, 215, 0, 0.4);
+  }
+  
+  .cta-button i {
+    font-size: 1.1rem;
+  }
+  
+  .cta-note {
+    font-size: 0.8rem !important;
+    color: rgba(255, 255, 255, 0.4) !important;
+    margin-top: 12px !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .cta-note i {
+    margin-right: 4px;
   }
 
-  /* ===== ANIMASI ===== */
+  /* ===== ANIMATIONS ===== */
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  .medal-card {
-    animation: fadeInUp 0.8s ease-out forwards;
+  
+  .filosofi-item {
+    animation: fadeInUp 0.6s ease-out forwards;
   }
-  .medal-card:nth-child(2) {
+  
+  .filosofi-item:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  
+  .filosofi-item:nth-child(3) {
     animation-delay: 0.2s;
   }
-  .baris-filosofi {
-    animation: fadeInUp 0.8s ease-out forwards;
-  }
-  .baris-filosofi:nth-child(2) {
-    animation-delay: 0.15s;
-  }
-  .baris-filosofi:nth-child(3) {
+  
+  .filosofi-item:nth-child(4) {
     animation-delay: 0.3s;
   }
-  .baris-filosofi:nth-child(4) {
-    animation-delay: 0.45s;
-  }
-  .kesimpulan-box {
-    animation: fadeInUp 0.8s ease-out forwards;
-    animation-delay: 0.6s;
+  
+  .filosofi-conclusion {
+    animation: fadeInUp 0.6s ease-out forwards;
+    animation-delay: 0.4s;
     opacity: 0;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 992px) {
+    .medal-card-inner {
+      padding: 20px;
+      gap: 24px;
+    }
+    
+    .medal-image-wrapper {
+      flex: 0 0 160px;
+    }
+    
+    .filosofi-item {
+      padding: 20px;
+      gap: 24px;
+    }
+    
+    .filosofi-image {
+      flex: 0 0 130px;
+    }
+    
+    .filosofi-image img {
+      max-width: 130px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .race-hero {
+      min-height: 260px;
+    }
+    
+    .race-title {
+      font-size: 1.8rem;
+    }
+    
+    .race-subtitle {
+      font-size: 0.9rem;
+    }
+    
+    .medal-section {
+      padding: 40px 0;
+    }
+    
+    .medal-grid {
+      gap: 20px;
+    }
+    
+    .medal-card-inner {
+      flex-direction: column;
+      padding: 20px;
+      gap: 16px;
+      text-align: center;
+    }
+    
+    .medal-image-wrapper {
+      flex: 0 0 auto;
+      width: 100%;
+      max-width: 200px;
+      padding: 12px;
+    }
+    
+    .medal-image {
+      max-height: 140px;
+    }
+    
+    .medal-title {
+      font-size: 1.3rem;
+    }
+    
+    .medal-description {
+      font-size: 0.9rem;
+    }
+    
+    .medal-tags {
+      justify-content: center;
+    }
+    
+    .filosofi-section {
+      padding: 40px 0;
+    }
+    
+    .section-header h2 {
+      font-size: 1.8rem;
+    }
+    
+    .filosofi-grid {
+      gap: 24px;
+    }
+    
+    .filosofi-item {
+      flex-direction: column !important;
+      padding: 20px;
+      text-align: center;
+      gap: 16px;
+    }
+    
+    .filosofi-item.reverse {
+      flex-direction: column !important;
+    }
+    
+    .filosofi-image {
+      flex: 0 0 auto;
+      width: 100%;
+      max-width: 140px;
+    }
+    
+    .filosofi-image img {
+      max-width: 140px;
+    }
+    
+    .filosofi-content h3 {
+      font-size: 1.2rem;
+    }
+    
+    .filosofi-content p {
+      font-size: 0.9rem;
+    }
+    
+    .filosofi-tags {
+      justify-content: center;
+    }
+    
+    .filosofi-conclusion {
+      padding: 28px 20px;
+      margin-top: 32px;
+    }
+    
+    .filosofi-conclusion h3 {
+      font-size: 1.3rem;
+    }
+    
+    .filosofi-conclusion p {
+      font-size: 0.95rem;
+    }
+    
+    .cta-section {
+      padding: 40px 0;
+    }
+    
+    .cta-content h2 {
+      font-size: 1.6rem;
+    }
+    
+    .cta-button {
+      padding: 12px 28px;
+      font-size: 0.95rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .container {
+      padding: 0 16px;
+    }
+    
+    .race-title {
+      font-size: 1.5rem;
+    }
+    
+    .medal-image-wrapper {
+      max-width: 160px;
+    }
+    
+    .medal-badge {
+      font-size: 0.6rem;
+      padding: 3px 10px;
+    }
+    
+    .filosofi-image {
+      max-width: 110px;
+    }
+    
+    .filosofi-image img {
+      max-width: 110px;
+    }
+    
+    .filosofi-conclusion {
+      padding: 24px 16px;
+    }
+    
+    .filosofi-conclusion h3 {
+      font-size: 1.1rem;
+    }
+    
+    .filosofi-conclusion p {
+      font-size: 0.85rem;
+    }
   }
 </style>
