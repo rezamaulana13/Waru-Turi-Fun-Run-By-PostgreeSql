@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/package.json",
   "name": "waruturi-2027",
   "type": "module",
   "version": "1.0.0",
