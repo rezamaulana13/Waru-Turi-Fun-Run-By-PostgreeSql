@@ -1143,7 +1143,7 @@ const faqs = [
     const submitBtn = document.getElementById('submitBtn');
 
     if (form) {
-      form.addEventListener('submit', function(e) {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         // Hide previous feedback
@@ -1152,11 +1152,11 @@ const faqs = [
 
         // Get form data
         const formData = new FormData(form);
-        const name = formData.get('name')?.trim();
-        const email = formData.get('email')?.trim();
-        const phone = formData.get('phone')?.trim();
-        const subject = formData.get('subject')?.trim();
-        const message = formData.get('message')?.trim();
+        const name = formData.get('name')?.toString().trim();
+        const email = formData.get('email')?.toString().trim();
+        const phone = formData.get('phone')?.toString().trim();
+        const subject = formData.get('subject')?.toString().trim();
+        const message = formData.get('message')?.toString().trim();
         const agree = formData.get('agree');
 
         // Validate required fields
@@ -1185,17 +1185,23 @@ const faqs = [
         submitBtn.innerHTML = '<span class="spinner"></span> Mengirim...';
         submitBtn.disabled = true;
 
-        // Simulate sending to admin (replace with actual API call)
-        setTimeout(() => {
+        // ===== KIRIM BENERAN KE API =====
+        try {
+          const res = await fetch('/api/contact/contact_messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, phone, subject, message }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Gagal mengirim pesan.');
+          }
+
           // Success
           successDiv.classList.add('show');
           form.reset();
-          submitBtn.innerHTML = originalText;
-          submitBtn.disabled = false;
-
-          // Log to console (for debugging)
-          console.log('Pesan dari:', { name, email, phone, subject, message });
-          console.log('Pesan akan diteruskan ke admin:', 'officialwaruturirun@gmail.com');
 
           // Auto hide success after 5 seconds
           setTimeout(() => {
@@ -1204,7 +1210,15 @@ const faqs = [
 
           // Scroll to success message
           successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 1500);
+        } catch (err) {
+          errorDiv.classList.add('show');
+          errorDiv.querySelector('p').innerHTML =
+            'Silakan coba lagi atau hubungi kami langsung melalui WhatsApp di <a href="https://wa.me/628155257733" target="_blank">+62 815-5257-733</a>';
+          errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } finally {
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        }
       });
     }
 

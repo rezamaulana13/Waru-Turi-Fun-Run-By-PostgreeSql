@@ -156,11 +156,11 @@ const totalParticipants = participantsList.length;
       <form method="GET" class="filter-form">
         <div class="search-wrapper">
           <i class="bi bi-search search-icon"></i>
-          <input 
-            type="text" 
-            name="search" 
+          <input
+            type="text"
+            name="search"
             value={searchQuery}
-            placeholder="Cari nama, email, atau nomor sertifikat..." 
+            placeholder="Cari nama, email, atau nomor sertifikat..."
             class="search-input"
           />
         </div>
@@ -213,10 +213,10 @@ const totalParticipants = participantsList.length;
                 const colors = ['bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-orange-500', 'bg-pink-500'];
                 const colorIndex = index % colors.length;
                 const hasFileUrl = cert.fileUrl && cert.fileUrl !== '';
-                
+
                 return (
-                  <tr 
-                    key={cert.id} 
+                  <tr
+                    key={cert.id}
                     class="table-row"
                     data-id={cert.id}
                     data-participantid={cert.participantId}
@@ -311,7 +311,7 @@ const totalParticipants = participantsList.length;
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
-      
+
       <div class="modal-body">
         <form id="certForm">
           <input type="hidden" id="editId" value="" />
@@ -454,6 +454,7 @@ const totalParticipants = participantsList.length;
       align-items: center;
       justify-content: space-between;
       transition: all 0.2s ease;
+      min-width: 0;
     }
 
     .stat-card:hover {
@@ -463,12 +464,16 @@ const totalParticipants = participantsList.length;
 
     .stat-info {
       flex: 1;
+      min-width: 0;
     }
 
     .stat-label {
       font-size: 0.8rem;
       color: #6b7280;
       margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .stat-value {
@@ -742,6 +747,7 @@ const totalParticipants = participantsList.length;
       align-items: center;
       justify-content: center;
       gap: 4px;
+      flex-wrap: wrap;
     }
 
     .action-btn {
@@ -1253,177 +1259,176 @@ const totalParticipants = participantsList.length;
       }
     }
 
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-      .stat-card,
-      .filter-section,
-      .table-container {
-        background: #1f2937;
-        border-color: #374151;
-      }
+    /* ===== Dark mode: mengikuti toggle manual aplikasi (class="dark" di <html>),
+       BUKAN preferensi OS, supaya konsisten dengan halaman admin lain ===== */
+    :global(.dark) .stat-card,
+    :global(.dark) .filter-section,
+    :global(.dark) .table-container {
+      background: #1f2937;
+      border-color: #374151;
+    }
 
-      .admin-title {
-        color: #f9fafb;
-      }
+    :global(.dark) .admin-title {
+      color: #f9fafb;
+    }
 
-      .admin-title i {
-        color: #60a5fa;
-      }
+    :global(.dark) .admin-title i {
+      color: #60a5fa;
+    }
 
-      .admin-subtitle {
-        color: #9ca3af;
-      }
+    :global(.dark) .admin-subtitle {
+      color: #9ca3af;
+    }
 
-      .stat-label {
-        color: #9ca3af;
-      }
+    :global(.dark) .stat-label {
+      color: #9ca3af;
+    }
 
-      .stat-value {
-        color: #f9fafb;
-      }
+    :global(.dark) .stat-value {
+      color: #f9fafb;
+    }
 
-      .search-input,
-      .filter-select,
-      .form-input,
-      .form-select {
-        background: #111827;
-        border-color: #374151;
-        color: #f3f4f6;
-      }
+    :global(.dark) .search-input,
+    :global(.dark) .filter-select,
+    :global(.dark) .form-input,
+    :global(.dark) .form-select {
+      background: #111827;
+      border-color: #374151;
+      color: #f3f4f6;
+    }
 
-      .search-input:focus,
-      .filter-select:focus {
-        border-color: #60a5fa;
-      }
+    :global(.dark) .search-input:focus,
+    :global(.dark) .filter-select:focus {
+      border-color: #60a5fa;
+    }
 
-      .btn-reset {
-        background: #374151;
-        color: #d1d5db;
-        border-color: #4b5563;
-      }
+    :global(.dark) .btn-reset {
+      background: #374151;
+      color: #d1d5db;
+      border-color: #4b5563;
+    }
 
-      .btn-reset:hover {
-        background: #4b5563;
-      }
+    :global(.dark) .btn-reset:hover {
+      background: #4b5563;
+    }
 
-      .admin-table thead {
-        background: #111827;
-      }
+    :global(.dark) .admin-table thead {
+      background: #111827;
+    }
 
-      .admin-table th {
-        color: #9ca3af;
-      }
+    :global(.dark) .admin-table th {
+      color: #9ca3af;
+    }
 
-      .admin-table td {
-        color: #d1d5db;
-        border-color: #374151;
-      }
+    :global(.dark) .admin-table td {
+      color: #d1d5db;
+      border-color: #374151;
+    }
 
-      .table-row:hover {
-        background: #111827;
-      }
+    :global(.dark) .table-row:hover {
+      background: #111827;
+    }
 
-      .cert-code {
-        background: #111827;
-        color: #e5e7eb;
-      }
+    :global(.dark) .cert-code {
+      background: #111827;
+      color: #e5e7eb;
+    }
 
-      .participant-name {
-        color: #f9fafb;
-      }
+    :global(.dark) .participant-name {
+      color: #f9fafb;
+    }
 
-      .participant-email {
-        color: #9ca3af;
-      }
+    :global(.dark) .participant-email {
+      color: #9ca3af;
+    }
 
-      .template-badge {
-        background: #111827;
-        color: #d1d5db;
-      }
+    :global(.dark) .template-badge {
+      background: #111827;
+      color: #d1d5db;
+    }
 
-      .modal-content {
-        background: #1f2937;
-      }
+    :global(.dark) .modal-content {
+      background: #1f2937;
+    }
 
-      .modal-header {
-        background: #1f2937;
-        border-color: #374151;
-      }
+    :global(.dark) .modal-header {
+      background: #1f2937;
+      border-color: #374151;
+    }
 
-      .modal-title {
-        color: #f9fafb;
-      }
+    :global(.dark) .modal-title {
+      color: #f9fafb;
+    }
 
-      .modal-title i {
-        color: #60a5fa;
-      }
+    :global(.dark) .modal-title i {
+      color: #60a5fa;
+    }
 
-      .modal-close {
-        background: #111827;
-        color: #9ca3af;
-      }
+    :global(.dark) .modal-close {
+      background: #111827;
+      color: #9ca3af;
+    }
 
-      .modal-close:hover {
-        background: #374151;
-      }
+    :global(.dark) .modal-close:hover {
+      background: #374151;
+    }
 
-      .form-label {
-        color: #e5e7eb;
-      }
+    :global(.dark) .form-label {
+      color: #e5e7eb;
+    }
 
-      .form-hint {
-        color: #9ca3af;
-      }
+    :global(.dark) .form-hint {
+      color: #9ca3af;
+    }
 
-      .btn-cancel {
-        background: #374151;
-        color: #e5e7eb;
-        border-color: #4b5563;
-      }
+    :global(.dark) .btn-cancel {
+      background: #374151;
+      color: #e5e7eb;
+      border-color: #4b5563;
+    }
 
-      .btn-cancel:hover {
-        background: #4b5563;
-      }
+    :global(.dark) .btn-cancel:hover {
+      background: #4b5563;
+    }
 
-      .modal-actions {
-        border-color: #374151;
-      }
+    :global(.dark) .modal-actions {
+      border-color: #374151;
+    }
 
-      .table-footer {
-        border-color: #374151;
-      }
+    :global(.dark) .table-footer {
+      border-color: #374151;
+    }
 
-      .footer-info {
-        color: #9ca3af;
-      }
+    :global(.dark) .footer-info {
+      color: #9ca3af;
+    }
 
-      .footer-stats {
-        color: #9ca3af;
-      }
+    :global(.dark) .footer-stats {
+      color: #9ca3af;
+    }
 
-      .empty-icon {
-        color: #4b5563;
-      }
+    :global(.dark) .empty-icon {
+      color: #4b5563;
+    }
 
-      .empty-title {
-        color: #e5e7eb;
-      }
+    :global(.dark) .empty-title {
+      color: #e5e7eb;
+    }
 
-      .empty-desc {
-        color: #9ca3af;
-      }
+    :global(.dark) .empty-desc {
+      color: #9ca3af;
+    }
 
-      .toast {
-        background: #111827;
-      }
+    :global(.dark) .toast {
+      background: #111827;
+    }
 
-      .toast-close {
-        color: #6b7280;
-      }
+    :global(.dark) .toast-close {
+      color: #6b7280;
+    }
 
-      .toast-close:hover {
-        color: #d1d5db;
-      }
+    :global(.dark) .toast-close:hover {
+      color: #d1d5db;
     }
   </style>
 
@@ -1435,18 +1440,18 @@ const totalParticipants = participantsList.length;
       const toast = document.getElementById('toast');
       const toastMessage = document.getElementById('toast-message');
       const icon = toast?.querySelector('.bi');
-      
+
       if (!toast) return;
-      
+
       if (type === 'success') {
         icon.className = 'bi bi-check-circle-fill text-green-400';
       } else {
         icon.className = 'bi bi-exclamation-circle-fill text-red-400';
       }
-      
+
       toastMessage.textContent = message;
       toast.classList.remove('hidden');
-      
+
       setTimeout(function() {
         window.hideToast();
       }, 3000);
@@ -1464,9 +1469,9 @@ const totalParticipants = participantsList.length;
     window.openModal = function(data = null) {
       const modal = document.getElementById('modal');
       const title = document.getElementById('modalTitle');
-      
+
       if (!modal) return;
-      
+
       if (data) {
         title.innerHTML = '<i class="bi bi-pencil text-yellow-600 mr-2"></i> Edit Sertifikat';
         document.getElementById('editId').value = data.id || '';
@@ -1482,7 +1487,7 @@ const totalParticipants = participantsList.length;
         document.getElementById('certStatus').value = 'draft';
         document.getElementById('fileUrl').value = '';
       }
-      
+
       modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
     };
@@ -1499,7 +1504,7 @@ const totalParticipants = participantsList.length;
     // ============================================================
     window.editCertificateFromRow = function(row) {
       if (!row) return;
-      
+
       const data = {
         id: row.dataset.id,
         participantId: row.dataset.participantid,
@@ -1507,7 +1512,7 @@ const totalParticipants = participantsList.length;
         status: row.dataset.status,
         fileUrl: row.dataset.fileurl || ''
       };
-      
+
       window.openModal(data);
     };
 
@@ -1523,7 +1528,7 @@ const totalParticipants = participantsList.length;
     // ============================================================
     window.saveCertificate = async function(e) {
       e.preventDefault();
-      
+
       const id = document.getElementById('editId').value;
       const participantId = document.getElementById('participantId').value;
       const template = document.getElementById('template').value;
@@ -1535,11 +1540,11 @@ const totalParticipants = participantsList.length;
         return;
       }
 
-      const data = { 
-        participantId: parseInt(participantId), 
-        template, 
-        status, 
-        fileUrl 
+      const data = {
+        participantId: parseInt(participantId),
+        template,
+        status,
+        fileUrl
       };
       const method = id ? 'PUT' : 'POST';
       if (id) data.id = parseInt(id);

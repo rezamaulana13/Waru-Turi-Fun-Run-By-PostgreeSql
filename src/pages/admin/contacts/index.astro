@@ -1,786 +1,787 @@
 ---
 // src/pages/admin/contacts/index.astro
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { db, contactMessages } from '../../../db/index.js';
+import { desc } from 'drizzle-orm';
 
-// Data dummy untuk sementara
-const contacts = [
-  {
-    id: '1',
-    name: 'Ahmad Fauzi',
-    email: 'ahmad.fauzi@email.com',
-    phone: '081234567890',
-    subject: 'Pertanyaan Pendaftaran',
-    message: 'Assalamualaikum, saya ingin bertanya tentang prosedur pendaftaran untuk kategori Half Marathon. Apakah masih ada kuota? Dan apakah ada persyaratan khusus untuk peserta dari luar kota? Terima kasih.',
-    status: 'unread',
-    priority: 'high',
-    category: 'Pendaftaran',
-    createdAt: '2026-07-10 14:30:00',
-    updatedAt: '2026-07-10 14:30:00',
-    response: null,
-  },
-  {
-    id: '2',
-    name: 'Siti Rahma',
-    email: 'siti.rahma@email.com',
-    phone: '081298765432',
-    subject: 'Informasi Sponsor',
-    message: 'Selamat siang. Perusahaan kami tertarik untuk menjadi sponsor di Waru Turi Run 2027. Mohon informasikan paket sponsorship yang tersedia dan ketentuan yang berlaku. Kami menunggu informasi lebih lanjut.',
-    status: 'read',
-    priority: 'medium',
-    category: 'Sponsor',
-    createdAt: '2026-07-09 10:15:00',
-    updatedAt: '2026-07-09 16:45:00',
-    response: 'Terima kasih atas minatnya untuk menjadi sponsor. Kami akan mengirimkan detail paket sponsorship melalui email dalam 1x24 jam.',
-  },
-  {
-    id: '3',
-    name: 'Budi Santoso',
-    email: 'budi.santoso@email.com',
-    phone: '081287654321',
-    subject: 'Keluhan Teknis Website',
-    message: 'Saya mengalami kendala saat melakukan pendaftaran online. Setelah mengisi data dan melakukan pembayaran, halaman tidak merespon dan saya tidak mendapatkan email konfirmasi. Mohon bantuannya.',
-    status: 'read',
-    priority: 'high',
-    category: 'Teknis',
-    createdAt: '2026-07-08 09:20:00',
-    updatedAt: '2026-07-08 15:30:00',
-    response: 'Kami mohon maaf atas ketidaknyamanan ini. Tim teknis kami akan segera memeriksa dan menghubungi Anda melalui email untuk menyelesaikan masalah ini.',
-  },
-  {
-    id: '4',
-    name: 'Dewi Lestari',
-    email: 'dewi.lestari@email.com',
-    phone: '081276543210',
-    subject: 'Saran dan Masukan',
-    message: 'Saya mengikuti Waru Turi Run tahun ini dan sangat menikmati eventnya. Namun saya ingin memberikan saran untuk penambahan pos air minum di kilometer 7 dan 14 karena cuaca sangat panas. Semoga bermanfaat.',
-    status: 'read',
-    priority: 'low',
-    category: 'Saran',
-    createdAt: '2026-07-07 13:45:00',
-    updatedAt: '2026-07-07 20:10:00',
-    response: 'Terima kasih atas saran dan masukannya. Kami akan mempertimbangkan penambahan pos air minum di titik-titik tersebut untuk event mendatang.',
-  },
-  {
-    id: '5',
-    name: 'Rudi Hermawan',
-    email: 'rudi.hermawan@email.com',
-    phone: '081265432109',
-    subject: 'Pertanyaan Tentang Medali',
-    message: 'Assalamualaikum, saya ingin bertanya tentang desain medali untuk Waru Turi Run 2027. Apakah ada perubahan desain dari tahun sebelumnya? Dan apakah peserta akan mendapatkan medali saat finish?',
-    status: 'unread',
-    priority: 'medium',
-    category: 'Informasi',
-    createdAt: '2026-07-06 11:00:00',
-    updatedAt: '2026-07-06 11:00:00',
-    response: null,
-  },
-  {
-    id: '6',
-    name: 'Maya Anggraini',
-    email: 'maya.anggraini@email.com',
-    phone: '081254321098',
-    subject: 'Kerjasama Media',
-    message: 'Saya dari media lokal ingin menjalin kerjasama untuk liputan Waru Turi Run 2027. Kami siap membantu promosi dan publikasi event ini. Mohon informasi lebih lanjut tentang kerjasama media.',
-    status: 'read',
-    priority: 'medium',
-    category: 'Kerjasama',
-    createdAt: '2026-07-05 16:20:00',
-    updatedAt: '2026-07-06 09:30:00',
-    response: 'Terima kasih atas minat kerjasamanya. Kami sangat terbuka untuk kerjasama media. Mohon kirimkan proposal kerjasama melalui email officialwaruturirun@gmail.com',
-  },
-];
+let list: any[] = [];
+let loadError = false;
 
-// Helper function untuk format tanggal
-function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString('id-ID', {
+try {
+  list = await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
+} catch (err) {
+  console.error('Gagal memuat contact_messages:', err);
+  loadError = true;
+}
+
+const counts = {
+  semua: list.length,
+  unread: list.filter((m) => m.status === 'unread').length,
+  read: list.filter((m) => m.status === 'read').length,
+  replied: list.filter((m) => m.status === 'replied').length,
+};
+
+const statusLabel: Record<string, string> = {
+  unread: 'Masuk',
+  read: 'Dibaca',
+  replied: 'Selesai',
+};
+
+function formatDate(d: Date | string | null) {
+  if (!d) return '-';
+  return new Date(d).toLocaleString('id-ID', {
     day: '2-digit',
-    month: 'long',
+    month: 'short',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
   });
 }
-
-// Helper function untuk get status color
-function getStatusColor(status: string): string {
-  const colors: Record<string, string> = {
-    read: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-    unread: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
-    replied: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
-  };
-  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
-}
-
-// Helper function untuk get status label
-function getStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    read: 'Sudah Dibaca',
-    unread: 'Belum Dibaca',
-    replied: 'Sudah Dibalas',
-  };
-  return labels[status] || status;
-}
-
-// Helper function untuk get priority color
-function getPriorityColor(priority: string): string {
-  const colors: Record<string, string> = {
-    high: 'text-red-600 dark:text-red-400',
-    medium: 'text-yellow-600 dark:text-yellow-400',
-    low: 'text-green-600 dark:text-green-400',
-  };
-  return colors[priority] || 'text-gray-600 dark:text-gray-400';
-}
-
-// Helper function untuk get priority label
-function getPriorityLabel(priority: string): string {
-  const labels: Record<string, string> = {
-    high: 'Tinggi',
-    medium: 'Sedang',
-    low: 'Rendah',
-  };
-  return labels[priority] || priority;
-}
 ---
 
-<AdminLayout title="Kontak - Admin Panel">
-  <div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-            <i class="bi bi-envelope text-blue-600 dark:text-blue-400 mr-2"></i>
-            Manajemen Kontak
-          </h1>
-          <p class="text-gray-500 dark:text-gray-400 mt-1">
-            Kelola pesan dan kontak dari pengunjung
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <button class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition flex items-center gap-2">
-            <i class="bi bi-download"></i>
-            Export
-          </button>
-          <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
-            <i class="bi bi-check-all"></i>
-            Tandai Semua Dibaca
-          </button>
-        </div>
+<AdminLayout title="Kontak - Admin Waru Turi Run">
+  <div class="wt-page">
+    <div class="wt-page-head">
+      <div>
+        <span class="wt-eyebrow">Kotak Masuk</span>
+        <h1 class="wt-title">Pesan Kontak</h1>
+        <p class="wt-subtitle">Setiap pesan dari halaman /kontak melewati tiga tahap: Masuk, Dibaca, lalu Selesai.</p>
       </div>
     </div>
 
-    <!-- Filter & Search -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4 mb-6">
-      <div class="flex flex-col md:flex-row gap-4">
-        <div class="flex-1 relative">
-          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
-          <input 
-            type="text" 
-            placeholder="Cari kontak..." 
-            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            id="searchInput"
-          />
-        </div>
-        <div class="flex gap-3">
-          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-            <option value="">Semua Status</option>
-            <option value="unread">Belum Dibaca</option>
-            <option value="read">Sudah Dibaca</option>
-            <option value="replied">Sudah Dibalas</option>
-          </select>
-          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-            <option value="">Semua Prioritas</option>
-            <option value="high">Tinggi</option>
-            <option value="medium">Sedang</option>
-            <option value="low">Rendah</option>
-          </select>
-          <select class="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-            <option value="">Semua Kategori</option>
-            <option value="Pendaftaran">Pendaftaran</option>
-            <option value="Sponsor">Sponsor</option>
-            <option value="Teknis">Teknis</option>
-            <option value="Saran">Saran</option>
-            <option value="Informasi">Informasi</option>
-            <option value="Kerjasama">Kerjasama</option>
-          </select>
-        </div>
+    {loadError && (
+      <div class="wt-alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Gagal memuat pesan dari database. Cek koneksi <code>DATABASE_URL</code> dan tabel <code>contact_messages</code>.</span>
       </div>
+    )}
+
+    <div class="wt-tabs" role="tablist">
+      <button class="wt-tab active" data-filter="semua">
+        <span>Semua</span><b>{counts.semua}</b>
+      </button>
+      <button class="wt-tab" data-filter="unread">
+        <span class="dot dot-unread"></span><span>Masuk</span><b>{counts.unread}</b>
+      </button>
+      <button class="wt-tab" data-filter="read">
+        <span class="dot dot-read"></span><span>Dibaca</span><b>{counts.read}</b>
+      </button>
+      <button class="wt-tab" data-filter="replied">
+        <span class="dot dot-replied"></span><span>Selesai</span><b>{counts.replied}</b>
+      </button>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Total Pesan</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">{contacts.length}</p>
+    <div class="wt-inbox" id="inbox">
+      <div class="wt-list" id="messageList">
+        {list.length === 0 && (
+          <div class="wt-empty">
+            <i class="bi bi-inbox"></i>
+            <p>Belum ada pesan masuk.</p>
           </div>
-          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-envelope text-2xl text-blue-600 dark:text-blue-400"></i>
-          </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-green-600 dark:text-green-400">↑ 2 pesan baru</span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Belum Dibaca</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
-              {contacts.filter(c => c.status === 'unread').length}
-            </p>
-          </div>
-          <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-envelope-exclamation text-2xl text-red-600 dark:text-red-400"></i>
-          </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-red-500 dark:text-red-400">Perlu perhatian</span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Sudah Dibalas</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
-              {contacts.filter(c => c.response).length}
-            </p>
-          </div>
-          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-check-circle text-2xl text-green-600 dark:text-green-400"></i>
-          </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-gray-500 dark:text-gray-400">Sudah ditangani</span>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Prioritas Tinggi</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">
-              {contacts.filter(c => c.priority === 'high').length}
-            </p>
-          </div>
-          <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
-            <i class="bi bi-exclamation-triangle text-2xl text-yellow-600 dark:text-yellow-400"></i>
-          </div>
-        </div>
-        <div class="mt-2">
-          <span class="text-xs text-yellow-600 dark:text-yellow-400">Perlu segera ditangani</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Contacts List -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="border-b border-gray-200/50 dark:border-gray-700/50">
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" />
-              </th>
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pengirim</th>
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Subjek</th>
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kategori</th>
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prioritas</th>
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal</th>
-              <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-200/50 dark:divide-gray-700/50">
-            {contacts.map((contact) => (
-              <tr class={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition ${contact.status === 'unread' ? 'bg-blue-50/50 dark:bg-blue-900/5' : ''}`} data-id={contact.id}>
-                <td class="px-6 py-4">
-                  <input type="checkbox" class="rounded border-gray-300 dark:border-gray-600" />
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-sm font-bold">
-                      {contact.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p class="text-sm font-medium text-gray-900 dark:text-white">
-                        {contact.name}
-                        {contact.status === 'unread' && (
-                          <span class="ml-2 inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                        )}
-                      </p>
-                      <p class="text-xs text-gray-500 dark:text-gray-400">{contact.email}</p>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4">
-                  <p class="text-sm text-gray-700 dark:text-gray-300 font-medium line-clamp-1">
-                    {contact.subject}
-                  </p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-                    {contact.message.substring(0, 50)}...
-                  </p>
-                </td>
-                <td class="px-6 py-4">
-                  <span class="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-full">
-                    {contact.category}
-                  </span>
-                </td>
-                <td class="px-6 py-4">
-                  <span class={`
-                    px-2.5 py-1 text-xs font-medium rounded-full
-                    ${getStatusColor(contact.status)}
-                  `}>
-                    {getStatusLabel(contact.status)}
-                  </span>
-                </td>
-                <td class="px-6 py-4">
-                  <span class={`text-sm font-medium ${getPriorityColor(contact.priority)}`}>
-                    {getPriorityLabel(contact.priority)}
-                  </span>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
-                  {formatDate(contact.createdAt)}
-                </td>
-                <td class="px-6 py-4">
-                  <div class="flex items-center gap-2">
-                    <button onclick="viewContact('{contact.id}')" class="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition" title="Lihat">
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <button onclick="replyContact('{contact.id}')" class="p-1.5 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition" title="Balas">
-                      <i class="bi bi-reply"></i>
-                    </button>
-                    <button onclick="deleteContact('{contact.id}')" class="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition" title="Hapus">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="px-6 py-4 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between flex-wrap gap-3">
-        <p class="text-sm text-gray-500 dark:text-gray-400">
-          Menampilkan <span class="font-medium">1</span> - <span class="font-medium">{Math.min(10, contacts.length)}</span> dari <span class="font-medium">{contacts.length}</span> data
-        </p>
-        <div class="flex items-center gap-2">
-          <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50" disabled>
-            <i class="bi bi-chevron-left"></i>
+        )}
+        {list.map((m) => (
+          <button
+            class="wt-item"
+            data-id={m.id}
+            data-status={m.status}
+            data-name={m.name}
+            data-email={m.email}
+            data-phone={m.phone ?? ''}
+            data-subject={m.subject}
+            data-message={m.message}
+            data-reply={m.adminReply ?? ''}
+            data-replied-by={m.repliedBy ?? ''}
+            data-date={formatDate(m.createdAt)}
+          >
+            <span class={`wt-item-bar bar-${m.status}`}></span>
+            <span class="wt-item-body">
+              <span class="wt-item-top">
+                <span class="wt-item-name">{m.name}</span>
+                <span class={`wt-badge badge-${m.status}`}>
+                  {m.status === 'replied' && <i class="bi bi-flag-fill"></i>}
+                  {statusLabel[m.status ?? 'unread']}
+                </span>
+              </span>
+              <span class="wt-item-subject">{m.subject}</span>
+              <span class="wt-item-date">{formatDate(m.createdAt)}</span>
+            </span>
           </button>
-          <button class="px-3 py-1.5 rounded-lg bg-blue-600 text-white">1</button>
-          <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">2</button>
-          <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">3</button>
-          <span class="text-gray-500 dark:text-gray-400">...</span>
-          <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">10</button>
-          <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-            <i class="bi bi-chevron-right"></i>
-          </button>
+        ))}
+      </div>
+
+      <div class="wt-detail" id="messageDetail">
+        <div class="wt-detail-empty">
+          <i class="bi bi-envelope-open"></i>
+          <p>Pilih pesan di sebelah kiri untuk melihat detail.</p>
         </div>
       </div>
     </div>
   </div>
+</AdminLayout>
 
-  <!-- Modal View Contact -->
-  <div id="viewModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0 invisible transition-all duration-300">
-    <div class="absolute inset-0 bg-black/50" onclick="closeViewModal()"></div>
-    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform scale-95 transition-all duration-300">
-      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          <i class="bi bi-envelope-open text-blue-600 dark:text-blue-400 mr-2"></i>
-          Detail Pesan
-        </h3>
-        <button onclick="closeViewModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
-          <i class="bi bi-x-lg"></i>
+<style is:global>
+  :root {
+    --wt-navy: #0b1f3a;
+    --wt-blue: #2679ec;
+    --wt-blue-deep: #144fba;
+    --wt-gold: #f5b300;
+    --wt-gold-deep: #c98e00;
+    --wt-rose: #e23f5d;
+    --wt-amber: #d97706;
+    --wt-mist: #f3f6fb;
+    --wt-line: #e4e9f2;
+    --wt-ink: #0b1f3a;
+    --wt-ink-soft: #5b6577;
+  }
+  .dark {
+    --wt-mist: #16202f;
+    --wt-line: #2a3648;
+    --wt-ink: #eef2fa;
+    --wt-ink-soft: #93a0b4;
+  }
+
+  .wt-page { color: var(--wt-ink); }
+
+  .wt-page-head { margin-bottom: 20px; }
+  .wt-eyebrow {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--wt-blue);
+    margin-bottom: 6px;
+  }
+  .wt-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px 0;
+  }
+  .wt-subtitle {
+    font-size: 0.85rem;
+    color: var(--wt-ink-soft);
+    margin: 0;
+    max-width: 480px;
+  }
+
+  .wt-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(226, 63, 93, 0.08);
+    border: 1px solid rgba(226, 63, 93, 0.25);
+    color: var(--wt-rose);
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+  }
+  .wt-alert i { margin-top: 2px; }
+
+  .wt-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--wt-mist);
+    border: 1px solid var(--wt-line);
+    border-radius: 14px;
+    padding: 5px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+  }
+  .wt-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--wt-ink-soft);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .wt-tab:hover { color: var(--wt-ink); }
+  .wt-tab.active {
+    background: #fff;
+    color: var(--wt-navy);
+    box-shadow: 0 2px 8px rgba(11, 31, 58, 0.1);
+  }
+  .dark .wt-tab.active { background: #0b1f3a; color: #eef2fa; }
+  .wt-tab b {
+    font-variant-numeric: tabular-nums;
+    font-size: 0.72rem;
+    background: rgba(11, 31, 58, 0.06);
+    padding: 1px 7px;
+    border-radius: 20px;
+  }
+  .dark .wt-tab b { background: rgba(255, 255, 255, 0.08); }
+  .wt-tab.active b { background: rgba(38, 121, 236, 0.12); color: var(--wt-blue); }
+
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-unread { background: var(--wt-rose); }
+  .dot-read { background: var(--wt-amber); }
+  .dot-replied { background: var(--wt-gold); }
+
+  .wt-inbox {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .wt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 72vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .wt-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--wt-ink-soft);
+    background: var(--wt-mist);
+    border-radius: 16px;
+    font-size: 0.85rem;
+  }
+  .wt-empty i { font-size: 1.6rem; opacity: 0.5; }
+
+  .wt-item {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    text-align: left;
+    background: #fff;
+    border: 1px solid var(--wt-line);
+    border-radius: 14px;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+    font-family: inherit;
+    width: 100%;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .dark .wt-item { background: #101a29; }
+  .wt-item:hover { border-color: rgba(38, 121, 236, 0.35); box-shadow: 0 4px 14px rgba(11, 31, 58, 0.06); }
+  .wt-item.selected { border-color: var(--wt-blue); background: rgba(38, 121, 236, 0.05); }
+
+  .wt-item-bar { width: 4px; flex-shrink: 0; }
+  .bar-unread { background: var(--wt-rose); }
+  .bar-read { background: var(--wt-amber); }
+  .bar-replied { background: var(--wt-gold); }
+
+  .wt-item-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 13px 15px;
+  }
+
+  .wt-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .wt-item-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .wt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-unread { background: rgba(226, 63, 93, 0.12); color: var(--wt-rose); }
+  .badge-read { background: rgba(217, 119, 6, 0.12); color: var(--wt-amber); }
+  .badge-replied {
+    color: #7a5400;
+    background-color: rgba(245, 179, 0, 0.18);
+    background-image: repeating-conic-gradient(rgba(11,31,58,0.35) 0% 25%, transparent 0% 50%);
+    background-size: 6px 6px;
+  }
+  .dark .badge-replied { color: #ffdf8a; }
+
+  .wt-item-subject {
+    font-size: 0.82rem;
+    color: var(--wt-ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wt-item-date {
+    font-size: 0.72rem;
+    color: var(--wt-ink-soft);
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wt-detail {
+    background: #fff;
+    border: 1px solid var(--wt-line);
+    border-radius: 18px;
+    padding: 26px;
+    min-height: 420px;
+  }
+  .dark .wt-detail { background: #101a29; }
+
+  .wt-detail-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 360px;
+    color: var(--wt-ink-soft);
+    text-align: center;
+    gap: 10px;
+  }
+  .wt-detail-empty i { font-size: 1.8rem; opacity: 0.4; }
+
+  .wt-back {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: var(--wt-blue);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0 0 16px 0;
+    cursor: pointer;
+  }
+
+  .wt-d-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--wt-line);
+  }
+  .wt-d-header h2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px 0;
+    word-break: break-word;
+  }
+
+  .wt-meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .wt-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--wt-ink-soft);
+    background: var(--wt-mist);
+    border-radius: 20px;
+    padding: 5px 11px;
+    text-decoration: none;
+    max-width: 100%;
+  }
+  .wt-meta-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wt-meta-chip i { color: var(--wt-blue); flex-shrink: 0; }
+  .wt-meta-chip.is-link:hover { background: rgba(38, 121, 236, 0.1); }
+
+  .wt-d-body {
+    background: var(--wt-mist);
+    border-left: 3px solid var(--wt-blue);
+    border-radius: 4px 14px 14px 4px;
+    padding: 16px 18px;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .wt-prev-reply {
+    background: rgba(245, 179, 0, 0.08);
+    border-left: 3px solid var(--wt-gold);
+    border-radius: 4px 14px 14px 4px;
+    padding: 12px 18px;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+    word-break: break-word;
+  }
+  .wt-prev-reply strong {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--wt-gold-deep);
+    margin-bottom: 5px;
+  }
+
+  .wt-reply-box { margin-top: 4px; }
+  .wt-reply-box label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--wt-ink-soft);
+    margin-bottom: 8px;
+  }
+  .wt-reply-box textarea {
+    display: block;
+    width: 100%;
+    min-height: 120px;
+    padding: 13px 16px;
+    border: 2px solid var(--wt-line);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    line-height: 1.6;
+    resize: vertical;
+    background: var(--wt-mist);
+    color: var(--wt-ink);
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+  }
+  .wt-reply-box textarea:focus {
+    border-color: var(--wt-blue);
+    background: #fff;
+    outline: none;
+  }
+  .dark .wt-reply-box textarea:focus { background: #0b1420; }
+  .wt-reply-box textarea.invalid { border-color: var(--wt-rose); }
+
+  .wt-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .wt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 11px;
+    border: none;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.12s ease, background 0.15s ease;
+  }
+  .wt-btn:active { transform: translateY(1px); }
+
+  .wt-btn-finish {
+    background: var(--wt-gold);
+    color: #402c00;
+    box-shadow: 0 4px 14px rgba(245, 179, 0, 0.3);
+  }
+  .wt-btn-finish:hover { background: var(--wt-gold-deep); }
+  .wt-btn-finish:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+  .wt-btn-ghost {
+    background: var(--wt-mist);
+    color: var(--wt-ink);
+    border: 1px solid var(--wt-line);
+  }
+  .wt-btn-ghost:hover { background: var(--wt-line); }
+
+  .wt-hint { font-size: 0.75rem; color: var(--wt-ink-soft); margin-top: 8px; }
+
+  .wt-feedback {
+    font-size: 0.8rem;
+    margin-top: 12px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+  }
+  .wt-feedback.show { display: flex; }
+  .wt-feedback.ok { color: #16a34a; }
+  .wt-feedback.fail { color: var(--wt-rose); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wt-item, .wt-btn, .wt-detail { transition: none !important; }
+  }
+
+  @media (max-width: 768px) {
+    .wt-inbox { display: block; }
+    .wt-list { max-height: none; padding-right: 0; }
+    .wt-back { display: inline-flex; }
+
+    .wt-detail {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      border-radius: 0;
+      border: none;
+      padding: 18px 16px 24px 16px;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.28s ease;
+      -webkit-overflow-scrolling: touch;
+    }
+    .wt-inbox.mobile-detail-active .wt-detail { transform: translateX(0); }
+    .wt-detail-empty { display: none; }
+
+    .wt-actions {
+      position: sticky;
+      bottom: -24px;
+      background: #fff;
+      margin: 16px -16px -24px -16px;
+      padding: 14px 16px 22px 16px;
+      border-top: 1px solid var(--wt-line);
+    }
+    .dark .wt-actions { background: #101a29; }
+    .wt-actions .wt-btn { flex: 1; }
+  }
+
+  @media (max-width: 480px) {
+    .wt-title { font-size: 1.3rem; }
+    .wt-item-body { padding: 11px 13px; }
+    .wt-d-header h2 { font-size: 1.02rem; }
+  }
+</style>
+
+<script>
+  const inboxEl = document.getElementById('inbox');
+  const detailEl = document.getElementById('messageDetail');
+  const tabs = document.querySelectorAll('.wt-tab');
+  let currentFilter = 'semua';
+
+  const statusLabel: Record<string, string> = {
+    unread: 'Masuk',
+    read: 'Dibaca',
+    replied: 'Selesai',
+  };
+
+  const isMobile = () => window.innerWidth <= 768;
+
+  function applyFilter() {
+    document.querySelectorAll('.wt-item').forEach((el) => {
+      const status = el.getAttribute('data-status');
+      const show = currentFilter === 'semua' || status === currentFilter;
+      (el as HTMLElement).style.display = show ? '' : 'none';
+    });
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilter = tab.getAttribute('data-filter') || 'semua';
+      applyFilter();
+    });
+  });
+
+  function escapeHtml(str: string) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderDetail(item: HTMLElement) {
+    const id = item.getAttribute('data-id')!;
+    const name = item.getAttribute('data-name')!;
+    const email = item.getAttribute('data-email')!;
+    const phone = item.getAttribute('data-phone') || '';
+    const subject = item.getAttribute('data-subject')!;
+    const message = item.getAttribute('data-message')!;
+    const reply = item.getAttribute('data-reply') || '';
+    const repliedBy = item.getAttribute('data-replied-by') || '';
+    const date = item.getAttribute('data-date')!;
+    const status = item.getAttribute('data-status')!;
+
+    const waHref = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}` : '';
+
+    const prevReplyHtml = reply
+      ? `<div class="wt-prev-reply">
+          <strong><i class="bi bi-flag-fill"></i> Balasan tersimpan${repliedBy ? ' &middot; ' + escapeHtml(repliedBy) : ''}</strong>
+          ${escapeHtml(reply)}
+        </div>`
+      : '';
+
+    detailEl!.innerHTML = `
+      <button class="wt-back" id="detailBackBtn" type="button">
+        <i class="bi bi-arrow-left"></i> Kembali ke daftar
+      </button>
+
+      <div class="wt-d-header">
+        <div>
+          <h2>${escapeHtml(subject)}</h2>
+          <div class="wt-meta-row">
+            <span class="wt-meta-chip"><i class="bi bi-person-fill"></i><span>${escapeHtml(name)}</span></span>
+            <a class="wt-meta-chip is-link" href="mailto:${escapeHtml(email)}"><i class="bi bi-envelope-fill"></i><span>${escapeHtml(email)}</span></a>
+            ${phone ? `<a class="wt-meta-chip is-link" href="${waHref}" target="_blank"><i class="bi bi-whatsapp"></i><span>${escapeHtml(phone)}</span></a>` : ''}
+            <span class="wt-meta-chip"><i class="bi bi-clock-fill"></i><span>${date}</span></span>
+          </div>
+        </div>
+        <span class="wt-badge badge-${status}" id="currentStatusBadge">${status === 'replied' ? '<i class="bi bi-flag-fill"></i>' : ''}${statusLabel[status] ?? status}</span>
+      </div>
+
+      <div class="wt-d-body">${escapeHtml(message)}</div>
+
+      ${prevReplyHtml}
+
+      <div class="wt-reply-box">
+        <label for="replyText">Balasan Admin</label>
+        <textarea id="replyText" placeholder="Tulis balasan untuk peserta ini...">${escapeHtml(reply)}</textarea>
+        <p class="wt-hint" id="replyHint">1) Tekan "Tandai Selesai" buat nyimpen &amp; nutup tiket. 2) Tekan "Kirim via WhatsApp" / "Kirim via Email" buat benar-benar ngirim ke penanya.</p>
+      </div>
+
+      <div class="wt-actions">
+        <button class="wt-btn wt-btn-finish" id="finishBtn">
+          <i class="bi bi-flag-fill"></i> Tandai Selesai
+        </button>
+        ${status === 'unread' ? `<button class="wt-btn wt-btn-ghost" id="markReadBtn">Tandai Dibaca</button>` : ''}
+        ${phone ? `<button class="wt-btn wt-btn-ghost" id="openWaBtn" type="button"><i class="bi bi-whatsapp"></i> Kirim via WhatsApp</button>` : ''}
+        <button class="wt-btn wt-btn-ghost" id="openEmailBtn" type="button">
+          <i class="bi bi-envelope"></i> Kirim via Email
         </button>
       </div>
-      
-      <div class="p-6" id="viewContent">
-        <!-- Content akan diisi oleh JavaScript -->
-      </div>
-    </div>
-  </div>
 
-  <!-- Modal Reply Contact -->
-  <div id="replyModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 opacity-0 invisible transition-all duration-300">
-    <div class="absolute inset-0 bg-black/50" onclick="closeReplyModal()"></div>
-    <div class="relative bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform scale-95 transition-all duration-300">
-      <div class="sticky top-0 bg-white dark:bg-gray-800 z-10 px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          <i class="bi bi-reply text-green-600 dark:text-green-400 mr-2"></i>
-          Balas Pesan
-        </h3>
-        <button onclick="closeReplyModal()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition">
-          <i class="bi bi-x-lg"></i>
-        </button>
-      </div>
-      
-      <form id="replyForm" class="p-6 space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Kepada
-          </label>
-          <input 
-            type="text" 
-            id="replyTo"
-            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-            disabled
-          />
-        </div>
+      <div class="wt-feedback" id="saveFeedback"></div>
+    `;
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Subjek
-          </label>
-          <input 
-            type="text" 
-            id="replySubject"
-            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-          />
-        </div>
+    document.getElementById('finishBtn')!.addEventListener('click', async () => {
+      const textarea = document.getElementById('replyText') as HTMLTextAreaElement;
+      const hint = document.getElementById('replyHint')!;
+      const value = textarea.value.trim();
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Pesan Balasan <span class="text-red-500">*</span>
-          </label>
-          <textarea 
-            id="replyMessage"
-            rows="6" 
-            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
-            placeholder="Tulis balasan Anda di sini..."
-            required
-          ></textarea>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <input type="checkbox" id="markAsRead" checked class="rounded border-gray-300 dark:border-gray-600" />
-          <label for="markAsRead" class="text-sm text-gray-700 dark:text-gray-300">
-            Tandai sebagai sudah dibaca
-          </label>
-        </div>
-
-        <div class="flex justify-end gap-3">
-          <button type="button" onclick="closeReplyModal()" class="px-6 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-            Batal
-          </button>
-          <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
-            <i class="bi bi-send"></i>
-            Kirim Balasan
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-gray-900 dark:bg-gray-800 text-white px-6 py-4 rounded-xl shadow-lg transform translate-y-full opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
-    <i class="bi bi-check-circle-fill text-green-400"></i>
-    <span id="toast-message">Pesan berhasil dihapus!</span>
-    <button onclick="hideToast()" class="text-gray-400 hover:text-white transition">
-      <i class="bi bi-x-lg"></i>
-    </button>
-  </div>
-
-  <script>
-    // ============================================================
-    // CONTACT DATA
-    // ============================================================
-    const contactsData = [
-      { id: '1', name: 'Ahmad Fauzi', email: 'ahmad.fauzi@email.com', subject: 'Pertanyaan Pendaftaran', message: 'Assalamualaikum, saya ingin bertanya tentang prosedur pendaftaran untuk kategori Half Marathon...', status: 'unread', priority: 'high', category: 'Pendaftaran', createdAt: '2026-07-10 14:30:00' },
-      { id: '2', name: 'Siti Rahma', email: 'siti.rahma@email.com', subject: 'Informasi Sponsor', message: 'Selamat siang. Perusahaan kami tertarik untuk menjadi sponsor...', status: 'read', priority: 'medium', category: 'Sponsor', createdAt: '2026-07-09 10:15:00' },
-    ];
-
-    // ============================================================
-    // VIEW CONTACT
-    // ============================================================
-    function viewContact(id) {
-      const contact = contactsData.find(c => c.id === id);
-      if (!contact) return;
-
-      const content = document.getElementById('viewContent');
-      content.innerHTML = `
-        <div class="space-y-4">
-          <!-- Header -->
-          <div class="flex items-start justify-between">
-            <div>
-              <h4 class="text-lg font-bold text-gray-900 dark:text-white">${contact.subject}</h4>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Dari: ${contact.name} (${contact.email})</p>
-            </div>
-            <div class="flex gap-2">
-              <span class="px-2.5 py-1 text-xs font-medium rounded-full ${getStatusColor(contact.status)}">
-                ${getStatusLabel(contact.status)}
-              </span>
-              <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                ${contact.category}
-              </span>
-            </div>
-          </div>
-
-          <!-- Priority & Date -->
-          <div class="flex items-center gap-4 text-sm">
-            <span class="flex items-center gap-1">
-              <i class="bi bi-flag-fill ${getPriorityColor(contact.priority)}"></i>
-              Prioritas: ${getPriorityLabel(contact.priority)}
-            </span>
-            <span class="text-gray-500 dark:text-gray-400">
-              <i class="bi bi-clock mr-1"></i>
-              ${formatDate(contact.createdAt)}
-            </span>
-          </div>
-
-          <!-- Message -->
-          <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-            <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">${contact.message}</p>
-          </div>
-
-          <!-- Response -->
-          ${contact.response ? `
-            <div>
-              <h5 class="text-sm font-semibold text-green-600 dark:text-green-400 mb-2">
-                <i class="bi bi-reply mr-1"></i>
-                Balasan:
-              </h5>
-              <div class="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200 dark:border-green-800">
-                <p class="text-gray-700 dark:text-gray-300">${contact.response}</p>
-              </div>
-            </div>
-          ` : `
-            <div class="flex justify-end">
-              <button onclick="replyContact('${contact.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
-                <i class="bi bi-reply"></i>
-                Balas Pesan
-              </button>
-            </div>
-          `}
-        </div>
-      `;
-
-      viewModal.classList.remove('opacity-0', 'invisible');
-      viewModal.querySelector('.relative').classList.remove('scale-95');
-      viewModal.querySelector('.relative').classList.add('scale-100');
-      document.body.style.overflow = 'hidden';
-    }
-    window.viewContact = viewContact;
-
-    function closeViewModal() {
-      viewModal.classList.add('opacity-0', 'invisible');
-      viewModal.querySelector('.relative').classList.remove('scale-100');
-      viewModal.querySelector('.relative').classList.add('scale-95');
-      document.body.style.overflow = '';
-    }
-    window.closeViewModal = closeViewModal;
-
-    // ============================================================
-    // REPLY CONTACT
-    // ============================================================
-    let replyContactId = null;
-
-    function replyContact(id) {
-      const contact = contactsData.find(c => c.id === id);
-      if (!contact) return;
-
-      replyContactId = id;
-      document.getElementById('replyTo').value = `${contact.name} <${contact.email}>`;
-      document.getElementById('replySubject').value = `Re: ${contact.subject}`;
-      document.getElementById('replyMessage').value = '';
-      document.getElementById('markAsRead').checked = true;
-
-      replyModal.classList.remove('opacity-0', 'invisible');
-      replyModal.querySelector('.relative').classList.remove('scale-95');
-      replyModal.querySelector('.relative').classList.add('scale-100');
-      document.body.style.overflow = 'hidden';
-    }
-    window.replyContact = replyContact;
-
-    function closeReplyModal() {
-      replyModal.classList.add('opacity-0', 'invisible');
-      replyModal.querySelector('.relative').classList.remove('scale-100');
-      replyModal.querySelector('.relative').classList.add('scale-95');
-      document.body.style.overflow = '';
-      replyContactId = null;
-    }
-    window.closeReplyModal = closeReplyModal;
-
-    // Reply Form Submit
-    document.getElementById('replyForm')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      
-      const message = document.getElementById('replyMessage').value.trim();
-      if (!message) {
-        showToast('⚠️ Mohon tulis balasan Anda');
+      if (!value) {
+        textarea.classList.add('invalid');
+        hint.textContent = 'Tulis dulu balasannya sebelum menandai selesai.';
+        hint.style.color = 'var(--wt-rose)';
+        textarea.focus();
         return;
       }
+      textarea.classList.remove('invalid');
 
-      showToast('✅ Balasan berhasil dikirim!');
-      
-      setTimeout(() => {
-        closeReplyModal();
-        // Update status in table
-        if (replyContactId) {
-          const row = document.querySelector(`tr[data-id="${replyContactId}"]`);
-          if (row) {
-            const statusCell = row.querySelectorAll('td')[4];
-            if (statusCell) {
-              statusCell.innerHTML = `
-                <span class="px-2.5 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
-                  Sudah Dibalas
-                </span>
-              `;
-            }
-          }
-        }
-      }, 1000);
-    });
+      await updateMessage(id, { adminReply: value }, item, 'replied');
 
-    // ============================================================
-    // DELETE CONTACT
-    // ============================================================
-    function deleteContact(id) {
-      if (!confirm('Yakin ingin menghapus pesan ini?')) return;
-      
-      const row = document.querySelector(`tr[data-id="${id}"]`);
-      if (row) {
-        row.style.transform = 'scale(0.9)';
-        row.style.opacity = '0';
+      if (isMobile()) {
         setTimeout(() => {
-          row.remove();
-          showToast('Pesan berhasil dihapus!');
-          updateStats();
-        }, 300);
-      }
-    }
-    window.deleteContact = deleteContact;
-
-    // ============================================================
-    // UPDATE STATISTICS
-    // ============================================================
-    function updateStats() {
-      const rows = document.querySelectorAll('tbody tr');
-      const total = rows.length;
-      const unread = document.querySelectorAll('tbody tr .bg-red-100').length;
-      const replied = document.querySelectorAll('tbody tr .bg-blue-100').length;
-      const high = document.querySelectorAll('tbody tr .text-red-600').length;
-      
-      const statCards = document.querySelectorAll('.grid-cols-1.sm\\:grid-cols-2 .bg-white');
-      if (statCards.length >= 4) {
-        const totalCount = statCards[0].querySelector('.text-2xl');
-        if (totalCount) totalCount.textContent = total;
-        
-        const unreadCount = statCards[1].querySelector('.text-2xl');
-        if (unreadCount) unreadCount.textContent = unread;
-        
-        const repliedCount = statCards[2].querySelector('.text-2xl');
-        if (repliedCount) repliedCount.textContent = replied;
-        
-        const highCount = statCards[3].querySelector('.text-2xl');
-        if (highCount) highCount.textContent = high;
-      }
-    }
-
-    // ============================================================
-    // SEARCH
-    // ============================================================
-    const searchInput = document.getElementById('searchInput');
-    searchInput?.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const rows = document.querySelectorAll('tbody tr');
-      
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(query) ? '' : 'none';
-      });
-    });
-
-    // ============================================================
-    // TOAST
-    // ============================================================
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      const toastMessage = document.getElementById('toast-message');
-      
-      if (toast && toastMessage) {
-        toastMessage.textContent = message;
-        toast.classList.remove('translate-y-full', 'opacity-0');
-        toast.classList.add('translate-y-0', 'opacity-100');
-        
-        setTimeout(hideToast, 3000);
-      }
-    }
-    window.showToast = showToast;
-
-    function hideToast() {
-      const toast = document.getElementById('toast');
-      if (toast) {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-full', 'opacity-0');
-      }
-    }
-    window.hideToast = hideToast;
-
-    // ============================================================
-    // KEYBOARD SHORTCUTS
-    // ============================================================
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeViewModal();
-        closeReplyModal();
+          inboxEl!.classList.remove('mobile-detail-active');
+        }, 650);
       }
     });
 
-    // ============================================================
-    // GET COLOR FUNCTIONS
-    // ============================================================
-    function getStatusColor(status) {
-      const colors = {
-        read: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-        unread: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
-        replied: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
-      };
-      return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400';
-    }
-
-    function getStatusLabel(status) {
-      const labels = {
-        read: 'Sudah Dibaca',
-        unread: 'Belum Dibaca',
-        replied: 'Sudah Dibalas',
-      };
-      return labels[status] || status;
-    }
-
-    function getPriorityColor(priority) {
-      const colors = {
-        high: 'text-red-600 dark:text-red-400',
-        medium: 'text-yellow-600 dark:text-yellow-400',
-        low: 'text-green-600 dark:text-green-400',
-      };
-      return colors[priority] || 'text-gray-600 dark:text-gray-400';
-    }
-
-    function getPriorityLabel(priority) {
-      const labels = {
-        high: 'Tinggi',
-        medium: 'Sedang',
-        low: 'Rendah',
-      };
-      return labels[priority] || priority;
-    }
-
-    function formatDate(date) {
-      return new Date(date).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+    const markReadBtn = document.getElementById('markReadBtn');
+    if (markReadBtn) {
+      markReadBtn.addEventListener('click', async () => {
+        await updateMessage(id, { status: 'read' }, item, 'read');
       });
     }
 
-    console.log('✅ Kontak Admin Panel loaded');
-  </script>
-</AdminLayout>
+    document.getElementById('openWaBtn')?.addEventListener('click', () => {
+      const textarea = document.getElementById('replyText') as HTMLTextAreaElement;
+      const text = textarea.value.trim();
+      if (!text) {
+        textarea.classList.add('invalid');
+        textarea.focus();
+        return;
+      }
+      const waMessage =
+        `Halo ${name}, ini balasan dari panitia Waru Turi Fun Run 2026 untuk pertanyaan kamu ("${subject}"):\n\n${text}\n\n` +
+        `Ada pertanyaan lain? Hubungi kami di sini atau kunjungi http://localhost:4321/kontak`;
+      const target = phone.replace(/[^0-9]/g, '').replace(/^0/, '62');
+      window.open(`https://wa.me/${target}?text=${encodeURIComponent(waMessage)}`, '_blank');
+    });
+
+    document.getElementById('openEmailBtn')?.addEventListener('click', () => {
+      const textarea = document.getElementById('replyText') as HTMLTextAreaElement;
+      const text = textarea.value.trim();
+      if (!text) {
+        textarea.classList.add('invalid');
+        textarea.focus();
+        return;
+      }
+      const emailBody =
+        `Halo ${name},\n\nTerima kasih sudah menghubungi Waru Turi Fun Run 2026. Berikut balasan dari tim kami:\n\n${text}\n\n` +
+        `Salam,\nPanitia Waru Turi Fun Run 2026`;
+      window.location.href = `mailto:${email}?subject=${encodeURIComponent('Re: ' + subject)}&body=${encodeURIComponent(emailBody)}`;
+    });
+
+    document.getElementById('detailBackBtn')!.addEventListener('click', () => {
+      inboxEl!.classList.remove('mobile-detail-active');
+    });
+
+    if (isMobile()) {
+      inboxEl!.classList.add('mobile-detail-active');
+    }
+  }
+
+  async function updateMessage(id: string, payload: Record<string, unknown>, item: HTMLElement, newStatus: string) {
+    const feedback = document.getElementById('saveFeedback');
+    try {
+      const res = await fetch(`/api/admin/contacts/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || 'Gagal');
+
+      item.setAttribute('data-status', newStatus);
+      if (typeof payload.adminReply === 'string') {
+        item.setAttribute('data-reply', payload.adminReply);
+      }
+
+      const bar = item.querySelector('.wt-item-bar');
+      if (bar) bar.className = `wt-item-bar bar-${newStatus}`;
+
+      const badge = item.querySelector('.wt-badge');
+      if (badge) {
+        badge.className = `wt-badge badge-${newStatus}`;
+        badge.innerHTML = `${newStatus === 'replied' ? '<i class="bi bi-flag-fill"></i>' : ''}${statusLabel[newStatus] ?? newStatus}`;
+      }
+
+      const currentBadge = document.getElementById('currentStatusBadge');
+      if (currentBadge) {
+        currentBadge.className = `wt-badge badge-${newStatus}`;
+        currentBadge.innerHTML = `${newStatus === 'replied' ? '<i class="bi bi-flag-fill"></i>' : ''}${statusLabel[newStatus] ?? newStatus}`;
+      }
+
+      if (feedback) {
+        feedback.innerHTML = newStatus === 'replied'
+          ? '<i class="bi bi-check-circle-fill"></i> Tiket ditandai selesai.'
+          : '<i class="bi bi-check-circle-fill"></i> Tersimpan.';
+        feedback.className = 'wt-feedback show ok';
+      }
+    } catch (err) {
+      if (feedback) {
+        feedback.innerHTML = '<i class="bi bi-x-circle-fill"></i> Gagal menyimpan, coba lagi.';
+        feedback.className = 'wt-feedback show fail';
+      }
+    }
+  }
+
+  document.querySelectorAll('.wt-item').forEach((item) => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.wt-item').forEach((el) => el.classList.remove('selected'));
+      item.classList.add('selected');
+      renderDetail(item as HTMLElement);
+
+      if (item.getAttribute('data-status') === 'unread') {
+        updateMessage(item.getAttribute('data-id')!, { status: 'read' }, item as HTMLElement, 'read');
+      }
+    });
+  });
+</script>

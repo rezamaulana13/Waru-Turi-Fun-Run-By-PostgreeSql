@@ -15,17 +15,19 @@ import {
 import { sql } from 'drizzle-orm';
 
 // ============================================================
-// ENUMS - PASTIKAN SESUAI DENGAN DATABASE
+// ENUMS
 // ============================================================
 
 export const userRoleEnum = pgEnum('user_role_enum', ['admin', 'user', 'super_admin']);
 export const genderEnum = pgEnum('gender_enum', ['Pria', 'Wanita']);
-export const categoryEnum = pgEnum('category_enum', ['5K', '10K', 'Pelajar']);  // ← Ubah 'Pelajar' menjadi 'pelajar'
+export const categoryEnum = pgEnum('category_enum', ['5K', '10K', 'pelajar']);
 export const jerseySizeEnum = pgEnum('jersey_size_enum', ['S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL']);
 export const paymentMethodEnum = pgEnum('payment_method_enum', ['bank_transfer', 'qris', 'cash', 'e_wallet']);
 export const paymentStatusEnum = pgEnum('payment_status_enum', ['pending', 'paid', 'failed', 'refunded', 'expired']);
 export const participantStatusEnum = pgEnum('participant_status_enum', ['registered', 'confirmed', 'checked_in', 'finished', 'cancelled', 'dnf']);
 export const articleStatusEnum = pgEnum('article_status_enum', ['draft', 'published', 'archived']);
+// BARU: status tiket pesan kontak dari halaman /kontak
+export const contactMessageStatusEnum = pgEnum('contact_message_status_enum', ['unread', 'read', 'replied']);
 
 // ============================================================
 // TABLE: users
@@ -58,8 +60,6 @@ export type NewUser = typeof users.$inferInsert;
 // ============================================================
 // TABLE: participants
 // ============================================================
-
-// src/db/schema.ts - Pastikan field participants lengkap
 
 export const participants = pgTable('participants', {
   id: serial('id').primaryKey(),
@@ -165,13 +165,19 @@ export const articles = pgTable('articles', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
   slug: text('slug').notNull().unique(),
+  subtitle: text('subtitle'),
+  category: text('category'),
   content: text('content').notNull(),
   excerpt: text('excerpt'),
+  tags: text('tags').array(),
   authorId: integer('author_id').references(() => users.id, { onDelete: 'set null' }),
   authorName: text('author_name'),
   featuredImage: text('featured_image'),
+  metaDescription: text('meta_description'),
+  metaKeywords: text('meta_keywords'),
   status: articleStatusEnum('status').default('draft'),
   viewCount: integer('view_count').default(0),
+  likes: integer('likes').default(0),
   publishedAt: timestamp('published_at'),
   createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`),
@@ -179,6 +185,7 @@ export const articles = pgTable('articles', {
   slugIdx: index('articles_slug_idx').on(table.slug),
   statusIdx: index('articles_status_idx').on(table.status),
   publishedAtIdx: index('articles_published_at_idx').on(table.publishedAt),
+  categoryIdx: index('articles_category_idx').on(table.category),
 }));
 
 export type Article = typeof articles.$inferSelect;
@@ -218,14 +225,14 @@ export const certificates = pgTable('certificates', {
   template: text('template').default('default'),
   data: jsonb('data'),
   fileUrl: text('file_url'),
-  status: text('status').default('draft'),  // ← HARUS ADA!
+  status: text('status').default('draft'),
   issuedAt: timestamp('issued_at'),
   createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
   participantIdIdx: index('certificates_participant_id_idx').on(table.participantId),
   certificateNumberIdx: index('certificates_certificate_number_idx').on(table.certificateNumber),
-  statusIdx: index('certificates_status_idx').on(table.status), // ← TAMBAHKAN
+  statusIdx: index('certificates_status_idx').on(table.status),
 }));
 
 export type Certificate = typeof certificates.$inferSelect;
@@ -252,6 +259,7 @@ export const settings = pgTable('settings', {
 
 export type Setting = typeof settings.$inferSelect;
 export type NewSetting = typeof settings.$inferInsert;
+
 // ============================================================
 // TABLE: password_resets
 // ============================================================
@@ -270,7 +278,6 @@ export const passwordResets = pgTable('password_resets', {
 
 export type PasswordReset = typeof passwordResets.$inferSelect;
 export type NewPasswordReset = typeof passwordResets.$inferInsert;
-
 
 // ============================================================
 // TABLE: about_content
@@ -294,3 +301,38 @@ export const aboutContent = pgTable('about_content', {
 
 export type AboutContent = typeof aboutContent.$inferSelect;
 export type NewAboutContent = typeof aboutContent.$inferInsert;
+
+// ============================================================
+// TABLE: contact_messages
+// BARU — menyimpan pesan dari form /kontak (halaman publik).
+// Admin melihat & membalas pesan-pesan ini di halaman /admin/kontak.
+// ============================================================
+
+export const contactMessages = pgTable('contact_messages', {
+  id: serial('id').primaryKey(),
+
+  // Data dari user yang mengisi form kontak
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone'),
+  subject: text('subject').notNull(),
+  message: text('message').notNull(),
+
+  // Status tiket: unread -> read -> replied
+  status: contactMessageStatusEnum('status').default('unread'),
+
+  // Balasan dari admin
+  adminReply: text('admin_reply'),
+  repliedBy: text('replied_by'),
+  repliedAt: timestamp('replied_at'),
+
+  createdAt: timestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp('updated_at').default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  statusIdx: index('contact_messages_status_idx').on(table.status),
+  emailIdx: index('contact_messages_email_idx').on(table.email),
+  createdAtIdx: index('contact_messages_created_at_idx').on(table.createdAt),
+}));
+
+export type ContactMessage = typeof contactMessages.$inferSelect;
+export type NewContactMessage = typeof contactMessages.$inferInsert;

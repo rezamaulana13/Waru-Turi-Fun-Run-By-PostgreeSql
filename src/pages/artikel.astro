@@ -3,146 +3,28 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navbar from '../components/common/Navbar.astro';
 import Footer from '../components/common/Footer.astro';
+import { db, articles } from '../db';
+import { eq, desc, and } from 'drizzle-orm';
 
-// Interface untuk data artikel
-interface Artikel {
-  id: number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content?: string;
-  image: string;
-  category: string;
-  author: string;
-  date: string;
-  readTime: number;
-  tags: string[];
-  featured?: boolean;
+// ===== GET ALL PUBLISHED ARTICLES =====
+let artikelData: any[] = [];
+let error = '';
+
+try {
+  const result = await db.select()
+    .from(articles)
+    .where(eq(articles.status, 'published'))
+    .orderBy(desc(articles.createdAt));
+
+  artikelData = result || [];
+} catch (e: any) {
+  error = e.message;
+  console.error('Error fetching articles:', e);
 }
 
-// Data artikel - ini akan diganti dengan fetch dari CMS/API
-const artikelData: Artikel[] = [
-  {
-    id: 1,
-    title: 'Persiapan Mental Sebelum Lomba Lari',
-    slug: 'persiapan-mental-sebelum-lomba-lari',
-    excerpt: 'Persiapan mental sama pentingnya dengan persiapan fisik. Pelajari tips dan trik untuk menjaga fokus dan motivasi sebelum hari-H.',
-    image: 'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=800&q=80',
-    category: 'Tips & Trik',
-    author: 'Tim Waru Turi',
-    date: '2026-01-20',
-    readTime: 5,
-    tags: ['Mental', 'Motivasi', 'Persiapan'],
-    featured: true,
-  },
-  {
-    id: 2,
-    title: 'Panduan Nutrisi untuk Pelari Jarak Jauh',
-    slug: 'panduan-nutrisi-untuk-pelari-jarak-jauh',
-    excerpt: 'Apa yang harus dimakan sebelum, selama, dan setelah lomba? Simak panduan nutrisi lengkap untuk performa maksimal.',
-    image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80',
-    category: 'Nutrisi',
-    author: 'Dr. Fitriani',
-    date: '2026-01-18',
-    readTime: 7,
-    tags: ['Nutrisi', 'Kesehatan', 'Energi'],
-    featured: false,
-  },
-  {
-    id: 3,
-    title: 'Sejarah Bendungan Waru Turi dan Keindahannya',
-    slug: 'sejarah-bendungan-waru-turi-dan-keindahannya',
-    excerpt: 'Jelajahi sejarah dan keindahan Bendungan Waru Turi, ikon kebanggaan Kediri yang menjadi lokasi lomba.',
-    image: 'https://images.unsplash.com/photo-1540539234-c14a20fb7c7b?w=800&q=80',
-    category: 'Wisata & Budaya',
-    author: 'Tim Waru Turi',
-    date: '2026-01-15',
-    readTime: 4,
-    tags: ['Sejarah', 'Wisata', 'Bendungan'],
-    featured: false,
-  },
-  {
-    id: 4,
-    title: 'Cara Memilih Sepatu Lari yang Tepat',
-    slug: 'cara-memilih-sepatu-lari-yang-tepat',
-    excerpt: 'Sepatu lari adalah investasi terpenting seorang pelari. Panduan memilih sepatu yang sesuai dengan jenis kaki dan gaya lari Anda.',
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&q=80',
-    category: 'Tips & Trik',
-    author: 'Heri Muda',
-    date: '2026-01-12',
-    readTime: 6,
-    tags: ['Sepatu', 'Peralatan', 'Tips'],
-    featured: false,
-  },
-  {
-    id: 5,
-    title: 'Teknik Pernapasan yang Efektif Saat Berlari',
-    slug: 'teknik-pernapasan-yang-efektif-saat-berlari',
-    excerpt: 'Pernapasan yang benar dapat meningkatkan performa lari Anda. Pelajari teknik pernapasan yang efektif untuk berbagai situasi.',
-    image: 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=800&q=80',
-    category: 'Teknik Lari',
-    author: 'Tim Waru Turi',
-    date: '2026-01-10',
-    readTime: 5,
-    tags: ['Pernapasan', 'Teknik', 'Performansi'],
-    featured: false,
-  },
-  {
-    id: 6,
-    title: 'Mengenal Rute 5K dan 10K Waru Turi Fun Run 2026',
-    slug: 'mengenal-rute-5k-dan-10k-waru-turi-fun-run-2026',
-    excerpt: 'Detail lengkap rute 5K dan 10K Waru Turi Fun Run 2026. Ketahui titik start, finish, water station, dan checkpoint.',
-    image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=800&q=80',
-    category: 'Informasi Lomba',
-    author: 'Panitia',
-    date: '2026-01-08',
-    readTime: 8,
-    tags: ['Rute', 'Informasi', 'Lomba'],
-    featured: true,
-  },
-  {
-    id: 7,
-    title: 'Manfaat Lari untuk Kesehatan Mental',
-    slug: 'manfaat-lari-untuk-kesehatan-mental',
-    excerpt: 'Lari tidak hanya baik untuk fisik, tetapi juga mental. Temukan bagaimana lari dapat mengurangi stres dan meningkatkan kebahagiaan.',
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f0ec?w=800&q=80',
-    category: 'Kesehatan',
-    author: 'Dr. Budi Santoso',
-    date: '2026-01-05',
-    readTime: 6,
-    tags: ['Kesehatan', 'Mental', 'Stres'],
-    featured: false,
-  },
-  {
-    id: 8,
-    title: 'Tips Mencegah Cedera Saat Latihan Lari',
-    slug: 'tips-mencegah-cedera-saat-latihan-lari',
-    excerpt: 'Cedera adalah musuh utama pelari. Pelajari cara mencegah cedera agar latihan tetap produktif dan menyenangkan.',
-    image: 'https://images.unsplash.com/photo-1576678927484-cc907957088c?w=800&q=80',
-    category: 'Kesehatan',
-    author: 'Dr. Fitriani',
-    date: '2026-01-03',
-    readTime: 7,
-    tags: ['Cedera', 'Pencegahan', 'Latihan'],
-    featured: false,
-  },
-  {
-    id: 9,
-    title: 'Rekomendasi Playlist Musik untuk Lari',
-    slug: 'rekomendasi-playlist-musik-untuk-lari',
-    excerpt: 'Musik yang tepat dapat meningkatkan motivasi dan performa lari. Simak rekomendasi playlist untuk menemani langkah Anda.',
-    image: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80',
-    category: 'Hiburan',
-    author: 'Tim Waru Turi',
-    date: '2025-12-30',
-    readTime: 4,
-    tags: ['Musik', 'Motivasi', 'Playlist'],
-    featured: false,
-  },
-];
-
-// Fungsi untuk format tanggal
-function formatDate(dateStr: string): string {
+// ===== HELPER FUNCTIONS =====
+function formatDate(dateStr: string | Date): string {
+  if (!dateStr) return '';
   const date = new Date(dateStr);
   return date.toLocaleDateString('id-ID', {
     day: 'numeric',
@@ -151,247 +33,332 @@ function formatDate(dateStr: string): string {
   });
 }
 
-// Fungsi untuk mendapatkan warna kategori
 function getCategoryColor(category: string): string {
   const colorMap: Record<string, string> = {
     'Tips & Trik': 'bg-blue-100 text-blue-700',
+    'Peralatan': 'bg-purple-100 text-purple-700',
     'Nutrisi': 'bg-green-100 text-green-700',
-    'Wisata & Budaya': 'bg-purple-100 text-purple-700',
-    'Teknik Lari': 'bg-orange-100 text-orange-700',
-    'Informasi Lomba': 'bg-red-100 text-red-700',
+    'Latihan': 'bg-orange-100 text-orange-700',
     'Kesehatan': 'bg-emerald-100 text-emerald-700',
-    'Hiburan': 'bg-pink-100 text-pink-700',
+    'Event': 'bg-red-100 text-red-700',
   };
   return colorMap[category] || 'bg-gray-100 text-gray-700';
 }
 
-// Filter artikel berdasarkan kategori (untuk demo)
-const categories = [...new Set(artikelData.map(a => a.category))];
+function getReadTime(content: string): number {
+  if (!content) return 1;
+  const words = content.split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
 
-// Artikel featured
-const featuredArticles = artikelData.filter(a => a.featured);
-const regularArticles = artikelData.filter(a => !a.featured);
+function truncateText(text: string, maxLength: number = 150): string {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+}
+
+// ===== GET UNIQUE CATEGORIES =====
+const categories = [...new Set(artikelData.map(a => a.category).filter(Boolean))];
+
+// ===== SEPARATE FEATURED ARTICLES =====
+// Featured: 2 artikel terbaru, ditampilkan di section "Artikel Pilihan".
+// Grid "Semua Artikel" tetap berisi SEMUA artikel (termasuk yang featured),
+// supaya tiap artikel selalu muncul di grid utama dan bisa kefilter sesuai
+// kategorinya masing-masing (mis. artikel kategori "Event" tetap muncul
+// baik di filter "Semua" maupun filter "Event").
+const featuredArticles = artikelData.slice(0, 2);
+const regularArticles = artikelData;
+
+// ===== CHECK IF ARTICLES EXIST =====
+const hasArticles = artikelData.length > 0;
 ---
 
 <BaseLayout title="Artikel - Waru Turi Fun Run 2026" description="Kumpulan artikel dan tips menarik seputar lari, kesehatan, dan Waru Turi Fun Run 2026.">
-  <Navbar />
+  <div class="artikel-page">
+    <Navbar />
 
-  <!-- ===== HERO ===== -->
-  <section class="artikel-hero">
-    <div class="artikel-overlay"></div>
-    <div class="artikel-hero-content">
-      <h2 class="artikel-title">Artikel & Tips</h2>
-      <p class="artikel-subtitle">
-        Temukan berbagai artikel menarik seputar lari, kesehatan, nutrisi, dan informasi seputar Waru Turi Fun Run 2026.
-      </p>
-      <div class="artikel-breadcrumb">
-        <a href="/">Home</a>
-        <span>›</span>
-        <span>Artikel</span>
+    <!-- ===== HERO (judul berdiri sendiri di awal halaman) ===== -->
+    <section class="artikel-hero">
+      <div class="artikel-overlay"></div>
+      <div class="artikel-hero-content">
+        <div class="artikel-breadcrumb">
+          <a href="/">Home</a>
+          <span>›</span>
+          <span>Artikel</span>
+        </div>
+        <h1 class="artikel-title">Artikel & Tips</h1>
+        <p class="artikel-subtitle">
+          Temukan berbagai artikel menarik seputar lari, kesehatan, nutrisi, dan informasi seputar Waru Turi Fun Run 2026.
+        </p>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ===== CATEGORY FILTER ===== -->
-  <section class="py-6 bg-white border-b border-gray-100 sticky top-[72px] z-40 shadow-sm">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-6xl mx-auto flex flex-wrap gap-2 justify-center">
-        <button class="category-filter-btn active px-4 py-2 rounded-full text-sm font-medium transition-all" data-category="all">
-          Semua
-        </button>
-        {categories.map((category) => (
-          <button key={category} class="category-filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all" data-category={category}>
-            {category}
-          </button>
-        ))}
-      </div>
-    </div>
-  </section>
+    {error && (
+      <section class="py-4 bg-red-50 border-b border-red-200">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <p class="text-red-700 text-sm">
+            <i class="bi bi-exclamation-circle-fill mr-1"></i>
+            Gagal memuat artikel: {error}
+          </p>
+        </div>
+      </section>
+    )}
 
-  <!-- ===== FEATURED ARTICLES ===== -->
-  {featuredArticles.length > 0 && (
-    <section class="py-10 bg-[#F7F8FC]">
+    <!-- ===== CATEGORY FILTER ===== -->
+    <section class="py-6 bg-white border-b border-gray-100 sticky top-[72px] z-40 shadow-sm">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="max-w-6xl mx-auto">
-          <div class="flex items-center gap-3 mb-8">
-            <span class="w-1 h-8 bg-[#FFD700] rounded-full"></span>
-            <h2 class="text-2xl font-bold text-gray-900">Artikel Pilihan</h2>
-            <span class="text-sm text-gray-400">|</span>
-            <span class="text-sm text-gray-500">Kami rekomendasikan untuk Anda</span>
-          </div>
+        <div class="max-w-6xl mx-auto flex flex-wrap gap-2 justify-center">
+          <button class="category-filter-btn active px-4 py-2 rounded-full text-sm font-medium transition-all" data-category="all">
+            Semua
+          </button>
+          {categories.map((category) => (
+            <button key={category} class="category-filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all" data-category={category}>
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {featuredArticles.map((artikel) => (
-              <a href={`/artikel/${artikel.slug}`} class="group block bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 hover:border-[#2679ec]/30 hover:-translate-y-2">
-                <div class="relative h-56 overflow-hidden">
-                  <img 
-                    src={artikel.image} 
-                    alt={artikel.title}
-                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    loading="lazy"
-                  />
-                  <div class="absolute top-4 left-4">
-                    <span class={`px-3 py-1 rounded-full text-xs font-bold ${getCategoryColor(artikel.category)}`}>
-                      {artikel.category}
-                    </span>
-                  </div>
-                  <div class="absolute top-4 right-4">
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-[#FFD700] text-gray-900">
-                      <i class="bi bi-star-fill mr-1"></i> Featured
-                    </span>
-                  </div>
+    <!-- ===== CONTENT ===== -->
+    {hasArticles ? (
+      <>
+        <!-- ===== FEATURED ARTICLES ===== -->
+        {featuredArticles.length > 0 && (
+          <section class="py-10 bg-[#F7F8FC]">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+              <div class="max-w-6xl mx-auto">
+                <div class="flex items-center gap-3 mb-8">
+                  <span class="w-1 h-8 bg-[#FFD700] rounded-full"></span>
+                  <h2 class="text-2xl font-bold text-gray-900">Artikel Pilihan</h2>
+                  <span class="text-sm text-gray-400">|</span>
+                  <span class="text-sm text-gray-500">Kami rekomendasikan untuk Anda</span>
                 </div>
-                <div class="p-6">
-                  <h3 class="text-xl font-bold text-gray-900 group-hover:text-[#2679ec] transition-colors line-clamp-2">
-                    {artikel.title}
-                  </h3>
-                  <p class="text-gray-600 text-sm mt-2 line-clamp-3">{artikel.excerpt}</p>
-                  <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                    <div class="flex items-center gap-2 text-xs text-gray-500">
-                      <i class="bi bi-person-circle"></i>
-                      <span>{artikel.author}</span>
-                      <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                      <i class="bi bi-calendar3"></i>
-                      <span>{formatDate(artikel.date)}</span>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {featuredArticles.map((artikel) => (
+                    <a href={`/artikel/${artikel.slug}`} class="group block bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 hover:border-[#2679ec]/30 hover:-translate-y-2">
+                      <div class="relative h-56 overflow-hidden">
+                        {artikel.featuredImage ? (
+                          <img
+                            src={artikel.featuredImage}
+                            alt={artikel.title}
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                            <i class="bi bi-image text-5xl text-blue-400"></i>
+                          </div>
+                        )}
+                        <div class="absolute top-4 left-4">
+                          <span class={`px-3 py-1 rounded-full text-xs font-bold ${getCategoryColor(artikel.category)}`}>
+                            {artikel.category}
+                          </span>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                          <span class="px-3 py-1 rounded-full text-xs font-bold bg-[#FFD700] text-gray-900">
+                            <i class="bi bi-star-fill mr-1"></i> Featured
+                          </span>
+                        </div>
+                      </div>
+                      <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-[#2679ec] transition-colors line-clamp-2">
+                          {artikel.title}
+                        </h3>
+                        <p class="text-gray-600 text-sm mt-2 line-clamp-3">
+                          {artikel.excerpt || truncateText(artikel.content || '', 150)}
+                        </p>
+                        <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                          <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <i class="bi bi-person-circle"></i>
+                            <span>{artikel.authorName || 'Admin'}</span>
+                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                            <i class="bi bi-calendar3"></i>
+                            <span>{formatDate(artikel.createdAt)}</span>
+                          </div>
+                          <span class="text-xs text-gray-400 flex items-center gap-1">
+                            <i class="bi bi-clock"></i>
+                            {getReadTime(artikel.content)} min read
+                          </span>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <!-- ===== ARTICLES GRID ===== -->
+        <section class="py-10 bg-white" id="artikel-grid">
+          <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-6xl mx-auto">
+              <div class="flex items-center gap-3 mb-8">
+                <span class="w-1 h-8 bg-[#2679ec] rounded-full"></span>
+                <h2 class="text-2xl font-bold text-gray-900">Semua Artikel</h2>
+                <span class="text-sm text-gray-400">|</span>
+                <span class="text-sm text-gray-500">{artikelData.length} artikel</span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {regularArticles.map((artikel) => (
+                  <a
+                    key={artikel.id}
+                    href={`/artikel/${artikel.slug}`}
+                    class="artikel-card group block bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 hover:border-[#2679ec]/20 hover:-translate-y-2"
+                    data-category={artikel.category}
+                  >
+                    <div class="relative h-48 overflow-hidden">
+                      {artikel.featuredImage ? (
+                        <img
+                          src={artikel.featuredImage}
+                          alt={artikel.title}
+                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <i class="bi bi-image text-4xl text-gray-400"></i>
+                        </div>
+                      )}
+                      <div class="absolute top-3 left-3">
+                        <span class={`px-2.5 py-1 rounded-full text-xs font-bold ${getCategoryColor(artikel.category)}`}>
+                          {artikel.category}
+                        </span>
+                      </div>
                     </div>
-                    <span class="text-xs text-gray-400 flex items-center gap-1">
-                      <i class="bi bi-clock"></i>
-                      {artikel.readTime} min read
-                    </span>
-                  </div>
-                </div>
+                    <div class="p-5">
+                      <h3 class="text-base font-bold text-gray-900 group-hover:text-[#2679ec] transition-colors line-clamp-2">
+                        {artikel.title}
+                      </h3>
+                      <p class="text-gray-600 text-sm mt-2 line-clamp-2">
+                        {artikel.excerpt || truncateText(artikel.content || '', 120)}
+                      </p>
+                      <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                          <i class="bi bi-person-circle"></i>
+                          <span>{artikel.authorName || 'Admin'}</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-gray-400">
+                          <i class="bi bi-calendar3"></i>
+                          <span>{formatDate(artikel.createdAt)}</span>
+                          <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                          <i class="bi bi-clock"></i>
+                          <span>{getReadTime(artikel.content)}m</span>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+
+              <!-- Empty State untuk filter -->
+              <div id="artikel-empty" class="hidden text-center py-16">
+                <i class="bi bi-journal text-6xl text-gray-300 block mb-4"></i>
+                <p class="text-gray-500 text-lg font-medium">Tidak ada artikel dalam kategori ini</p>
+                <p class="text-gray-400 text-sm mt-1">Coba pilih kategori lain</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </>
+    ) : (
+      <!-- ===== EMPTY STATE - Belum Ada Artikel ===== -->
+      <section class="py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="max-w-2xl mx-auto text-center">
+            <div class="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <i class="bi bi-newspaper text-5xl text-gray-400"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-3">Belum Ada Artikel</h2>
+            <p class="text-gray-600 text-lg mb-6">
+              Saat ini belum ada artikel yang dipublikasikan.
+              Silakan cek kembali nanti untuk artikel menarik seputar lari dan Waru Turi Fun Run 2026.
+            </p>
+            <div class="flex flex-wrap gap-3 justify-center">
+              <a href="/" class="inline-flex items-center gap-2 px-6 py-3 bg-[#2679ec] text-white rounded-xl hover:bg-[#1a5fc7] transition">
+                <i class="bi bi-house"></i>
+                Kembali ke Beranda
               </a>
-            ))}
+              <a href="/p/ticket-sold.html" class="inline-flex items-center gap-2 px-6 py-3 bg-[#FFD700] text-gray-900 rounded-xl hover:bg-[#FFC107] transition">
+                <i class="bi bi-ticket"></i>
+                Daftar Sekarang
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- ===== NEWSLETTER ===== -->
+    <section class="py-16 bg-[#F7F8FC]">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+          <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 text-center border border-gray-100">
+            <div class="w-16 h-16 bg-[#2679ec]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <i class="bi bi-envelope-paper text-3xl text-[#2679ec]"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-3">Subscribe Newsletter</h3>
+            <p class="text-gray-600 text-base mb-6 leading-relaxed">
+              Dapatkan artikel dan tips terbaru seputar lari dan informasi Waru Turi Fun Run 2026 langsung di email Anda.
+            </p>
+            <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder="Masukkan email Anda"
+                class="flex-1 px-4 py-3 rounded-full border border-gray-200 focus:border-[#2679ec] focus:ring-2 focus:ring-[#2679ec]/20 outline-none transition-all text-sm"
+                required
+              />
+              <button type="submit" class="px-6 py-3 bg-[#2679ec] hover:bg-[#1a5fc7] text-white font-semibold rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 text-sm whitespace-nowrap">
+                Subscribe
+              </button>
+            </form>
+            <p class="text-xs text-gray-400 mt-3">* Kami tidak akan spam. Anda bisa unsubscribe kapan saja.</p>
           </div>
         </div>
       </div>
     </section>
-  )}
 
-  <!-- ===== ARTICLES GRID ===== -->
-  <section class="py-10 bg-white" id="artikel-grid">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-6xl mx-auto">
-        <div class="flex items-center gap-3 mb-8">
-          <span class="w-1 h-8 bg-[#2679ec] rounded-full"></span>
-          <h2 class="text-2xl font-bold text-gray-900">Semua Artikel</h2>
-          <span class="text-sm text-gray-400">|</span>
-          <span class="text-sm text-gray-500">{artikelData.length} artikel</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {regularArticles.map((artikel) => (
-            <a 
-              key={artikel.id} 
-              href={`/artikel/${artikel.slug}`} 
-              class="artikel-card group block bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 hover:border-[#2679ec]/20 hover:-translate-y-2"
-              data-category={artikel.category}
-            >
-              <div class="relative h-48 overflow-hidden">
-                <img 
-                  src={artikel.image} 
-                  alt={artikel.title}
-                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  loading="lazy"
-                />
-                <div class="absolute top-3 left-3">
-                  <span class={`px-2.5 py-1 rounded-full text-xs font-bold ${getCategoryColor(artikel.category)}`}>
-                    {artikel.category}
-                  </span>
-                </div>
-              </div>
-              <div class="p-5">
-                <h3 class="text-base font-bold text-gray-900 group-hover:text-[#2679ec] transition-colors line-clamp-2">
-                  {artikel.title}
-                </h3>
-                <p class="text-gray-600 text-sm mt-2 line-clamp-2">{artikel.excerpt}</p>
-                <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                  <div class="flex items-center gap-2 text-xs text-gray-500">
-                    <i class="bi bi-person-circle"></i>
-                    <span>{artikel.author}</span>
-                  </div>
-                  <div class="flex items-center gap-2 text-xs text-gray-400">
-                    <i class="bi bi-calendar3"></i>
-                    <span>{formatDate(artikel.date)}</span>
-                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                    <i class="bi bi-clock"></i>
-                    <span>{artikel.readTime}m</span>
-                  </div>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-
-        <!-- Empty State -->
-        <div id="artikel-empty" class="hidden text-center py-16">
-          <i class="bi bi-journal text-6xl text-gray-300 block mb-4"></i>
-          <p class="text-gray-500 text-lg font-medium">Tidak ada artikel dalam kategori ini</p>
-          <p class="text-gray-400 text-sm mt-1">Coba pilih kategori lain</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== NEWSLETTER ===== -->
-  <section class="py-16 bg-[#F7F8FC]">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-3xl mx-auto">
-        <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 text-center border border-gray-100">
-          <div class="w-16 h-16 bg-[#2679ec]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <i class="bi bi-envelope-paper text-3xl text-[#2679ec]"></i>
-          </div>
-          <h3 class="text-2xl font-bold text-gray-900 mb-3">Subscribe Newsletter</h3>
-          <p class="text-gray-600 text-base mb-6 leading-relaxed">
-            Dapatkan artikel dan tips terbaru seputar lari dan informasi Waru Turi Fun Run 2026 langsung di email Anda.
+    <!-- ===== CTA ===== -->
+    <section class="py-16 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">
+            Siap Bergabung di <span class="text-[#FFD700]">Waru Turi</span>?
+          </h2>
+          <p class="text-white/80 text-base mb-8 leading-relaxed">
+            Baca artikel inspiratif, persiapkan diri, dan daftar sekarang untuk pengalaman lari yang tak terlupakan!
           </p>
-          <form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input 
-              type="email" 
-              placeholder="Masukkan email Anda" 
-              class="flex-1 px-4 py-3 rounded-full border border-gray-200 focus:border-[#2679ec] focus:ring-2 focus:ring-[#2679ec]/20 outline-none transition-all text-sm"
-              required
-            />
-            <button type="submit" class="px-6 py-3 bg-[#2679ec] hover:bg-[#1a5fc7] text-white font-semibold rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 text-sm whitespace-nowrap">
-              Subscribe
-            </button>
-          </form>
-          <p class="text-xs text-gray-400 mt-3">* Kami tidak akan spam. Anda bisa unsubscribe kapan saja.</p>
+          <a href="/p/ticket-sold.html" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
+            <i class="bi bi-ticket-perforated text-lg"></i> Daftar Sekarang
+          </a>
+          <p class="text-white/40 text-xs mt-4">
+            <i class="bi bi-clock-history mr-1"></i> Kuota terbatas, segera daftar!
+          </p>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ===== CTA ===== -->
-  <section class="py-16 bg-gradient-to-br from-[#001a4d] via-[#002266] to-[#0033A0] text-white">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-3xl mx-auto text-center">
-        <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">
-          Siap Bergabung di <span class="text-[#FFD700]">Waru Turi</span>?
-        </h2>
-        <p class="text-white/80 text-base mb-8 leading-relaxed">
-          Baca artikel inspiratif, persiapkan diri, dan daftar sekarang untuk pengalaman lari yang tak terlupakan!
-        </p>
-        <a href="/p/ticket-sold.html" class="inline-flex items-center gap-2.5 bg-[#FFD700] hover:bg-[#FFC107] text-gray-900 font-bold px-10 py-4 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-1">
-          <i class="bi bi-ticket-perforated text-lg"></i> Daftar Sekarang
-        </a>
-        <p class="text-white/40 text-xs mt-4">
-          <i class="bi bi-clock-history mr-1"></i> Kuota terbatas, segera daftar!
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <Footer />
+    <Footer />
+  </div>
 </BaseLayout>
 
 <style>
+  /* Font Open Sans untuk seluruh halaman artikel */
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
+  .artikel-page {
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
   /* ===== HERO ===== */
   .artikel-hero {
     position: relative;
     width: 100%;
-    min-height: 420px;
-    background: linear-gradient(135deg, rgba(11, 124, 255, 0.85), rgba(0, 182, 219, 0.85)),
+    min-height: 340px;
+    background: linear-gradient(135deg, rgba(11, 124, 255, 0.88), rgba(0, 51, 160, 0.9)),
       url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhLgtAHbzolMJkhEg_42wG0oVMGz24ls7ax9m3XUknvO8pkQA6NK93M3Opv9zTOczYPgXH1f92LEGnrmKRFA5JoG9W7Yj8MwGXouQ64OBF6A4IrjBcO_g_0576t4CPIlxVYzu3kLEvdI6tyP8D44Je7U7sRmo_aYGXc_Pgq5R0y9oJoRXtA2GjOrW-XxTiJ/s1280/header.jpg') center/cover no-repeat fixed;
     display: flex;
     align-items: center;
@@ -408,29 +375,17 @@ const regularArticles = artikelData.filter(a => !a.featured);
   .artikel-hero-content {
     position: relative;
     z-index: 2;
-    max-width: 800px;
+    max-width: 720px;
     padding: 0 20px;
   }
-  .artikel-title {
-    font-size: 52px;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 18px;
-    letter-spacing: 1px;
-  }
-  .artikel-subtitle {
-    font-size: 17px;
-    line-height: 1.7;
-    color: #e0f7fa;
-    margin-bottom: 28px;
-  }
   .artikel-breadcrumb {
-    font-size: 14px;
-    color: #e0f7fa;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 16px;
   }
   .artikel-breadcrumb a {
     color: #fff;
-    font-weight: 700;
+    font-weight: 600;
     text-decoration: none;
   }
   .artikel-breadcrumb a:hover {
@@ -439,17 +394,30 @@ const regularArticles = artikelData.filter(a => !a.featured);
   .artikel-breadcrumb span {
     margin: 0 6px;
   }
+  .artikel-title {
+    font-size: 44px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 14px;
+  }
+  .artikel-subtitle {
+    font-size: 16px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
+  }
 
   @media (max-width: 768px) {
     .artikel-hero {
-      min-height: 340px;
+      min-height: 280px;
       background-attachment: scroll;
     }
     .artikel-title {
-      font-size: 36px;
+      font-size: 30px;
     }
     .artikel-subtitle {
-      font-size: 15px;
+      font-size: 14px;
     }
   }
 
@@ -528,7 +496,7 @@ const regularArticles = artikelData.filter(a => !a.featured);
     const filterButtons = document.querySelectorAll('.category-filter-btn');
     const artikelCards = document.querySelectorAll('.artikel-card');
     const emptyState = document.getElementById('artikel-empty');
-    const featuredSection = document.querySelector('.bg-\\[\\#F7F8FC\\] .grid');
+    const featuredSection = document.querySelector('.bg-\\[\\#F7F8FC\\]');
 
     let currentCategory = 'all';
 
@@ -556,13 +524,10 @@ const regularArticles = artikelData.filter(a => !a.featured);
 
       // Show/hide featured section jika filter bukan 'all'
       if (featuredSection) {
-        const featuredContainer = featuredSection.closest('.py-10');
-        if (featuredContainer) {
-          if (category !== 'all') {
-            featuredContainer.style.display = 'none';
-          } else {
-            featuredContainer.style.display = '';
-          }
+        if (category !== 'all') {
+          featuredSection.style.display = 'none';
+        } else {
+          featuredSection.style.display = '';
         }
       }
     }
